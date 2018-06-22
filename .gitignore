@@ -1,0 +1,10 @@
+
+*.png
+*.pyc
+*.aux
+src/report.synctex.gz
+*.log
+src/report.pdf
+src/report.tex
+src/StreamPlotIssue.py
+src/TestPlot.py
