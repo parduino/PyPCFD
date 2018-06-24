@@ -1,5 +1,4 @@
 
-*.png
 *.pyc
 *.aux
 src/report.synctex.gz

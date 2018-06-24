@@ -199,11 +199,11 @@ class Cell(object):
 
         return array(d)
     
-    def computeForces(self):
+    def computeForces(self, addTransient=False):
         gpts = [ -1./sqrt(3.), 1./sqrt(3.) ]
-        w = 2.0*self.mu * self.size[0]*self.size[1]/4.
+        w = self.size[0]*self.size[1]/4.
         
-        self.SetVelocity()
+        self.SetVelocity()   # this initializes nodal velocities
         
         forces = zeros([4,2])
         
@@ -213,16 +213,37 @@ class Cell(object):
                 dh   = self.GetStrainRate(xl)
                 denh = self.GetEnhancedStrainRate(xl)
                 
-                d11 = w*( dh[0] + denh[0] )
-                d22 = w*( dh[1] + denh[1] )
-                d12 = w*0.5*( dh[2] + denh[2] )
+                d11 = w* 2.0*self.mu * ( dh[0] + denh[0] )
+                d22 = w* 2.0*self.mu * ( dh[1] + denh[1] )
+                d12 = w*     self.mu * ( dh[2] + denh[2] )
                 d21 = d12
                 
                 dfx = d11*self.DshapeX + d12*self.DshapeY
                 dfy = d21*self.DshapeX + d22*self.DshapeY
                 
                 forces -= stack((dfx,dfy),-1)
-            
+                
+                if (addTransient):
+                    
+                    aTransient = zeros(2)
+        
+                    dxu = dot(self.DshapeX, self.ux)
+                    dyu = dot(self.DshapeY, self.ux)
+                    dxv = dot(self.DshapeX, self.uy)
+                    dyv = dot(self.DshapeY, self.uy)
+                    
+                    # add  w . (grad v) . v
+                    vx = dot(self.shape, self.ux)
+                    vy = dot(self.shape, self.uy)
+                    # standard tensor (single) dot product
+                    aTransient[0] = dxu * vx + dyu * vy 
+                    aTransient[1] = dxv * vx + dyv * vy 
+                    
+                    fTransient = w * self.rho * tensordot(self.shape, aTransient, axes=0)  # tensor product
+                    
+                    forces -= fTransient
+                
+                
         for i in range(4):
             self.nodes[i].addForce(forces[i])
             

@@ -8,18 +8,21 @@ from Domain import *
 
 def Main():
     # defne the Reynolds number
-    Re = 1000.
+    Re = 1000
     
-    # set side-length of the analysis domain
-    edgeDomain      = 1.
-    # set the number of cells per edge
-    numCellsPerEdge = 4
+    # set sliding velocity
+    velocity = 1.0
     
     # mass density of the fluid
     density = 1000.
     
+    # set side-length of the analysis domain
+    edgeDomain      = 1.
+    # set the number of cells per edge
+    numCellsPerEdge = 64
+    
     # viscosity of the fluid
-    viscosity = 1.0
+    viscosity = density * velocity * edgeDomain / Re
     
     # create an analysis domain
     domain = Domain(edgeDomain,edgeDomain,numCellsPerEdge,numCellsPerEdge)
@@ -32,9 +35,10 @@ def Main():
     solveVenhanced = True
     updatePosition = True 
     updateStress   = False
+    addTransient   = True
     
-    domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
-    domain.setParameters(density, viscosity)
+    domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient)
+    domain.setParameters(Re, density, velocity)
     domain.setInitialState()
     
     CFL = 1.0

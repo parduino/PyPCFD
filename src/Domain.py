@@ -29,16 +29,18 @@ class Domain(object):
         self.cells 
         self.particles
         self.analysisControl
+        self.Re
         self.v0
         self.time = 0.0
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
+        def setBoundaryConditions(self)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
         def getAnalysisControl(self)
         def setStateN(self)
-        def setParameters(self, density, viscosity)
+        def setParameters(self, Re, density, velocity)
         def runAnalysis(self, maxtime=1.0)
         def runSingleStep(self, dt=1.0)
         def initStep(self)
@@ -74,7 +76,9 @@ class Domain(object):
         
         self.X, self.Y = meshgrid(x, y, indexing='xy')
         
-        self.v0 = 1.
+        self.Re  = 1.0
+        self.rho = 1.0
+        self.v0  = 0.0
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -103,6 +107,17 @@ class Domain(object):
                 newCell.SetNodes(theNodes)
                 self.cells.append(newCell)     
         
+        self.setParameters(self.Re, self.rho, self.v0)
+        self.setAnalysis(False, True, True, True, True, True, False, False)
+    
+        self.plot = Plotter()
+        self.plot.setGrid(width, height, nCellsX, nCellsY)
+        
+    def setBoundaryConditions(self):
+        
+        nCellsX = self.nCellsX
+        nCellsY = self.nCellsY
+        
         # define fixities
         for i in range(nCellsX+1):
             self.nodes[i][0].fixDOF(1, 0.0)
@@ -120,11 +135,7 @@ class Domain(object):
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed
             
-        self.setParameters(1.0, 0.0)
-        self.setAnalysis(False, True, True, True, True, True, False)
-    
-        self.plot = Plotter()
-        self.plot.setGrid(width, height, nCellsX, nCellsY)
+        
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -137,7 +148,7 @@ class Domain(object):
             s += str(cell) + "\n"
         return s
         
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress):
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -145,15 +156,31 @@ class Domain(object):
             'solveVtilde':solveVtilde,
             'solveVenhanced':solveVenhanced,
             'updatePosition':updatePosition,
-            'updateStress':updateStress
+            'updateStress':updateStress,
+            'addTransient':addTransient
             }
+        if (doInit and updatePosition and addTransient):
+            print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
     def getAnalysisControl(self):
         return self.analysisControl
     
-    def setParameters(self, density, viscosity):
+    def setParameters(self, Re, density, velocity):
+        
+        if (self.hx < self.hy ):
+            L = self.hx
+        else:
+            L = self.hy
+            
+        viscosity = density * velocity * L / Re
+        
+        self.Re = Re
         self.rho = density
+        self.v0  = velocity
         self.mu  = viscosity
+            
+        self.setBoundaryConditions()
+        
         for cell in self.cells:
             cell.setParameters(density, viscosity)
        
@@ -211,7 +238,7 @@ class Domain(object):
         if (self.analysisControl['doInit']):
             self.initStep()
         if (self.analysisControl['solveVstar']):
-            self.solveVstar(dt)
+            self.solveVstar(dt, self.analysisControl['addTransient'])
         if (self.analysisControl['solveP']):
             self.solveP(dt)
         if (self.analysisControl['solveVtilde']):
@@ -234,14 +261,14 @@ class Domain(object):
             # cell.mapMassToNodes()  # for particle formulation only
             cell.mapMomentumToNodes()
     
-    def solveVstar(self, dt):
+    def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
                 self.nodes[i][j].setForce(zeros(2))
                 
         for cell in self.cells:
-            cell.computeForces()
+            cell.computeForces(addTransient)
         
         # solve for nodal acceleration a*
         # and update nodal velocity to v*
