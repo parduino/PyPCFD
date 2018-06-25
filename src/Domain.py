@@ -7,7 +7,7 @@ Created on June 10, 2018
 from Node import *
 from Cell import *
 from Particle import *
-from Plotter import *
+from Plotter2 import *
 
 from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
     ceil
@@ -209,7 +209,7 @@ class Domain(object):
         
         # initial conditions are now set
         self.plot.setData(self.nodes)
-        self.plot.refresh()
+        self.plot.refresh(self.time)
      
     def runAnalysis(self, maxtime=1.0):
         
@@ -229,7 +229,7 @@ class Domain(object):
             self.time += dt 
             
         self.plot.setData(self.nodes)
-        self.plot.refresh()
+        self.plot.refresh(self.time)
         
     
     def runSingleStep(self, time=0.0, dt=1.0):

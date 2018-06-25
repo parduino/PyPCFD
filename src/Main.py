@@ -19,7 +19,7 @@ def Main():
     # set side-length of the analysis domain
     edgeDomain      = 1.
     # set the number of cells per edge
-    numCellsPerEdge = 64
+    numCellsPerEdge = 16
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
@@ -76,10 +76,15 @@ def Main():
     domain.runAnalysis(40.0)
     domain.runAnalysis(45.0)
     domain.runAnalysis(50.0)
+    domain.runAnalysis(55.0)
     domain.runAnalysis(60.0)
+    domain.runAnalysis(65.0)
     domain.runAnalysis(70.0)
+    domain.runAnalysis(75.0)
     domain.runAnalysis(80.0)
+    domain.runAnalysis(85.0)
     domain.runAnalysis(90.0)
+    domain.runAnalysis(95.0)
     domain.runAnalysis(100.0)
     
     
