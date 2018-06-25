@@ -9,3 +9,5 @@ src/StreamPlotIssue.py
 src/TestPlot.py
 src/Documentation/report.synctex.gz
 src/Documentation/report.pdf
+*.png
+*.gif
