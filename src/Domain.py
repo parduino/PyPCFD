@@ -6,13 +6,17 @@ Created on June 10, 2018
 
 from Node import *
 from Cell import *
+from matrixDataType import *
+
 from Particle import *
 from Plotter2 import *
 
 from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
     ceil
 from numpy.linalg import solve
-from xml.dom.minicompat import NodeList
+from scipy.sparse.linalg import spsolve
+
+from time import process_time
 
 class Domain(object):
     '''
@@ -133,8 +137,7 @@ class Domain(object):
             self.nodes[nCellsX][j].fixDOF(0, 0.0)
             
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
-            #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed
-            
+            #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
         
         
     def __str__(self):
@@ -233,8 +236,9 @@ class Domain(object):
         
     
     def runSingleStep(self, time=0.0, dt=1.0):
+
+        t = process_time()
         
-        print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f}".format(time, dt, time+dt))
         if (self.analysisControl['doInit']):
             self.initStep()
         if (self.analysisControl['solveVstar']):
@@ -249,6 +253,10 @@ class Domain(object):
             self.updateParticleMotion()
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
+            
+        elapsed_time = process_time() - t
+        print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
+        
     
     def initStep(self):
         # reset nodal mass, momentum, and force
@@ -279,9 +287,22 @@ class Domain(object):
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
         
+        # sparese outperformes dense very quickly for this problem.  
+        # I lowered this number to 100 and might want to switch to sparse entirely.
+        if ndof <= 100:
+            useDense = True
+        else:
+            useDense = False
+        
         # assemble matrix and force 
-        self.FP = zeros(ndof)
-        self.KP = zeros((ndof,ndof))
+        if (useDense):
+            # use dense matrix
+            self.FP = zeros(ndof)
+            self.KP = zeros((ndof,ndof))
+        else:
+            # use sparse matrix
+            self.FP = zeros(ndof)
+            KP = matrixDataType(ndof)
         
         for cell in self.cells:
             ke = cell.GetStiffness()
@@ -289,19 +310,41 @@ class Domain(object):
             nodeIndices = cell.getGridCoordinates()
             dof = [ x[0] + x[1]*(self.nCellsX+1)   for x in nodeIndices ]
             
-            for i in range(4):
-                self.FP[dof[i]] += fe[i]
-                for j in range(4):
-                    self.KP[dof[i]][dof[j]] += ke[i][j]
-                
+            if (useDense):
+                # use dense matrix
+                for i in range(4):
+                    self.FP[dof[i]] += fe[i]
+                    for j in range(4):
+                        self.KP[dof[i]][dof[j]] += ke[i][j]
+            else:
+                # use sparse matrix
+                for i in range(4):
+                    self.FP[dof[i]] += fe[i]
+                    for j in range(4):
+                        KP.add(ke[i][j],dof[i],dof[j]) 
+                        
         # apply boundary conditions
         i = self.nCellsX // 2
         dof = i + self.nCellsY*(self.nCellsX+1)
-        self.KP[dof][dof] = 1.0e20
-        self.FP[dof] = 0.0
+        
+            
+        if (useDense):
+            # use dense matrix
+            self.KP[dof][dof] = 1.0e20
+            self.FP[dof] = 0.0
+        else:
+            # use sparse matrix
+            KP.add(1.0e20, dof, dof)
+            self.FP[dof] = 0.0
             
         # solve for nodal p
-        pressure = solve(self.KP, self.FP)
+        if (useDense):
+            # use dense matrix
+            pressure = solve(self.KP, self.FP)
+        else:
+            # use sparse matrix
+            self.KP = KP.toCSCmatrix()
+            pressure = spsolve(self.KP, self.FP)
         
         # assign pressure to nodes
         for i in range(self.nCellsX+1):
