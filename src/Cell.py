@@ -164,8 +164,8 @@ class Cell(object):
         
         if (self.useEnhanced):
             # add the enhanced velocity field
-            dvx = 0.5 * self.divVb * (1. - xl[0]) 
-            dvy = 0.5 * self.divVc * (1. - xl[1])
+            dvx = 0.5 * self.divVb * (1. - xl[0]*xl[0]) 
+            dvy = 0.5 * self.divVc * (1. - xl[1]*xl[1])
             vel += array([dvx, dvy])
             
         return vel
