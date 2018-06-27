@@ -44,21 +44,31 @@ def Main():
     CFL = 1.0
     dt = domain.getTimeStep(CFL)
     
-    print(dt)
+    print(u"CFL=1 equals to \u0394t={:f}".format(dt))
     
     #print(domain)
     
+    # define load history and print interval
+    
+    dt1 = 0.5
+    target1 = 10.0
+    
+    dt2 = 0.5
+    target2 = 10.0
+
+# ************* don't mess with stuff below *************
+
     time = 0.0
     
-    dt = 0.5
+    dt = dt1
     
-    while (time+dt <= 10.0):
+    while (time+dt <= target2):
         time += dt
         domain.runAnalysis(time)
     
-    dt = 5.0
+    dt = dt2
     
-    while (time+dt <= 100.0):
+    while (time+dt <= target2):
         time += dt
         domain.runAnalysis(time)
     
