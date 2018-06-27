@@ -1,5 +1,6 @@
 '''
 Created on Jun 13, 2018
+Modified on June 24, 2018 for separate images
 
 @author: pmackenz
 '''
@@ -51,47 +52,81 @@ class Plotter(object):
         
     def refresh(self, time=-1):
         
+        self.IMAGE_COUNTER += 1
+        
         #self.Vx =  self.Y   # temporary solution for debugging only
         #self.Vy = -self.X   # temporary solution for debugging only
         
         speed = np.sqrt(self.Vx*self.Vx + self.Vy*self.Vy )
         
         fig = plt.figure(figsize=(10, 9))
-        gs = gridspec.GridSpec(nrows=2, ncols=2, height_ratios=[1, 1], width_ratios=[1,1.3])
+        #gs = gridspec.GridSpec(nrows=1, ncols=1, height_ratios=[1, 1], width_ratios=[1,1.3])
         
         
         #  pressure field
-        ax0 = fig.add_subplot(gs[1, 1])
+        #ax0 = fig.add_subplot(gs[1, 1])
+        #ax0 = fig.subplot(11)
+        ax0 = fig.gca()
         try:
             contour = ax0.contourf(self.X, self.Y, self.P, cmap='autumn')
             fig.colorbar(contour, ax=ax0)
-            ax0.set_title('Pressure')
+            if (time>=0.0):
+                ax0.set_title('Pressure at t={:06.3f}s'.format(time))
+            else:
+                ax0.set_title('Pressure')
         except:
             ax0.set_title('Pressure Failed')
         
+        imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
+        plt.savefig(imageName)
+        
+        plt.clf()
+        
         # Varying color along a streamline
-        ax1 = fig.add_subplot(gs[1, 0])
+        #ax1 = fig.add_subplot(gs[1, 0])
+        #ax1 = fig.subplot(11)
+        ax1 = fig.gca()
         try:
             force = ax1.quiver(self.X, self.Y, self.Fx, self.Fy, cmap='autumn')
             ax1.quiverkey(force, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,N$',labelpos='E',coordinates='axes')
             #fig.colorbar(force, ax=ax1)
-            ax1.set_title('Nodal Forces')
+            if (time>=0.0):
+                ax1.set_title('Nodal Forces at t={:06.3f}s'.format(time))
+            else:
+                ax1.set_title('Nodal Forces')
         except:
             ax1.set_title('Nodal Forces Failed')
         
+        imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
+        plt.savefig(imageName)
+        
+        plt.clf()
+        
         
         #  Varying line width along a streamline
-        ax2 = fig.add_subplot(gs[0, 0])
+        #ax2 = fig.add_subplot(gs[0, 0])
+        #ax2 = fig.subplot(11)
+        ax2 = fig.gca()
         try:
             vecs = ax2.quiver(self.X, self.Y, self.Vx, self.Vy, cmap='autumn')
             ax2.quiverkey(vecs, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,\frac{m}{s}$',labelpos='E',coordinates='axes')
             #fig.colorbar(vecs, ax=ax2)
-            ax2.set_title('velocity')
+            if (time>=0.0):
+                ax2.set_title('velocity at t={:06.3f}s'.format(time))
+            else:
+                ax2.set_title('velocity')
         except:
             ax2.set_title('velocity Failed')
         
+        imageName = "Velocity{:03d}.png".format(self.IMAGE_COUNTER)
+        plt.savefig(imageName)
         
-        ax3 = fig.add_subplot(gs[0, 1])
+        plt.clf()
+        
+        
+        #ax3 = fig.add_subplot(gs[0, 1])
+        #ax3 = fig.subplot(11)
+        ax3 = fig.gca()
         try:
             seed_points = np.array([ self.tracerPoints[0].flatten(), self.tracerPoints[1].flatten() ])
             
@@ -101,18 +136,22 @@ class Plotter(object):
                                    density=2, integration_direction='forward',
                                    start_points=seed_points.T)
             fig.colorbar(strm3.lines)
-            ax3.set_title('Particle Trajectory')
+            if (time>=0.0):
+                ax3.set_title('Streamlines at t={:06.3f}s'.format(time))
+            else:
+                ax3.set_title('Streamlines')
         except:
-            ax3.set_title('Particle Trajectory Failed')
+            ax3.set_title('Streamlines Failed')
         
         # Displaying the starting points with blue symbols.
         ###ax3.plot(self.tracerPoints[0], self.tracerPoints[1], 'bo', markersize=2)
         ax3.axis((0.0, self.width, 0.0, self.height))
         
-        plt.tight_layout()
-        self.IMAGE_COUNTER += 1
         imageName = "Stream{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
+        
+        #plt.clf()
+        
         plt.close()
         
     def setGrid(self, width, height, nCellsX, nCellsY):

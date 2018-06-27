@@ -1,0 +1,152 @@
+\documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
+\usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
+\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+%\geometry{landscape}                		% Activate for rotated page geometry
+%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+								% TeX will automatically convert eps --> pdf in pdflatex		
+\usepackage{amssymb}
+
+%   General parameters, for ALL pages:
+\renewcommand{\topfraction}{0.9}	% max fraction of floats at top
+\renewcommand{\bottomfraction}{0.8}	% max fraction of floats at bottom
+%   Parameters for TEXT pages (not float pages):
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{3}
+\setcounter{totalnumber}{4}     % 2 may work better
+\setcounter{dbltopnumber}{3}    % for 2-column pages
+\renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
+\renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
+%   Parameters for FLOAT pages (not text pages):
+\renewcommand{\floatpagefraction}{0.7}	% require fuller float pages
+% N.B.: floatpagefraction MUST be less than topfraction !!
+\renewcommand{\dblfloatpagefraction}{0.7}	% require fuller float pages
+    
+
+\newcommand{\figref}[1]{\ref{fig:#1}}
+
+\newcommand{\TheTimeStep}[3]{%
+\begin{figure}[p]
+	\centering
+	\includegraphics[width=1.0\hsize]{#1}
+	\caption{State of the simulation at $t = #2$~seconds.}
+	\label{fig:#3}
+\end{figure}}
+
+\newcommand{\TheScaledTimeStep}[4]{%
+\begin{figure}[htb]
+	\centering
+	\includegraphics[width=#1\hsize]{#2}
+	\caption{State of the simulation at $t = #3$~seconds.}
+	\label{fig:#4}
+\end{figure}}
+
+\title{On the sliding lid problem}
+\author{Peter Mackenzie-Helnwein}
+%\date{}							% Activate to display a given date or no date
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+I implemented the incompressible formulation using python~3.6.  The code is currently solely grid based (no particle equations), though it has the particle tracking, updates, memory in place.
+Plotting is performed using matplotlib~2.2.2 and its \verb+pyplot+, \verb+contour+, \verb+straemplot+ and \verb+quiver+ methods.
+
+The \verb+streamplot+ appears to suffer from a bug in which the rightmost column and topmost row of cells yield faulty streamlines.  I verified this by plotting both the velocity field (as a \verb+quiver+ plot) and the streamlines.  This issue is especially cumbersome with very coarse grids (not shown here).
+
+\section{Example}
+I am looking at the sliding lid problem.  The container is 1~m times 1~m in size.  The lid slides at a steady rate of 1.0~m/s.
+The fluid has a density of 1000~kg/m$^3$ and a viscosity of 1~Pa$\cdot$s.  No gravity is considered.
+
+Time stepping is automatic with $\Delta t$ such that $CFL\le 0.5$ in every cell.  This results in rather small $CFL$-numbers in most cells.
+
+\subsection{Results for the standard algorithm on an $8\times8$ grid}
+Using an $8\times8$ grid and the algorithm without the enhanced velocity component, the following time series was obtained.
+
+The presented solution up to real time 10~seconds requires 40 time steps and took, including generation and saving of figures, just about 1~minute.   
+
+\TheScaledTimeStep{0.35}{8x8/Stream000.png}{0.0}{t01}
+\TheScaledTimeStep{0.35}{8x8/Stream020.png}{10.0}{t02}
+\TheScaledTimeStep{0.35}{8x8/Stream028.png}{50.0}{t03}
+
+Figures~\figref{t01}, \figref{t02} and \figref{t03} show that, for this problem, even after 50 seconds this may not be the stationary solution!
+
+
+\TheTimeStep{8x8/Stream000.png}{0.0}{000}
+%\TheTimeStep{8x8/Stream001.png}{0.5}{001}
+\TheTimeStep{8x8/Stream002.png}{1.0}{002}
+%\TheTimeStep{8x8/Stream003.png}{1.5}{003}
+\TheTimeStep{8x8/Stream004.png}{2.0}{004}
+%\TheTimeStep{8x8/Stream005.png}{2.5}{005}
+\TheTimeStep{8x8/Stream006.png}{3.0}{006}
+%\TheTimeStep{8x8/Stream007.png}{3.5}{007}
+\TheTimeStep{8x8/Stream008.png}{4.0}{008}
+%\TheTimeStep{8x8/Stream009.png}{4.5}{009}
+\TheTimeStep{8x8/Stream010.png}{5.0}{010}
+%\TheTimeStep{8x8/Stream011.png}{5.5}{011}
+\TheTimeStep{8x8/Stream012.png}{6.0}{012}
+%\TheTimeStep{8x8/Stream013.png}{6.5}{013}
+\TheTimeStep{8x8/Stream014.png}{7.0}{014}
+%\TheTimeStep{8x8/Stream015.png}{7.5}{015}
+\TheTimeStep{8x8/Stream016.png}{8.0}{016}
+%\TheTimeStep{8x8/Stream017.png}{8.5}{017}
+\TheTimeStep{8x8/Stream018.png}{9.0}{018}
+%\TheTimeStep{8x8/Stream019.png}{9.5}{019}
+\TheTimeStep{8x8/Stream020.png}{10.0}{020}
+
+\TheTimeStep{8x8/Stream021.png}{15.0}{021}
+\TheTimeStep{8x8/Stream022.png}{20.0}{022}
+\TheTimeStep{8x8/Stream023.png}{25.0}{023}
+\TheTimeStep{8x8/Stream024.png}{30.0}{024}
+\TheTimeStep{8x8/Stream025.png}{35.0}{025}
+\TheTimeStep{8x8/Stream026.png}{40.0}{026}
+\TheTimeStep{8x8/Stream027.png}{45.0}{027}
+\TheTimeStep{8x8/Stream028.png}{50.0}{028}
+
+\clearpage
+
+\subsection{Results for the standard algorithm on a $32\times32$ grid}
+Using a $32\times32$ grid and the algorithm without the enhanced velocity component, the following time series was obtained.
+
+The presented solution up to real time 10~seconds requires 300 time steps and took, including generation and saving of figures, just about 3 minutes.   Solutions after 10~seconds have been computed with a $CFL$-number greater than one, though it is greater only for the top right and top left cells which are stabilized by boundary conditions.  Increasing $\Delta t$ too much will cause numeric instabilities and destroy the solution.
+
+\TheScaledTimeStep{0.35}{32x32/Stream000.png}{0.0}{s01}
+\TheScaledTimeStep{0.35}{32x32/Stream020.png}{10.0}{s02}
+\TheScaledTimeStep{0.35}{32x32/Stream028.png}{50.0}{s03}
+
+Figures~\figref{s01}, \figref{s02} and \figref{s03} show that, for this problem, even after 50 seconds this may not be the stationary solution!
+
+
+\TheTimeStep{32x32/Stream000.png}{0.0}{100}
+%\TheTimeStep{32x32/Stream001.png}{0.5}{101}
+\TheTimeStep{32x32/Stream002.png}{1.0}{102}
+%\TheTimeStep{32x32/Stream003.png}{1.5}{103}
+\TheTimeStep{32x32/Stream004.png}{2.0}{104}
+%\TheTimeStep{32x32/Stream005.png}{2.5}{105}
+\TheTimeStep{32x32/Stream006.png}{3.0}{106}
+%\TheTimeStep{32x32/Stream007.png}{3.5}{107}
+\TheTimeStep{32x32/Stream008.png}{4.0}{108}
+%\TheTimeStep{32x32/Stream009.png}{4.5}{109}
+\TheTimeStep{32x32/Stream010.png}{5.0}{110}
+%\TheTimeStep{32x32/Stream011.png}{5.5}{111}
+\TheTimeStep{32x32/Stream012.png}{6.0}{112}
+%\TheTimeStep{32x32/Stream013.png}{6.5}{113}
+\TheTimeStep{32x32/Stream014.png}{7.0}{114}
+%\TheTimeStep{32x32/Stream015.png}{7.5}{115}
+\TheTimeStep{32x32/Stream016.png}{8.0}{116}
+%\TheTimeStep{32x32/Stream017.png}{8.5}{117}
+\TheTimeStep{32x32/Stream018.png}{9.0}{118}
+%\TheTimeStep{32x32/Stream019.png}{9.5}{119}
+\TheTimeStep{32x32/Stream020.png}{10.0}{120}
+
+\TheTimeStep{32x32/Stream021.png}{15.0}{021}
+\TheTimeStep{32x32/Stream022.png}{20.0}{022}
+\TheTimeStep{32x32/Stream023.png}{25.0}{023}
+\TheTimeStep{32x32/Stream024.png}{30.0}{024}
+\TheTimeStep{32x32/Stream025.png}{35.0}{025}
+\TheTimeStep{32x32/Stream026.png}{40.0}{026}
+\TheTimeStep{32x32/Stream027.png}{45.0}{027}
+\TheTimeStep{32x32/Stream028.png}{50.0}{028}
+
+
+\end{document}  

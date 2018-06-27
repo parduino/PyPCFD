@@ -6,13 +6,17 @@ Created on June 10, 2018
 
 from Node import *
 from Cell import *
+from matrixDataType import *
+
 from Particle import *
-from Plotter import *
+from Plotter2 import *
 
 from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
     ceil
 from numpy.linalg import solve
-from xml.dom.minicompat import NodeList
+from scipy.sparse.linalg import spsolve
+
+from time import process_time
 
 class Domain(object):
     '''
@@ -29,16 +33,18 @@ class Domain(object):
         self.cells 
         self.particles
         self.analysisControl
+        self.Re
         self.v0
         self.time = 0.0
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
+        def setBoundaryConditions(self)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
         def getAnalysisControl(self)
         def setStateN(self)
-        def setParameters(self, density, viscosity)
+        def setParameters(self, Re, density, velocity)
         def runAnalysis(self, maxtime=1.0)
         def runSingleStep(self, dt=1.0)
         def initStep(self)
@@ -74,7 +80,9 @@ class Domain(object):
         
         self.X, self.Y = meshgrid(x, y, indexing='xy')
         
-        self.v0 = 1.
+        self.Re  = 1.0
+        self.rho = 1.0
+        self.v0  = 0.0
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -103,6 +111,17 @@ class Domain(object):
                 newCell.SetNodes(theNodes)
                 self.cells.append(newCell)     
         
+        self.setParameters(self.Re, self.rho, self.v0)
+        self.setAnalysis(False, True, True, True, True, True, False, False)
+    
+        self.plot = Plotter()
+        self.plot.setGrid(width, height, nCellsX, nCellsY)
+        
+    def setBoundaryConditions(self):
+        
+        nCellsX = self.nCellsX
+        nCellsY = self.nCellsY
+        
         # define fixities
         for i in range(nCellsX+1):
             self.nodes[i][0].fixDOF(1, 0.0)
@@ -118,13 +137,8 @@ class Domain(object):
             self.nodes[nCellsX][j].fixDOF(0, 0.0)
             
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
-            #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed
-            
-        self.setParameters(1.0, 0.0)
-        self.setAnalysis(False, True, True, True, True, True, False)
-    
-        self.plot = Plotter()
-        self.plot.setGrid(width, height, nCellsX, nCellsY)
+            #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
+        
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -137,7 +151,7 @@ class Domain(object):
             s += str(cell) + "\n"
         return s
         
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress):
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -145,15 +159,31 @@ class Domain(object):
             'solveVtilde':solveVtilde,
             'solveVenhanced':solveVenhanced,
             'updatePosition':updatePosition,
-            'updateStress':updateStress
+            'updateStress':updateStress,
+            'addTransient':addTransient
             }
+        if (doInit and updatePosition and addTransient):
+            print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
     def getAnalysisControl(self):
         return self.analysisControl
     
-    def setParameters(self, density, viscosity):
+    def setParameters(self, Re, density, velocity):
+        
+        if (self.hx < self.hy ):
+            L = self.hx
+        else:
+            L = self.hy
+            
+        viscosity = density * velocity * L / Re
+        
+        self.Re = Re
         self.rho = density
+        self.v0  = velocity
         self.mu  = viscosity
+            
+        self.setBoundaryConditions()
+        
         for cell in self.cells:
             cell.setParameters(density, viscosity)
        
@@ -182,7 +212,7 @@ class Domain(object):
         
         # initial conditions are now set
         self.plot.setData(self.nodes)
-        self.plot.refresh()
+        self.plot.refresh(self.time)
      
     def runAnalysis(self, maxtime=1.0):
         
@@ -202,16 +232,17 @@ class Domain(object):
             self.time += dt 
             
         self.plot.setData(self.nodes)
-        self.plot.refresh()
+        self.plot.refresh(self.time)
         
     
     def runSingleStep(self, time=0.0, dt=1.0):
+
+        t = process_time()
         
-        print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f}".format(time, dt, time+dt))
         if (self.analysisControl['doInit']):
             self.initStep()
         if (self.analysisControl['solveVstar']):
-            self.solveVstar(dt)
+            self.solveVstar(dt, self.analysisControl['addTransient'])
         if (self.analysisControl['solveP']):
             self.solveP(dt)
         if (self.analysisControl['solveVtilde']):
@@ -222,6 +253,10 @@ class Domain(object):
             self.updateParticleMotion()
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
+            
+        elapsed_time = process_time() - t
+        print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
+        
     
     def initStep(self):
         # reset nodal mass, momentum, and force
@@ -234,14 +269,14 @@ class Domain(object):
             # cell.mapMassToNodes()  # for particle formulation only
             cell.mapMomentumToNodes()
     
-    def solveVstar(self, dt):
+    def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
                 self.nodes[i][j].setForce(zeros(2))
                 
         for cell in self.cells:
-            cell.computeForces()
+            cell.computeForces(addTransient)
         
         # solve for nodal acceleration a*
         # and update nodal velocity to v*
@@ -252,9 +287,22 @@ class Domain(object):
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
         
+        # sparese outperformes dense very quickly for this problem.  
+        # I lowered this number to 100 and might want to switch to sparse entirely.
+        if ndof <= 100:
+            useDense = True
+        else:
+            useDense = False
+        
         # assemble matrix and force 
-        self.FP = zeros(ndof)
-        self.KP = zeros((ndof,ndof))
+        if (useDense):
+            # use dense matrix
+            self.FP = zeros(ndof)
+            self.KP = zeros((ndof,ndof))
+        else:
+            # use sparse matrix
+            self.FP = zeros(ndof)
+            KP = matrixDataType(ndof)
         
         for cell in self.cells:
             ke = cell.GetStiffness()
@@ -262,19 +310,41 @@ class Domain(object):
             nodeIndices = cell.getGridCoordinates()
             dof = [ x[0] + x[1]*(self.nCellsX+1)   for x in nodeIndices ]
             
-            for i in range(4):
-                self.FP[dof[i]] += fe[i]
-                for j in range(4):
-                    self.KP[dof[i]][dof[j]] += ke[i][j]
-                
+            if (useDense):
+                # use dense matrix
+                for i in range(4):
+                    self.FP[dof[i]] += fe[i]
+                    for j in range(4):
+                        self.KP[dof[i]][dof[j]] += ke[i][j]
+            else:
+                # use sparse matrix
+                for i in range(4):
+                    self.FP[dof[i]] += fe[i]
+                    for j in range(4):
+                        KP.add(ke[i][j],dof[i],dof[j]) 
+                        
         # apply boundary conditions
         i = self.nCellsX // 2
         dof = i + self.nCellsY*(self.nCellsX+1)
-        self.KP[dof][dof] = 1.0e20
-        self.FP[dof] = 0.0
+        
+            
+        if (useDense):
+            # use dense matrix
+            self.KP[dof][dof] = 1.0e20
+            self.FP[dof] = 0.0
+        else:
+            # use sparse matrix
+            KP.add(1.0e20, dof, dof)
+            self.FP[dof] = 0.0
             
         # solve for nodal p
-        pressure = solve(self.KP, self.FP)
+        if (useDense):
+            # use dense matrix
+            pressure = solve(self.KP, self.FP)
+        else:
+            # use sparse matrix
+            self.KP = KP.toCSCmatrix()
+            pressure = spsolve(self.KP, self.FP)
         
         # assign pressure to nodes
         for i in range(self.nCellsX+1):
