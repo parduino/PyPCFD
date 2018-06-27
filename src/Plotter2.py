@@ -14,6 +14,7 @@ import matplotlib.gridspec as gridspec
 class Plotter(object):
     '''
     variables:
+        self.particlesPresent     # boolean
         self.height
         self.width
         self.nNodesX = nCellsX+1
@@ -40,6 +41,7 @@ class Plotter(object):
         Constructor
         '''
         self.IMAGE_COUNTER = -1
+        self.particlesPresent = False
         
         self.width  = 1.0
         self.height = 1.0
@@ -53,18 +55,13 @@ class Plotter(object):
         
         self.IMAGE_COUNTER += 1
         
-        #self.Vx =  self.Y   # temporary solution for debugging only
-        #self.Vy = -self.X   # temporary solution for debugging only
-        
         speed = np.sqrt(self.Vx*self.Vx + self.Vy*self.Vy )
         
         fig = plt.figure(figsize=(10, 9))
         #gs = gridspec.GridSpec(nrows=1, ncols=1, height_ratios=[1, 1], width_ratios=[1,1.3])
         
-        
         #  pressure field
         #ax0 = fig.add_subplot(gs[1, 1])
-        #ax0 = fig.subplot(11)
         ax0 = fig.gca()
         try:
             contour = ax0.contourf(self.X, self.Y, self.P, cmap='autumn')
@@ -83,7 +80,6 @@ class Plotter(object):
         
         # Varying color along a streamline
         #ax1 = fig.add_subplot(gs[1, 0])
-        #ax1 = fig.subplot(11)
         ax1 = fig.gca()
         try:
             force = ax1.quiver(self.X, self.Y, self.Fx, self.Fy, cmap='autumn')
@@ -104,7 +100,6 @@ class Plotter(object):
         
         #  Varying line width along a streamline
         #ax2 = fig.add_subplot(gs[0, 0])
-        #ax2 = fig.subplot(11)
         ax2 = fig.gca()
         try:
             vecs = ax2.quiver(self.X, self.Y, self.Vx, self.Vy, cmap='autumn')
@@ -124,7 +119,6 @@ class Plotter(object):
         
         
         #ax3 = fig.add_subplot(gs[0, 1])
-        #ax3 = fig.subplot(11)
         ax3 = fig.gca()
         try:
             seed_points = np.array([ self.tracerPoints[0].flatten(), self.tracerPoints[1].flatten() ])
@@ -149,7 +143,32 @@ class Plotter(object):
         imageName = "Stream{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
         
-        #plt.clf()
+        plt.clf()
+        
+        
+        if (self.particlesPresent):
+            #  Varying line width along a streamline
+            #ax2 = fig.add_subplot(gs[0, 0])
+            ax4 = fig.gca()
+            try:
+                vecs = ax4.quiver(self.ParticleX, self.ParticleY, self.ParticleVx, self.ParticleVy, cmap='autumn')
+                ax4.quiverkey(vecs, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,\frac{m}{s}$',labelpos='E',coordinates='axes')
+                
+                points = ax4.plot(self.ParticleX, self.ParticleY, 'bo', markersize=2)
+                #fig.colorbar(vecs, ax=ax2)
+                if (time>=0.0):
+                    ax4.set_title('particle velocity at t={:06.3f}s'.format(time))
+                else:
+                    ax4.set_title('particle velocity')
+            except:
+                ax4.set_title('particle velocity Failed at t={:06.3f}s'.format(time))
+                
+            #ax4.axis((0, 1, 0, 1))
+            
+            imageName = "ParticleVelocity{:03d}.png".format(self.IMAGE_COUNTER)
+            plt.savefig(imageName)
+            
+            plt.clf()
         
         plt.close()
         
@@ -168,8 +187,6 @@ class Plotter(object):
         
         # define tracer points
         
-        #xp = 0.5*self.width*(0.5+np.arange(2*nCellsX)) / nCellsX
-        #yp = 0.5*self.height*(0.5+np.arange(2*nCellsY))/ nCellsY
         xp = self.width*(0.5+np.arange(nCellsX)) / nCellsX
         yp = self.height*(0.5+np.arange(nCellsY))/ nCellsY
         refPtsX, refPtsY = np.meshgrid(xp,yp)
@@ -177,6 +194,8 @@ class Plotter(object):
         self.tracerPoints = [refPtsX,refPtsY]
         
     def setData(self, nodes):
+        self.particlesPresent = False
+        
         self.P  = np.zeros_like(self.X)
         self.Vx = np.zeros_like(self.X)
         self.Vy = np.zeros_like(self.X)
@@ -195,5 +214,25 @@ class Plotter(object):
                 self.Fy[j,i] = force[1]
         
         self.speed = np.sqrt(self.Vx*self.Vx + self.Vy*self.Vy)
+        
+    def setParticleData(self, particles):
+        if (len(particles) == 0):
+            return
+        
+        self.particlesPresent = True
+        
+        self.ParticleX  = []
+        self.ParticleY  = []
+        self.ParticleVx = []
+        self.ParticleVy = []
+        
+        for p in particles:
+            pos = p.position()
+            vel = p.velocity()
+            self.ParticleX.append(pos[0])
+            self.ParticleY.append(pos[1])
+            self.ParticleVx.append(vel[0])
+            self.ParticleVy.append(vel[1])
+            
         
         
