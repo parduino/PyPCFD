@@ -9,7 +9,6 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-#from matplotlib import cm
 
 
 class Plotter(object):
@@ -75,7 +74,7 @@ class Plotter(object):
             else:
                 ax0.set_title('Pressure')
         except:
-            ax0.set_title('Pressure Failed')
+            ax0.set_title('Pressure Failed at t={:06.3f}s'.format(time))
         
         imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
@@ -95,7 +94,7 @@ class Plotter(object):
             else:
                 ax1.set_title('Nodal Forces')
         except:
-            ax1.set_title('Nodal Forces Failed')
+            ax1.set_title('Nodal Forces Failed at t={:06.3f}s'.format(time))
         
         imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
@@ -116,7 +115,7 @@ class Plotter(object):
             else:
                 ax2.set_title('velocity')
         except:
-            ax2.set_title('velocity Failed')
+            ax2.set_title('velocity Failed at t={:06.3f}s'.format(time))
         
         imageName = "Velocity{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
@@ -141,7 +140,7 @@ class Plotter(object):
             else:
                 ax3.set_title('Streamlines')
         except:
-            ax3.set_title('Streamlines Failed')
+            ax3.set_title('Streamlines Failed at t={:06.3f}s'.format(time))
         
         # Displaying the starting points with blue symbols.
         ###ax3.plot(self.tracerPoints[0], self.tracerPoints[1], 'bo', markersize=2)
