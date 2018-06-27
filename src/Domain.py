@@ -11,6 +11,8 @@ from matrixDataType import *
 from Particle import *
 from Plotter2 import *
 
+from Errors import *
+
 from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
     ceil
 from numpy.linalg import solve
@@ -109,13 +111,28 @@ class Domain(object):
                 theNodes.append(self.nodes[i+1][j+1])
                 theNodes.append(self.nodes[i][j+1])
                 newCell.SetNodes(theNodes)
-                self.cells.append(newCell)     
+                self.cells.append(newCell)
         
         self.setParameters(self.Re, self.rho, self.v0)
+        
+        self.particles = []
+        self.createParticles(2,2)
+        
         self.setAnalysis(False, True, True, True, True, True, False, False)
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+        
+    def __str__(self):
+        s = "==== D O M A I N ====\n"
+        s += "Nodes:\n"
+        for i in range(self.nCellsX+1):
+            for j in range(self.nCellsY+1):
+                s += str(self.nodes[i][j]) + "\n"
+        s += "nCells:\n"
+        for cell in self.cells:
+            s += str(cell) + "\n"
+        return s
         
     def setBoundaryConditions(self):
         
@@ -140,17 +157,6 @@ class Domain(object):
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
         
         
-    def __str__(self):
-        s = "==== D O M A I N ====\n"
-        s += "Nodes:\n"
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY+1):
-                s += str(self.nodes[i][j]) + "\n"
-        s += "nCells:\n"
-        for cell in self.cells:
-            s += str(cell) + "\n"
-        return s
-        
     def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
         self.analysisControl = {
             'doInit':doInit,
@@ -162,6 +168,11 @@ class Domain(object):
             'updateStress':updateStress,
             'addTransient':addTransient
             }
+        
+        if (solveVenhanced):
+            for cell in self.cells:
+                cell.setEnhanced(True)
+                
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
@@ -212,6 +223,7 @@ class Domain(object):
         
         # initial conditions are now set
         self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
      
     def runAnalysis(self, maxtime=1.0):
@@ -232,6 +244,7 @@ class Domain(object):
             self.time += dt 
             
         self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
         
     
@@ -250,7 +263,7 @@ class Domain(object):
         if (self.analysisControl['solveVenhanced']):
             self.solveVenhanced(dt)
         if (self.analysisControl['updatePosition']):
-            self.updateParticleMotion()
+            self.updateParticleMotion(dt)
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
             
@@ -380,11 +393,58 @@ class Domain(object):
     def updateParticleStress(self):
         pass
     
-    def updateParticleMotion(self):
-        pass
+    def updateParticleMotion(self, dt):
+        for p in self.particles:
+            # this is Runge-Kutta 4
+            try:
+                pos1  = p.position()
+                cell = self.findCell(pos1)
+                vel1  = cell.GetVelocity(pos1)
+                
+                pos2 = pos1 + 0.5*vel1*dt
+                cell = self.findCell(pos2, cell)
+                vel2  = cell.GetVelocity(pos2)
+                
+                pos3 = pos1 + 0.5*vel2*dt
+                cell = self.findCell(pos3, cell)
+                vel3 = cell.GetVelocity(pos3)
+                
+                pos4 = pos1 + vel3*dt
+                cell = self.findCell(pos2, cell)
+                vel4  = cell.GetVelocity(pos4)
+                
+                p.addToPosition((vel1+2.*vel2+2.*vel3+vel4)*dt/6.)
+                p.setVelocity(vel4)
+            except CellIndexError as e:
+                print(e)
+                raise e
+                
     
-    def findCell(self, x):
-        pass
+    def findCell(self, x, testCell=None):
+        if (testCell != None  and  testCell.contains(x)):
+            return testCell
+        
+        # find a cell that contains x
+        i = np.int_((x[0] - 0.0) / self.hx)
+        j = np.int_((x[1] - 0.0) / self.hy)
+
+        if (i<0):
+            i = 0
+        if (i>self.nCellsX-1):
+            i = self.nCellsX -1
+        if (j<0):
+            j = 0
+        if (j>self.nCellsY-1):
+            j = self.nCellsY -1
+            
+        k = self.nCellsX * i + j
+        
+        try:
+            cell = self.cells[k]
+        except:
+            raise CellIndexError((i,j,k,x))
+        
+        return cell
     
     def createParticles(self, n, m):
         for cell in self.cells:
@@ -393,7 +453,7 @@ class Domain(object):
             
             for i in range(n):
                 s = -1. + (2*i+1)/n
-                for j in range(j):
+                for j in range(m):
                     t = -1. + (2*j+1)/m
                     xl = array([s,t])
                     xp = cell.getGlobal(xl)

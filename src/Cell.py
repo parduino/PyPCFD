@@ -11,12 +11,12 @@ class Cell(object):
     variables:
         self.id     = id
         self.nodes  = []
+        self.useEnhanced = False
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
         self.divVa = 0.0
         self.divVb = 0.0
         self.divVc = 0.0
-        self.params = {}
         self.rho  = density
         self.mu   = viscosity
         self.xm   = zeros(2)
@@ -29,14 +29,14 @@ class Cell(object):
     
     methods:
         def __init__(self, id)
-        def setParameters(self, density, viscosity):
+        def setParameters(self, density, viscosity)
+        def setEnhanced(self, useEnhanced=True)
         def addParticle(self, particle)
         def releaseParticles(self)
         def getLocal(self, x)
         def getGlobal(self, xl)
         def setShape(self,xl)
         def SetNodes(self, nds)
-        def SetParameters(self, param)
         def SetVelocity(self, u)
         def GetVelocity(self, x)
         def SetPressure(self, p)
@@ -63,11 +63,11 @@ class Cell(object):
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
         
+        self.useEnhanced = False
+        
         self.divVa = 0.0
         self.divVb = 0.0
         self.divVc = 0.0
-        
-        self.params = {}
         
         self.xm   = zeros(2)
         self.size = array([hx,hy])
@@ -93,6 +93,9 @@ class Cell(object):
         self.rho = density
         self.mu  = viscosity
     
+    def setEnhanced(self, useEnhanced=True):
+        self.useEnhanced = useEnhanced
+        
     def addParticle(self, particle):
         self.myParticles.append(particle)
         
@@ -139,9 +142,6 @@ class Cell(object):
             indexes.append(node.getGridCoordinates())
         return indexes
         
-    def SetParameters(self, param):
-        self.params = param
-        
     def SetVelocity(self):
         
         self.ux = zeros(4)
@@ -160,7 +160,15 @@ class Cell(object):
     def GetVelocity(self, x):
         xl = self.getLocal(x)
         self.setShape(xl)
-        return array([dot(self.shape, self.ux), dot(self.shape, self.uy)])
+        vel = array([dot(self.shape, self.ux), dot(self.shape, self.uy)])
+        
+        if (self.useEnhanced):
+            # add the enhanced velocity field
+            dvx = 0.5 * self.divVb * (1. - xl[0]*xl[0]) 
+            dvy = 0.5 * self.divVc * (1. - xl[1]*xl[1])
+            vel += array([dvx, dvy])
+            
+        return vel
     
     def SetPressure(self, p):
         self.p = p
@@ -188,8 +196,6 @@ class Cell(object):
     
     def GetEnhancedStrainRate(self, xl):
         
-        return zeros(3)
-        
         s = xl[0]
         t = xl[1]
         
@@ -211,7 +217,11 @@ class Cell(object):
             for t in gpts:
                 xl = array([s,t])
                 dh   = self.GetStrainRate(xl)
-                denh = self.GetEnhancedStrainRate(xl)
+                
+                if (self.useEnhanced):
+                    denh = self.GetEnhancedStrainRate(xl)
+                else:
+                    denh = zeros(3)
                 
                 d11 = w* 2.0*self.mu * ( dh[0] + denh[0] )
                 d22 = w* 2.0*self.mu * ( dh[1] + denh[1] )
