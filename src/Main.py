@@ -55,10 +55,10 @@ def Main():
     #target1 = 10.0
     
     dt1 = 0.025
-    target1 = 10
+    target1 = 1
     
     dt2 = 0.5
-    target2 = 10.0
+    target2 = 1.0
 
 # ************* don't mess with stuff below *************
 
@@ -67,13 +67,13 @@ def Main():
     
     # run first segment
     dt = dt1
-    while (time+dt <= target1):
+    while (time+dt <= target1+0.1*dt):
         time += dt
         domain.runAnalysis(time)
     
     # run second segment
     dt = dt2
-    while (time+dt <= target2):
+    while (time+dt <= target2+0.1*dt):
         time += dt
         domain.runAnalysis(time)
     
