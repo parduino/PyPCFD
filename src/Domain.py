@@ -168,6 +168,11 @@ class Domain(object):
             'updateStress':updateStress,
             'addTransient':addTransient
             }
+        
+        if (solveVenhanced):
+            for cell in self.cells:
+                cell.setEnhanced(True)
+                
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
