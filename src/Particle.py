@@ -5,8 +5,7 @@ Created on Jun 10, 2018
 '''
 
 from numpy import array, ones, zeros
-
-ParticleID = -1
+import globalCounter as GC
 
 class Particle(object):
     '''
@@ -25,6 +24,7 @@ class Particle(object):
     methods:
         def __init__(self, mp=1.0, xp=zeros(2), vp=zeros(2))
         def setViscosity(self, mu)
+        def setVelocity(self, v)
         def addToVelocity(self, dv)
         def addToPosition(self, dx)
         def velocity(self)      # return particle velocity
@@ -40,8 +40,8 @@ class Particle(object):
         Constructor
         '''
         # assign a unique ID
-        ParticleID += 1
-        self.id    = ParticleID
+        GC.ParticleID += 1
+        self.id    = GC.ParticleID
         
         self.mass  = mp
         self.pos   = xp
@@ -60,6 +60,9 @@ class Particle(object):
         
     def addToVelocity(self, dv):
         self.vel += dv
+        
+    def setVelocity(self, v):
+        self.vel = v
         
     def velocity(self):
         return self.vel

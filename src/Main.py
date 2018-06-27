@@ -5,10 +5,11 @@ Created on Nov 21, 2015
 '''
 
 from Domain import *
+import subprocess
 
 def Main():
     # defne the Reynolds number
-    Re = 100
+    Re = 1
     
     # set sliding velocity
     velocity = 1.0
@@ -19,7 +20,7 @@ def Main():
     # set side-length of the analysis domain
     edgeDomain      = 1.
     # set the number of cells per edge
-    numCellsPerEdge = 16
+    numCellsPerEdge = 4
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
@@ -44,24 +45,40 @@ def Main():
     CFL = 1.0
     dt = domain.getTimeStep(CFL)
     
-    print(dt)
+    print(u"CFL=1 equals to \u0394t={:f}".format(dt))
     
     #print(domain)
     
+    # define load history and print interval
+    
+    #dt1 = 0.5
+    #target1 = 10.0
+    
+    dt1 = 0.025
+    target1 = 1
+    
+    dt2 = 0.5
+    target2 = 1.0
+
+# ************* don't mess with stuff below *************
+
+    # initializing starting time
     time = 0.0
     
-    dt = 0.5
-    
-    while (time+dt <= 10.0):
+    # run first segment
+    dt = dt1
+    while (time+dt <= target1+0.1*dt):
         time += dt
         domain.runAnalysis(time)
     
-    dt = 5.0
-    
-    while (time+dt <= 100.0):
+    # run second segment
+    dt = dt2
+    while (time+dt <= target2+0.1*dt):
         time += dt
         domain.runAnalysis(time)
     
+    # generate the animation
+    subprocess.run('./makeAnim.sh')
     
 
 if __name__ == '__main__':
