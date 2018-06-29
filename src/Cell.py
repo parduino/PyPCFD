@@ -193,15 +193,24 @@ class Cell(object):
         dyv = dot(self.DshapeY, self.uy)
         
         return array([dxu, dyv, dyu+dxv])
+        
+        #dd = (dxu + dyv) / 3.
+        #return array([dxu-dd, dyv-dd, dyu+dxv])
     
     def GetEnhancedStrainRate(self, xl):
         
         s = xl[0]
         t = xl[1]
         
-        d = [ (self.divVc*t/self.size[1] - 2.*self.divVb*s/self.size[0])/1.5, 
-              (self.divVb*s/self.size[0] - 2.*self.divVc*t/self.size[1])/1.5, 
+        # this is the full rate of deformation tensor
+        d = [ -2.*self.divVb*s/self.size[0], 
+              -2.*self.divVc*t/self.size[1], 
               0.0 ]
+
+        ## this is the deviatoric portion
+        #d = [ (self.divVc*t/self.size[1] - 2.*self.divVb*s/self.size[0])/1.5, 
+        #      (self.divVb*s/self.size[0] - 2.*self.divVc*t/self.size[1])/1.5, 
+        #      0.0 ]
 
         return array(d)
     
