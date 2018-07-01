@@ -414,7 +414,11 @@ class Domain(object):
                 vel4  = cell.GetVelocity(pos4)
                 
                 p.addToPosition((vel1+2.*vel2+2.*vel3+vel4)*dt/6.)
-                p.setVelocity(vel4)
+                pos  = p.position()
+                cell = self.findCell(pos, cell)
+                vel  = cell.GetVelocity(pos)
+                
+                p.setVelocity(vel)
             except CellIndexError as e:
                 print(e)
                 raise e
