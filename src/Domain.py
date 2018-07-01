@@ -228,24 +228,25 @@ class Domain(object):
      
     def runAnalysis(self, maxtime=1.0):
         
-        # find ideal timestep using CFL=0.5
-        dt = self.getTimeStep(1.0)
-        if (dt > (maxtime - self.time)):
-            dt = (maxtime - self.time)
-        if (dt < (maxtime - self.time)):
-            nsteps = ceil((maxtime - self.time)/dt)
-            if (nsteps>50):
-                nsteps= 50
-            dt = (maxtime - self.time) / nsteps
+        # find ideal timestep using CFL
+        dt = self.getTimeStep(0.5)
+        dt = 0.0625 # ad hoc
+        # if (dt > (maxtime - self.time)):
+        #     dt = (maxtime - self.time)
+        # if (dt < (maxtime - self.time)):
+        #     nsteps = ceil((maxtime - self.time)/dt)
+        #     if (nsteps>50):
+        #         nsteps= 50
+        #     dt = (maxtime - self.time) / nsteps
         
-        #
+
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
             self.time += dt 
             
-        self.plot.setData(self.nodes)
-        self.plot.setParticleData(self.particles)
-        self.plot.refresh(self.time)
+            self.plot.setData(self.nodes)
+            self.plot.setParticleData(self.particles)
+            self.plot.refresh(self.time)
         
     
     def runSingleStep(self, time=0.0, dt=1.0):
@@ -476,5 +477,5 @@ class Domain(object):
                     if (dty<dt):
                         dt = dty
 
-        return dt
+        return dt*CFL
                 

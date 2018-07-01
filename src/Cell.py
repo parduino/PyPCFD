@@ -192,10 +192,10 @@ class Cell(object):
         dxv = dot(self.DshapeX, self.uy)
         dyv = dot(self.DshapeY, self.uy)
         
-        return array([dxu, dyv, dyu+dxv])
+        # return array([dxu, dyv, dyu+dxv])
         
-        #dd = (dxu + dyv) / 3.
-        #return array([dxu-dd, dyv-dd, dyu+dxv])
+        dd = (dxu + dyv) / 3.
+        return array([dxu-dd, dyv-dd, dyu+dxv])
     
     def GetEnhancedStrainRate(self, xl):
         
