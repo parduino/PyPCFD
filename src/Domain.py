@@ -476,5 +476,5 @@ class Domain(object):
                     if (dty<dt):
                         dt = dty
 
-        return dt
+        return dt*CFL
                 
