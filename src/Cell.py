@@ -191,7 +191,7 @@ class Cell(object):
         dyu = dot(self.DshapeY, self.ux)
         dxv = dot(self.DshapeX, self.uy)
         dyv = dot(self.DshapeY, self.uy)
-        
+
         #return array([dxu, dyv, dyu+dxv])
         
         dd = (dxu + dyv) / 3.
