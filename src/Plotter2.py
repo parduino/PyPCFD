@@ -67,11 +67,11 @@ class Plotter(object):
             contour = ax0.contourf(self.X, self.Y, self.P, cmap='autumn')
             fig.colorbar(contour, ax=ax0)
             if (time>=0.0):
-                ax0.set_title('Pressure at t={:06.5f}s'.format(time))
+                ax0.set_title('Pressure at t={:08.5f}s'.format(time))
             else:
                 ax0.set_title('Pressure')
         except:
-            ax0.set_title('Pressure Failed at t={:06.5f}s'.format(time))
+            ax0.set_title('Pressure Failed at t={:08.5f}s'.format(time))
         
         imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
@@ -86,11 +86,11 @@ class Plotter(object):
             ax1.quiverkey(force, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,N$',labelpos='E',coordinates='axes')
             #fig.colorbar(force, ax=ax1)
             if (time>=0.0):
-                ax1.set_title('Nodal Forces at t={:06.5f}s'.format(time))
+                ax1.set_title('Nodal Forces at t={:08.5f}s'.format(time))
             else:
                 ax1.set_title('Nodal Forces')
         except:
-            ax1.set_title('Nodal Forces Failed at t={:06.5f}s'.format(time))
+            ax1.set_title('Nodal Forces Failed at t={:08.5f}s'.format(time))
         
         imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
@@ -106,11 +106,11 @@ class Plotter(object):
             ax2.quiverkey(vecs, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,\frac{m}{s}$',labelpos='E',coordinates='axes')
             #fig.colorbar(vecs, ax=ax2)
             if (time>=0.0):
-                ax2.set_title('velocity at t={:06.5f}s'.format(time))
+                ax2.set_title('velocity at t={:08.5f}s'.format(time))
             else:
                 ax2.set_title('velocity')
         except:
-            ax2.set_title('velocity Failed at t={:06.5f}s'.format(time))
+            ax2.set_title('velocity Failed at t={:08.5f}s'.format(time))
         
         imageName = "Velocity{:03d}.png".format(self.IMAGE_COUNTER)
         plt.savefig(imageName)
@@ -130,11 +130,11 @@ class Plotter(object):
                                    start_points=seed_points.T)
             fig.colorbar(strm3.lines)
             if (time>=0.0):
-                ax3.set_title('Streamlines at t={:06.5f}s'.format(time))
+                ax3.set_title('Streamlines at t={:08.5f}s'.format(time))
             else:
                 ax3.set_title('Streamlines')
         except:
-            ax3.set_title('Streamlines Failed at t={:06.5f}s'.format(time))
+            ax3.set_title('Streamlines Failed at t={:08.5f}s'.format(time))
         
         # Displaying the starting points with blue symbols.
         ###ax3.plot(self.tracerPoints[0], self.tracerPoints[1], 'bo', markersize=2)
@@ -157,11 +157,11 @@ class Plotter(object):
                 points = ax4.plot(self.ParticleX, self.ParticleY, 'bo', markersize=2)
                 #fig.colorbar(vecs, ax=ax2)
                 if (time>=0.0):
-                    ax4.set_title('particle velocity at t={:06.5f}s'.format(time))
+                    ax4.set_title('particle velocity at t={:08.5f}s'.format(time))
                 else:
                     ax4.set_title('particle velocity')
             except:
-                ax4.set_title('particle velocity Failed at t={:06.5f}s'.format(time))
+                ax4.set_title('particle velocity Failed at t={:08.5f}s'.format(time))
                 
             #ax4.axis((0, 1, 0, 1))
             
