@@ -230,14 +230,13 @@ class Domain(object):
         
         # find ideal timestep using CFL
         dt = self.getTimeStep(0.5)
-        dt = 0.0625 # ad hoc
-        # if (dt > (maxtime - self.time)):
-        #     dt = (maxtime - self.time)
-        # if (dt < (maxtime - self.time)):
-        #     nsteps = ceil((maxtime - self.time)/dt)
-        #     if (nsteps>50):
-        #         nsteps= 50
-        #     dt = (maxtime - self.time) / nsteps
+        if (dt > (maxtime - self.time)):
+            dt = (maxtime - self.time)
+        if (dt < (maxtime - self.time)):
+            nsteps = ceil((maxtime - self.time)/dt)
+            if (nsteps>50):
+                nsteps= 50
+            dt = (maxtime - self.time) / nsteps
         
 
         while (self.time < maxtime-0.1*dt):
