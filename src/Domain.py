@@ -228,8 +228,8 @@ class Domain(object):
      
     def runAnalysis(self, maxtime=1.0):
         
-        # find ideal timestep using CFL=0.5
-        dt = self.getTimeStep(1.0)
+        # find ideal timestep using CFL
+        dt = self.getTimeStep(0.5)
         if (dt > (maxtime - self.time)):
             dt = (maxtime - self.time)
         if (dt < (maxtime - self.time)):
@@ -238,14 +238,14 @@ class Domain(object):
                 nsteps= 50
             dt = (maxtime - self.time) / nsteps
         
-        #
+
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
             self.time += dt 
             
-        self.plot.setData(self.nodes)
-        self.plot.setParticleData(self.particles)
-        self.plot.refresh(self.time)
+            self.plot.setData(self.nodes)
+            self.plot.setParticleData(self.particles)
+            self.plot.refresh(self.time)
         
     
     def runSingleStep(self, time=0.0, dt=1.0):
@@ -414,7 +414,11 @@ class Domain(object):
                 vel4  = cell.GetVelocity(pos4)
                 
                 p.addToPosition((vel1+2.*vel2+2.*vel3+vel4)*dt/6.)
-                p.setVelocity(vel4)
+                pos  = p.position()
+                cell = self.findCell(pos, cell)
+                vel  = cell.GetVelocity(pos)
+                
+                p.setVelocity(vel)
             except CellIndexError as e:
                 print(e)
                 raise e
@@ -476,5 +480,5 @@ class Domain(object):
                     if (dty<dt):
                         dt = dty
 
-        return dt
+        return dt*CFL
                 

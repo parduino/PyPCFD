@@ -20,7 +20,7 @@ def Main():
     # set side-length of the analysis domain
     edgeDomain      = 1.
     # set the number of cells per edge
-    numCellsPerEdge = 4
+    numCellsPerEdge = 2
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
@@ -33,10 +33,10 @@ def Main():
     solveVstar     = True
     solveP         = True
     solveVtilde    = True
-    solveVenhanced = True
-    updatePosition = True 
+    solveVenhanced = False
+    updatePosition = True
     updateStress   = False
-    addTransient   = True
+    addTransient   = False
     
     domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient)
     domain.setParameters(Re, density, velocity)
@@ -46,38 +46,34 @@ def Main():
     dt = domain.getTimeStep(CFL)
     
     print(u"CFL=1 equals to \u0394t={:f}".format(dt))
-    
-    #print(domain)
-    
+
+
+    print(domain)
+
     # define load history and print interval
-    
-    #dt1 = 0.5
-    #target1 = 10.0
+
+    dt1 = 0.5
+    target1 = 10.0
     
     dt1 = 0.025
     target1 = 1
-    
+
     dt2 = 0.5
     target2 = 1.0
 
-# ************* don't mess with stuff below *************
+************* don't mess with stuff below *************
 
     # initializing starting time
     time = 0.0
     
-    # run first segment
+    run first segment
     dt = dt1
     while (time+dt <= target1+0.1*dt):
         time += dt
         domain.runAnalysis(time)
+
     
-    # run second segment
-    dt = dt2
-    while (time+dt <= target2+0.1*dt):
-        time += dt
-        domain.runAnalysis(time)
-    
-    # generate the animation
+    generate the animation
     subprocess.run('./makeAnim.sh')
     
 
