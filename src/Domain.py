@@ -43,7 +43,7 @@ class Domain(object):
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
         def setBoundaryConditions(self)
-        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
+        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
         def getAnalysisControl(self)
         def setStateN(self)
         def setParameters(self, Re, density, velocity)
@@ -118,7 +118,7 @@ class Domain(object):
         self.particles = []
         self.createParticles(2,2)
         
-        self.setAnalysis(False, True, True, True, True, True, False, False)
+        self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
@@ -157,7 +157,7 @@ class Domain(object):
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
         
         
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput):
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -166,12 +166,13 @@ class Domain(object):
             'solveVenhanced':solveVenhanced,
             'updatePosition':updatePosition,
             'updateStress':updateStress,
-            'addTransient':addTransient
+            'addTransient':addTransient,
+            'plotFigures':plotFigures,
+            'writeOutput':writeOutput
             }
-        
-        if (solveVenhanced):
-            for cell in self.cells:
-                cell.setEnhanced(True)
+
+        for cell in self.cells:
+            cell.setEnhanced(True)
                 
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
@@ -181,14 +182,14 @@ class Domain(object):
     
     def setParameters(self, Re, density, velocity):
         
-        if (self.hx < self.hy ):
-            L = self.hx
+        if (self.width < self.height ):
+            L = self.width
         else:
-            L = self.hy
+            L = self.height
             
         viscosity = density * velocity * L / Re
         
-        self.Re = Re
+        self.Re  = Re
         self.rho = density
         self.v0  = velocity
         self.mu  = viscosity
@@ -222,9 +223,8 @@ class Domain(object):
         self.solveVtilde(1.0)
         
         # initial conditions are now set
-        self.plot.setData(self.nodes)
-        self.plot.setParticleData(self.particles)
-        self.plot.refresh(self.time)
+        self.plotData()
+        self.writeData()
      
     def runAnalysis(self, maxtime=1.0):
         
@@ -242,10 +242,7 @@ class Domain(object):
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
             self.time += dt 
-            
-            self.plot.setData(self.nodes)
-            self.plot.setParticleData(self.particles)
-            self.plot.refresh(self.time)
+
         
     
     def runSingleStep(self, time=0.0, dt=1.0):
@@ -266,6 +263,10 @@ class Domain(object):
             self.updateParticleMotion(dt)
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
+        if (self.analysisControl['plotFigures']):
+            self.plotData()
+        if (self.analysisControl['writeOutput']):
+            self.writeData()
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
@@ -481,4 +482,24 @@ class Domain(object):
                         dt = dty
 
         return dt*CFL
-                
+
+    def plotData(self):
+        self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
+        self.plot.refresh(self.time)
+
+    def writeData(self): # TOTAL HACK, needs it's own class
+        # write velocity to file
+        vx = []
+        vy = []
+        for i in range(self.nCellsY + 1):
+            for j in range(self.nCellsX + 1):
+                vel = self.nodes[j][i].getVelocity()
+                vel = vel.tolist()
+                vx.append(vel[0])
+                vy.append(vel[1])
+        vv = vx + vy
+        with open('output' + str(self.nCellsX) + 'x' + str(self.nCellsY) + '.csv', 'w') as thefile:
+            for item in vv:
+                thefile.write("%s\n" % item)
+        # end write velocity to file
