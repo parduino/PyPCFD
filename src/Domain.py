@@ -9,7 +9,7 @@ from Cell import *
 from matrixDataType import *
 
 from Particle import *
-from Plotter2 import *
+from Output import *
 
 from Errors import *
 
@@ -488,18 +488,6 @@ class Domain(object):
         self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
 
-    def writeData(self): # TOTAL HACK, needs it's own class
-        # write velocity to file
-        vx = []
-        vy = []
-        for i in range(self.nCellsY + 1):
-            for j in range(self.nCellsX + 1):
-                vel = self.nodes[j][i].getVelocity()
-                vel = vel.tolist()
-                vx.append(vel[0])
-                vy.append(vel[1])
-        vv = vx + vy
-        with open('output' + str(self.nCellsX) + 'x' + str(self.nCellsY) + '.csv', 'w') as thefile:
-            for item in vv:
-                thefile.write("%s\n" % item)
-        # end write velocity to file
+    def writeData(self):
+        self.plot.setData(self.nodes)
+        self.plot.writeData(self.time)
