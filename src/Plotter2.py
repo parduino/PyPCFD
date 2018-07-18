@@ -9,6 +9,7 @@ import matplotlib as mpl
 mpl.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import os
 
 
 class Plotter(object):
@@ -47,6 +48,10 @@ class Plotter(object):
         self.height = 1.0
         
         self.setGrid(self.width, self.height, 10, 10)
+
+        if not os.path.isdir("images"):
+            os.mkdir("images")
+
         
     def safePlot(self, filename):
         self.fig.saveFig(filename)
@@ -74,7 +79,7 @@ class Plotter(object):
             ax0.set_title('Pressure Failed at t={:08.5f}s'.format(time))
         
         imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig(imageName)
+        plt.savefig("images/"+imageName)
         
         plt.clf()
         
@@ -93,7 +98,7 @@ class Plotter(object):
             ax1.set_title('Nodal Forces Failed at t={:08.5f}s'.format(time))
         
         imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig(imageName)
+        plt.savefig("images/"+imageName)
         
         plt.clf()
         
@@ -113,7 +118,7 @@ class Plotter(object):
             ax2.set_title('velocity Failed at t={:08.5f}s'.format(time))
         
         imageName = "Velocity{:03d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig(imageName)
+        plt.savefig("images/"+imageName)
         
         plt.clf()
         
@@ -141,7 +146,7 @@ class Plotter(object):
         ax3.axis((0.0, self.width, 0.0, self.height))
         
         imageName = "Stream{:03d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig(imageName)
+        plt.savefig("images/"+imageName)
         
         plt.clf()
         
@@ -166,7 +171,7 @@ class Plotter(object):
             #ax4.axis((0, 1, 0, 1))
             
             imageName = "ParticleVelocity{:03d}.png".format(self.IMAGE_COUNTER)
-            plt.savefig(imageName)
+            plt.savefig("images/"+imageName)
             
             plt.clf()
         
