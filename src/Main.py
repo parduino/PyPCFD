@@ -9,7 +9,7 @@ import subprocess
 
 def Main():
     # defne the Reynolds number
-    Re = 1
+    Re = 1000
     
     # set sliding velocity
     velocity = 1.0
@@ -20,7 +20,7 @@ def Main():
     # set side-length of the analysis domain
     edgeDomain      = 1.
     # set the number of cells per edge
-    numCellsPerEdge = 2
+    numCellsPerEdge = 8
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
@@ -36,7 +36,7 @@ def Main():
     solveVenhanced = False
     updatePosition = True
     updateStress   = False
-    addTransient   = False
+    addTransient   = True
     
     domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient)
     domain.setParameters(Re, density, velocity)
@@ -61,19 +61,19 @@ def Main():
     dt2 = 0.5
     target2 = 1.0
 
-************* don't mess with stuff below *************
+# ************* don't mess with stuff below *************
 
     # initializing starting time
     time = 0.0
     
-    run first segment
+    # run first segment
     dt = dt1
     while (time+dt <= target1+0.1*dt):
         time += dt
         domain.runAnalysis(time)
 
     
-    generate the animation
+    # generate the animation
     subprocess.run('./makeAnim.sh')
     
 
