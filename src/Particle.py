@@ -92,6 +92,9 @@ class Particle(object):
                         ])
         return stress
 
-    def updateDeformationGradient(self, newValue):
+    def setDeformationGradient(self, newValue):
         self.deformationGradient = newValue
+
+    def getDeformationGradient(self):
+        return self.deformationGradient
         
