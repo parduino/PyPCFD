@@ -4,7 +4,7 @@ Created on Jun 10, 2018
 @author: pmackenz
 '''
 
-from numpy import array, ones, zeros
+from numpy import array, ones, zeros, identity
 import globalCounter as GC
 
 class Particle(object):
@@ -20,6 +20,7 @@ class Particle(object):
         self.strain = zeros(3)
         self.p      = 0.0
         self.strainRate = zeros(3)
+        self.deformationGradient = identity(2)
     
     methods:
         def __init__(self, mp=1.0, xp=zeros(2), vp=zeros(2))
@@ -54,6 +55,7 @@ class Particle(object):
         self.strain = zeros(3)
         self.p      = 0.0
         self.strainRate = zeros(3)
+        self.deformationGradient = identity(2)
         
     def setViscosity(self, mu):
         self.mu = mu;
@@ -89,4 +91,7 @@ class Particle(object):
                         self.mu*self.strainRate[2]
                         ])
         return stress
+
+    def updateDeformationGradient(self, newValue):
+        self.deformationGradient = newValue
         

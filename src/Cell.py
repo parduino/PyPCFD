@@ -42,6 +42,7 @@ class Cell(object):
         def SetPressure(self, p)
         def GetPressure(self, x)
         def GetGradientP(self, x)
+        def GetGradientV(self, x)
         def GetStrainRate(self, xl)
         def GetEnhancedStrainRate(self, xl)
         def computeForces(self)                # compute nodal forces from viscous stress and add them to the nodes
@@ -183,6 +184,17 @@ class Cell(object):
         self.setShape(xl)
         
         return array([dot(self.DshapeX,self.p), dot(self.DshapeY,self.p) ])
+
+    def GetGradientV(self, x):
+        xl = self.getLocal(x)
+        self.setShape(xl)
+
+        dxu = dot(self.DshapeX, self.ux)
+        dyu = dot(self.DshapeY, self.ux)
+        dxv = dot(self.DshapeX, self.uy)
+        dyv = dot(self.DshapeY, self.uy)
+
+        return array([[dxu, dyu],[dxv, dyv]])
     
     def GetStrainRate(self, xl):
         self.setShape(xl)
