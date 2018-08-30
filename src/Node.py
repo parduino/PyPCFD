@@ -35,6 +35,7 @@ class Node(object):
         def getMomentum(self)
         def setMass(self, m)
         def addMass(self, m)
+        def getMass(self)
         def setVelocity(self, v)
         def addVelocity(self, dv)
         def getVelocity(self)
@@ -110,6 +111,9 @@ class Node(object):
     
     def addMass(self, m):
         self.mass += m
+
+    def getMass(self):
+        return self.mass
     
     def setVelocity(self, v):
         self.momentum = self.mass*v

@@ -397,32 +397,66 @@ class Domain(object):
     def updateParticleMotion(self, dt):
         for p in self.particles:
             # this is Runge-Kutta 4
+            c = [1/6, 1/3, 1/3, 1/6] # Butcher Tableau
+            a = [0, 1/2, 1/2, 1]     # Butcher Tableau
+            tn = 0
+
+            vInterim = []
+            finterim = []
+            gradV    = []
             try:
+                ti = tn + a[0]*dt 
                 pos1  = p.position()
                 cell = self.findCell(pos1)
-                vel1  = cell.GetVelocity(pos1)
+                vInterim.append(cell.GetVelocity(pos1))
+                gradV.append(cell.GetGradientV(pos1) + (ti-tn)*cell.GetGradientA(pos1)) 
+                finterim.append(identity(2))
                 
-                pos2 = pos1 + 0.5*vel1*dt
+                ti = tn + a[1]*dt 
+                pos2 = pos1 + 0.5*vInterim[0]*dt
                 cell = self.findCell(pos2, cell)
-                vel2  = cell.GetVelocity(pos2)
+                vInterim.append(cell.GetVelocity(pos2))
+                gradV.append(cell.GetGradientV(pos2) + (ti-tn)*cell.GetGradientA(pos2)) 
+                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
                 
-                pos3 = pos1 + 0.5*vel2*dt
+                ti = tn + a[2]*dt 
+                pos3 = pos1 + 0.5*vInterim[1]*dt
                 cell = self.findCell(pos3, cell)
-                vel3 = cell.GetVelocity(pos3)
+                vInterim.append(cell.GetVelocity(pos3))
+                gradV.append(cell.GetGradientV(pos3) + (ti-tn)*cell.GetGradientA(pos3)) 
+                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
                 
-                pos4 = pos1 + vel3*dt
+                ti = tn + a[3]*dt 
+                pos4 = pos1 + vInterim[2]*dt
                 cell = self.findCell(pos2, cell)
-                vel4  = cell.GetVelocity(pos4)
+                vInterim.append(cell.GetVelocity(pos4))
+                gradV.append(cell.GetGradientV(pos4) + (ti-tn)*cell.GetGradientA(pos4)) 
+                finterim.append(identity(2) + dt * 1.0 * gradV[-1] * finterim[-1])
                 
-                p.addToPosition((vel1+2.*vel2+2.*vel3+vel4)*dt/6.)
+                p.addToPosition((vInterim[0]+2.*vInterim[1]+2.*vInterim[2]+vInterim[3])*dt/6.)
                 pos  = p.position()
                 cell = self.findCell(pos, cell)
                 vel  = cell.GetVelocity(pos)
-                
+
+                f = identity(2)
+                for i in range(4):
+                    f = f + dt * c[i] * gradV[i] * finterim[i]
+
                 p.setVelocity(vel)
+                p.setDeformationGradient(f)
+
             except CellIndexError as e:
                 print(e)
                 raise e
+
+        # RK4 HACK for deformation Gradient
+            f = identity(2) # initialize Consistent Deformation Gradient
+            for i in range(4):
+
+                f = f + dt * c[i]
+
+
+            
                 
     
     def findCell(self, x, testCell=None):

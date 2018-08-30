@@ -44,6 +44,7 @@ class Cell(object):
         def GetGradientP(self, x)
         def GetGradientV(self, x)
         def GetStrainRate(self, xl)
+        def GetGradientA(self, x)              # returns gradient of acceleration field
         def GetEnhancedStrainRate(self, xl)
         def computeForces(self)                # compute nodal forces from viscous stress and add them to the nodes
         def GetStiffness(self)                 # "stiffness matrix" for pressure calculation
@@ -53,6 +54,7 @@ class Cell(object):
         def getGridCoordinates(self)
         def mapMassToNodes(self)
         def mapMomentumToNodes(self)
+        def GetAcceleration(self, x)
     '''
 
     def __init__(self, id, hx, hy):
@@ -170,7 +172,20 @@ class Cell(object):
             vel += array([dvx, dvy])
             
         return vel
-    
+
+    def GetAcceleration(self, x):
+        xl = self.getLocal(x)
+        self.setShape(xl)
+        ax = zeros((4,1))
+        ay = zeros((4,1))
+        for i in range(4):
+            nodalforce = self.nodes[i].getForce()
+            ax[i] = nodalforce[0]/self.nodes[i].getMass()
+            ay[i] = nodalforce[1]/self.nodes[i].getMass()
+        accn = array([dot(self.shape, ax), dot(self.shape, ay)])
+            
+        return accn
+
     def SetPressure(self, p):
         self.p = p
 
@@ -195,6 +210,23 @@ class Cell(object):
         dyv = dot(self.DshapeY, self.uy)
 
         return array([[dxu, dyu],[dxv, dyv]])
+
+    def GetGradientA(self, x):
+        xl = self.getLocal(x)
+        self.setShape(xl)
+        ax = zeros((4,1))
+        ay = zeros((4,1))
+        for i in range(4):
+            nodalforce = self.nodes[i].getForce()
+            ax[i] = nodalforce[0]/self.nodes[i].getMass()
+            ay[i] = nodalforce[1]/self.nodes[i].getMass()
+        
+        dxax = dot(self.DshapeX, ax)
+        dyax = dot(self.DshapeY, ax)
+        dxay = dot(self.DshapeX, ay)
+        dyay = dot(self.DshapeY, ay)
+            
+        return array([[dxax, dyax],[dxay, dyay]])
     
     def GetStrainRate(self, xl):
         self.setShape(xl)
