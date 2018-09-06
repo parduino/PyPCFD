@@ -67,42 +67,42 @@ class Plotter(object):
         fig = plt.figure(figsize=(10, 9))
         #gs = gridspec.GridSpec(nrows=1, ncols=1, height_ratios=[1, 1], width_ratios=[1,1.3])
         
-        #  pressure field
-        #ax0 = fig.add_subplot(gs[1, 1])
-        ax0 = fig.gca()
-        try:
-            contour = ax0.contourf(self.X, self.Y, self.P, cmap='autumn')
-            fig.colorbar(contour, ax=ax0)
-            if (time>=0.0):
-                ax0.set_title('Pressure at t={:08.5f}s'.format(time))
-            else:
-                ax0.set_title('Pressure')
-        except:
-            ax0.set_title('Pressure Failed at t={:08.5f}s'.format(time))
+        # #  pressure field
+        # #ax0 = fig.add_subplot(gs[1, 1])
+        # ax0 = fig.gca()
+        # try:
+        #     contour = ax0.contourf(self.X, self.Y, self.P, cmap='autumn')
+        #     fig.colorbar(contour, ax=ax0)
+        #     if (time>=0.0):
+        #         ax0.set_title('Pressure at t={:08.5f}s'.format(time))
+        #     else:
+        #         ax0.set_title('Pressure')
+        # except:
+        #     ax0.set_title('Pressure Failed at t={:08.5f}s'.format(time))
         
-        imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/"+imageName)
+        # imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
+        # plt.savefig("images/"+imageName)
         
-        plt.clf()
+        # plt.clf()
         
-        # Varying color along a streamline
-        #ax1 = fig.add_subplot(gs[1, 0])
-        ax1 = fig.gca()
-        try:
-            force = ax1.quiver(self.X, self.Y, self.Fx, self.Fy, cmap='autumn')
-            ax1.quiverkey(force, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,N$',labelpos='E',coordinates='axes')
-            #fig.colorbar(force, ax=ax1)
-            if (time>=0.0):
-                ax1.set_title('Nodal Forces at t={:08.5f}s'.format(time))
-            else:
-                ax1.set_title('Nodal Forces')
-        except:
-            ax1.set_title('Nodal Forces Failed at t={:08.5f}s'.format(time))
+        # # Varying color along a streamline
+        # #ax1 = fig.add_subplot(gs[1, 0])
+        # ax1 = fig.gca()
+        # try:
+        #     force = ax1.quiver(self.X, self.Y, self.Fx, self.Fy, cmap='autumn')
+        #     ax1.quiverkey(force, 0.9*self.width, 1.05*self.height, 1.0, r'$1.0\,N$',labelpos='E',coordinates='axes')
+        #     #fig.colorbar(force, ax=ax1)
+        #     if (time>=0.0):
+        #         ax1.set_title('Nodal Forces at t={:08.5f}s'.format(time))
+        #     else:
+        #         ax1.set_title('Nodal Forces')
+        # except:
+        #     ax1.set_title('Nodal Forces Failed at t={:08.5f}s'.format(time))
         
-        imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/"+imageName)
+        # imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
+        # plt.savefig("images/"+imageName)
         
-        plt.clf()
+        # plt.clf()
         
         
         #  Varying line width along a streamline
@@ -173,9 +173,39 @@ class Plotter(object):
             #ax4.axis((0, 1, 0, 1))
             
             imageName = "ParticleVelocity{:03d}.png".format(self.IMAGE_COUNTER)
+            plt.xlim([0.0, self.width])
+            plt.ylim([0.0, self.height])
             plt.savefig("images/"+imageName)
             
             plt.clf()
+
+        # Streamlines on particles
+        ax5 = fig.gca()
+        try:
+            seed_points = np.array([ np.array(self.ParticleX), np.array(self.ParticleY) ])
+            
+            vecs  = ax5.quiver(    self.X, self.Y, self.Vx, self.Vy, cmap='autumn')
+            strm5 = ax5.streamplot(self.X, self.Y, self.Vx, self.Vy,
+                                   color=speed, linewidth=1, cmap='autumn',
+                                   density=2, integration_direction='forward',
+                                   start_points=seed_points.T)
+
+
+            fig.colorbar(strm5.lines)
+            if (time>=0.0):
+                ax5.set_title('Streamlines at t={:08.5f}s'.format(time))
+            else:
+                ax5.set_title('Streamlines')
+        except:
+            ax5.set_title('Streamlines Failed at t={:08.5f}s'.format(time))
+        
+        # Displaying the starting points with blue symbols.
+        ax5.axis((0.0, self.width, 0.0, self.height))
+        
+        imageName = "StreamPoints{:03d}.png".format(self.IMAGE_COUNTER)
+        plt.savefig("images/"+imageName)
+        
+        plt.clf()
         
         plt.close()
         

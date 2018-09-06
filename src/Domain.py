@@ -13,10 +13,11 @@ from Output import *
 
 from Errors import *
 
-from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
-    ceil
+from numpy import array, linspace, dot, cross, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
+    ceil, transpose
 from numpy.linalg import solve
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, expm
+from numpy.linalg import norm
 
 from time import process_time
 
@@ -57,7 +58,8 @@ class Domain(object):
         def updateParticleStress(self)
         def updateParticleMotion(self)
         def findCell(self, x)
-        def createParticles(self, n, m)
+        def createParticles(self, n, m)    # Default particle creator that generates particles in all cells
+        def createParticlesMID(self, n, m) # Alternative particle creator that generates particle only in the middle cell
     '''
 
     def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
@@ -85,6 +87,7 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
+        # self.vTranslation = array([1.0,0]) # for deformation gradient test
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -116,7 +119,10 @@ class Domain(object):
         self.setParameters(self.Re, self.rho, self.v0)
         
         self.particles = []
-        self.createParticles(2,2)
+
+        # Only creating particles in the middle cell of the Domain
+        # self.createParticles(2,2)
+        self.createParticlesMID(3,3)
         
         self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
     
@@ -225,7 +231,30 @@ class Domain(object):
         # initial conditions are now set
         self.plotData()
         self.writeData()
-     
+
+    def setState(self, dt):
+        for cell in self.cells:
+            cell.mapMassToNodes()
+
+        for i in range(self.nCellsX+1):
+            for j in range(self.nCellsY):
+                nodeCoordinates = self.nodes[i][j].getPosition()
+                nodeCoordinates = array([nodeCoordinates[0], nodeCoordinates[1], 0.0])
+                vTranslation = self.nodes[i][j].getvTranslation()
+                Q = self.nodes[i][j].getRotation()
+                rotCenter = array([1.0,1.0,0.0])
+
+                newV = dot(Q, nodeCoordinates-rotCenter) + vTranslation - self.time * dot(Q, vTranslation)
+                self.nodes[i][j].setVelocity(newV[0:2])
+
+        for cell in self.cells:
+            cell.SetVelocity()
+
+        self.time = self.time + dt
+            
+
+
+
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
@@ -395,6 +424,7 @@ class Domain(object):
         pass
     
     def updateParticleMotion(self, dt):
+        FerrorList = []
         for p in self.particles:
             # this is Runge-Kutta 4
             c = [1/6, 1/3, 1/3, 1/6] # Butcher Tableau
@@ -406,7 +436,7 @@ class Domain(object):
             gradV    = []
             try:
                 ti = tn + a[0]*dt 
-                pos1  = p.position()
+                pos1 = p.position()
                 cell = self.findCell(pos1)
                 vInterim.append(cell.GetVelocity(pos1))
                 gradV.append(cell.GetGradientV(pos1) + (ti-tn)*cell.GetGradientA(pos1)) 
@@ -440,20 +470,22 @@ class Domain(object):
 
                 f = identity(2)
                 for i in range(4):
-                    f = f + dt * c[i] * gradV[i] * finterim[i]
+                    f = f + dt * c[i] * dot(gradV[i], finterim[i])
 
                 p.setVelocity(vel)
                 p.setDeformationGradient(f)
 
+                omega = self.nodes[0][0].A[0:2,0:2]
+                Fanalytical = expm(omega*self.time)
+                Ferror = norm(Fanalytical-f)
+                # print(Ferror)
+                FerrorList.append(Ferror)
+
             except CellIndexError as e:
                 print(e)
                 raise e
-
-        # RK4 HACK for deformation Gradient
-            f = identity(2) # initialize Consistent Deformation Gradient
-            for i in range(4):
-
-                f = f + dt * c[i]
+        
+        return FerrorList
 
 
             
@@ -499,6 +531,27 @@ class Domain(object):
                     newParticle = Particle(mp,xp)
                     self.particles.append(newParticle)
                     cell.addParticle(newParticle)
+
+    def createParticlesMID(self, n, m):
+        for cell in self.cells:
+            if ( cell.getID() != int( (self.nCellsX) * (self.nCellsY) / 2) - int(self.nCellsY/2.0) ):
+                continue
+            # print(cell.getID())
+            h = cell.getSize()
+            mp = self.rho,h[0]*h[1]/n/m
+            
+            for i in range(n):
+                s = -1. + (2*i+1)/n
+                # s = 0.5
+                for j in range(m):
+                    t = -1. + (2*j+1)/m
+                    # t = 0.5
+                    xl = array([s,t])
+                    xp = cell.getGlobal(xl)
+                    # print(xp)
+                    newParticle = Particle(mp,xp)
+                    self.particles.append(newParticle)
+                    cell.addParticle(newParticle)        
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
@@ -525,3 +578,6 @@ class Domain(object):
     def writeData(self):
         self.plot.setData(self.nodes)
         self.plot.writeData(self.time)
+
+
+

@@ -3,7 +3,7 @@ Created on Nov 21, 2015
 
 @author: pmackenz
 '''
-from numpy import array, dot, outer, tensordot, zeros, ones, sqrt, stack
+from numpy import array, dot, cross, outer, tensordot, zeros, ones, sqrt, stack, mat
 from _operator import index
 
 class Cell(object):
@@ -55,6 +55,7 @@ class Cell(object):
         def mapMassToNodes(self)
         def mapMomentumToNodes(self)
         def GetAcceleration(self, x)
+        def getID(self)
     '''
 
     def __init__(self, id, hx, hy):
@@ -78,10 +79,13 @@ class Cell(object):
         self.uHat = array([0.0,0.0])  # enhanced field parameters
         self.fHat = array([0.0,0.0])  # enhanced field forces
         self.mHat = array([0.0,0.0])  # enhanced field mass
+
         
         self.setShape(array([0.0,0.0]))
         
         self.myParticles = []
+
+        
     
     def __str__(self):
         s = "   cell({}): ({}/{}),({}/{}),({}/{}),({}/{})".format(self.id,
@@ -159,6 +163,11 @@ class Cell(object):
         self.divVa += 0.5*(-self.uy[0] - self.uy[1] + self.uy[2] + self.uy[3]) / self.size[1]
         self.divVb =  0.5*(self.uy[0]-self.uy[1]+self.uy[2]-self.uy[3]) / self.size[1]
         self.divVc =  0.5*(self.ux[0]-self.ux[1]+self.ux[2]-self.ux[3]) / self.size[0]
+
+    # def SetVelocity(self, ux, uy):
+    #      for i in range(4):
+    #         self.nodes[i].SetVelocity(array([ux]))
+
         
     def GetVelocity(self, x):
         xl = self.getLocal(x)
@@ -211,15 +220,20 @@ class Cell(object):
 
         return array([[dxu, dyu],[dxv, dyv]])
 
-    def GetGradientA(self, x):
+    # HACK to test deformation Gradient
+    def GetGradientA(self, x): 
         xl = self.getLocal(x)
         self.setShape(xl)
-        ax = zeros((4,1))
-        ay = zeros((4,1))
+        ax = array([0.0,0.0,0.0,0.0])
+        ay = array([0.0,0.0,0.0,0.0])
+        # loop over constituent nodes
         for i in range(4):
-            nodalforce = self.nodes[i].getForce()
-            ax[i] = nodalforce[0]/self.nodes[i].getMass()
-            ay[i] = nodalforce[1]/self.nodes[i].getMass()
+            # nodalAccn = -cross(w,vTranslation)
+            Q = self.nodes[i].getRotation()
+            vTranslation = self.nodes[i].getvTranslation()
+            nodalAccn = -dot(Q,vTranslation)
+            ax[i] = nodalAccn[0]
+            ay[i] = nodalAccn[1]
         
         dxax = dot(self.DshapeX, ax)
         dyax = dot(self.DshapeY, ax)
@@ -398,6 +412,12 @@ class Cell(object):
                 
         for i in range(4):
             self.nodes[i].addMomentum(momentum[i])
+
+    def getID(self):
+        return self.id
+
+
+
         
         
             
