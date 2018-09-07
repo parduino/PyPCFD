@@ -4,7 +4,10 @@ Created on Nov 21, 2015
 @author: pmackenz
 '''
 from numpy import array, zeros, ones
+from numpy.linalg import norm
 from sympy.physics.units.dimensions import mass
+from scipy.linalg import expm
+from math import pi
 
 class Node(object):
     '''
@@ -35,6 +38,7 @@ class Node(object):
         def getMomentum(self)
         def setMass(self, m)
         def addMass(self, m)
+        def getMass(self)
         def setVelocity(self, v)
         def addVelocity(self, dv)
         def getVelocity(self)
@@ -64,6 +68,7 @@ class Node(object):
         self.mass = 0.0
         self.momentum = zeros(2)
         self.pressure = 0.0
+        self.velocity = array([0.0,0.0])
         
         self.aStar  = zeros(2)
         self.aTilde = zeros(2)
@@ -73,6 +78,14 @@ class Node(object):
         self.lastV = zeros(2)   # last converged velocity
         
         self.fixety = dict()
+
+        # Additions to test deformation gradient
+        self.Q = zeros((3,3)) # Rotation matrix initialized to zeros
+        self.A = 0
+        self.setRotation(pi/6.0) 
+        self.vTranslation = array([0.1,0.0,0.0]) # translation velocity
+        
+
     
     def __str__(self):
         s = "   node({}/{}):  x=[{},{}], mass={}, p=[{},{}], v=[{},{}]".format(*self.gridCoords,
@@ -110,6 +123,9 @@ class Node(object):
     
     def addMass(self, m):
         self.mass += m
+
+    def getMass(self):
+        return self.mass
     
     def setVelocity(self, v):
         self.momentum = self.mass*v
@@ -162,6 +178,24 @@ class Node(object):
         self.aStar = self.force / self.mass
         self.addVelocity(self.aStar * dt)
         
-    def updateV(self):
+    def updateV(self, v):
         pass
         
+    def setRotation(self, theta = pi):
+        # define rotation axis as z axis
+        w = array([0.0, 0.0, 1.0])
+        w = w/norm(w)
+
+        # calculate rotation matrix
+        A = array([ [0.0, -w[2], w[1]]  ,\
+                    [w[2], 0.0, -w[0]]  ,\
+                    [-w[1], w[0], 0.0] ]) # skew symmetric matrix replacement for w
+        self.Q = expm(A*theta) # e^(i*theta) for Rodrigues formula
+        self.A = A
+
+
+    def getRotation(self):
+        return self.Q
+
+    def getvTranslation(self):
+        return self.vTranslation
