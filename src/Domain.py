@@ -58,8 +58,13 @@ class Domain(object):
         def updateParticleStress(self)
         def updateParticleMotion(self)
         def findCell(self, x)
-        def createParticles(self, n, m)    # Default particle creator that generates particles in all cells
-        def createParticlesMID(self, n, m) # Alternative particle creator that generates particle only in the middle cell
+        def createParticles(self, n, m)     # Default particle creator that generates particles in all cells
+        def createParticlesMID(self, n, m)  # Particle creator that generates particle only in the middle cell
+        def createParticleAtX(self, mp, xp) # Particle creator that generates a single particle of mass mp at position xp 
+        def getTimeStep(self, CFL)
+        def plotData(self)
+        def writeData(self)
+        def setMotion(self, dt=0.0)
     '''
 
     def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
@@ -120,9 +125,11 @@ class Domain(object):
         
         self.particles = []
 
-        # Only creating particles in the middle cell of the Domain
+        # create some particles ...
+        
         # self.createParticles(2,2)
-        self.createParticlesMID(3,3)
+        #self.createParticlesMID(3,3)
+        self.createParticleAtX(1.0, array([width/2.,height/3.]))
         
         self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
     
@@ -247,7 +254,7 @@ class Domain(object):
 
         self.setMotion(dt)
 
-        self.time += dt   # WHAT IS THAT FOR ?????
+        ###self.time += dt   # WHAT IS THAT FOR ?????
         
             
     def runAnalysis(self, maxtime=1.0):
@@ -427,7 +434,21 @@ class Domain(object):
                       [0. ,0.5,0.,0.],
                       [0. ,0. ,1.,0.]])              # position factors
         c = dt*array([1./6., 1./3., 1./3., 1./6.]) # update factors
-        tn = 0.  # WHY
+        
+        # this is the Butcher tableau for explicit Euler
+        a = dt*array([0.])       # time factors
+        b = dt*array([[0.]])              # position factors
+        c = dt*array([1.]) # update factors
+        
+        # this is the Butcher tableau for Heun's method
+        a = dt*array([0., 1.])       # time factors
+        b = dt*array([[0. ,0. ],
+                      [1. ,0. ]])              # position factors
+        c = dt*array([1./2., 1./2.]) # update factors
+        
+        #---
+        
+        tn = self.time 
         
         FerrorList = []
         
@@ -438,7 +459,7 @@ class Domain(object):
             Dv = []
             
             dF  = identity(2)
-            vel = p.velocity()
+            xn1 = p.position()
             
             Nsteps = len(a)
             
@@ -450,7 +471,7 @@ class Domain(object):
                     xi = p.position()
                     f  = identity(2)      
                     
-                    for j in range(i-1):
+                    for j in range(i):
                         if (b[i][j] != 0.):
                             xi += b[i][j] * kI[j]
                             f  += b[i][j] * dot( Dv[j], fI[j] )
@@ -461,15 +482,24 @@ class Domain(object):
                     
                     fI.append(f)
                     
-                    # particle velocity
-                    vel += c[i] * kI[-1]
+                    # particle position
+                    xn1 += c[i] * kI[-1]
                     #incremental deformation gradient
                     dF  += c[i] * dot(Dv[-1], fI[-1])
                     
 
+                # update particle position ...
+                p.addToPosition(xn1 - p.position())
+                
+                # update particle velocity ...
+                cell = self.findCell(xn1)
+                vel  = cell.GetVelocity(xn1) + a[i]*cell.GetApparentAccel(xn1)
                 p.setVelocity(vel)
+                
+                # update the deformation gradient ...
                 p.setDeformationGradient(dF)  # this is not the deformation gradient.  SHOULD BE UPDATE F = dF*F
 
+                # compute error measures ...
                 Fanalytical = self.Q
                 Ferror = norm(Fanalytical - dF)
                 # print(Ferror)
@@ -542,6 +572,14 @@ class Domain(object):
                     newParticle = Particle(mp,xp)
                     self.particles.append(newParticle)
                     cell.addParticle(newParticle)        
+                    
+    
+    def createParticleAtX(self, mp, xp):     # Particle creator that generates a single particle at position X
+        newParticle = Particle(mp,xp)
+        self.particles.append(newParticle)
+        cell = self.findCell(xp)
+        if (cell):
+            cell.addParticle(newParticle)
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
@@ -589,14 +627,15 @@ class Domain(object):
 
         # set nodal velovity field
         for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY):
+            for j in range(self.nCellsY+1):
                 # xIJ is Eulerial nodal position
                 xIJ = self.nodes[i][j].getPosition()
                 
                 #newV = dot(Q, nodeCoordinates-rotCenter) + vTranslation - self.time * dot(Q, vTranslation)
-                newV = dot(self.Omega, (xIJ - (self.time + dt) * self.Vel0)) + self.Vel0 
+                newV = dot(self.Omega, (xIJ - (self.time) * self.Vel0)) + self.Vel0 
                 self.nodes[i][j].setVelocity(newV)
-                self.nodes[i][j].setApparentAccel(zeros(2))
+                newA = -dot(self.Omega, self.Vel0)
+                self.nodes[i][j].setApparentAccel(newA)
 
         for cell in self.cells:
             cell.SetVelocity()
