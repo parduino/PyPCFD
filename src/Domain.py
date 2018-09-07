@@ -9,14 +9,15 @@ from Cell import *
 from matrixDataType import *
 
 from Particle import *
-from Plotter2 import *
+from Output import *
 
 from Errors import *
 
-from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
-    ceil
+from numpy import array, linspace, dot, cross, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
+    ceil, transpose
 from numpy.linalg import solve
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, expm
+from numpy.linalg import norm
 
 from time import process_time
 
@@ -43,7 +44,7 @@ class Domain(object):
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
         def setBoundaryConditions(self)
-        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
+        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
         def getAnalysisControl(self)
         def setStateN(self)
         def setParameters(self, Re, density, velocity)
@@ -57,7 +58,8 @@ class Domain(object):
         def updateParticleStress(self)
         def updateParticleMotion(self)
         def findCell(self, x)
-        def createParticles(self, n, m)
+        def createParticles(self, n, m)    # Default particle creator that generates particles in all cells
+        def createParticlesMID(self, n, m) # Alternative particle creator that generates particle only in the middle cell
     '''
 
     def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
@@ -85,6 +87,7 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
+        # self.vTranslation = array([1.0,0]) # for deformation gradient test
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -116,9 +119,12 @@ class Domain(object):
         self.setParameters(self.Re, self.rho, self.v0)
         
         self.particles = []
-        self.createParticles(2,2)
+
+        # Only creating particles in the middle cell of the Domain
+        # self.createParticles(2,2)
+        self.createParticlesMID(3,3)
         
-        self.setAnalysis(False, True, True, True, True, True, False, False)
+        self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
@@ -157,7 +163,7 @@ class Domain(object):
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
         
         
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput):
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -166,12 +172,13 @@ class Domain(object):
             'solveVenhanced':solveVenhanced,
             'updatePosition':updatePosition,
             'updateStress':updateStress,
-            'addTransient':addTransient
+            'addTransient':addTransient,
+            'plotFigures':plotFigures,
+            'writeOutput':writeOutput
             }
-        
-        if (solveVenhanced):
-            for cell in self.cells:
-                cell.setEnhanced(True)
+
+        for cell in self.cells:
+            cell.setEnhanced(True)
                 
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
@@ -222,10 +229,32 @@ class Domain(object):
         self.solveVtilde(1.0)
         
         # initial conditions are now set
-        self.plot.setData(self.nodes)
-        self.plot.setParticleData(self.particles)
-        self.plot.refresh(self.time)
-     
+        self.plotData()
+        self.writeData()
+
+    def setState(self, dt):
+        for cell in self.cells:
+            cell.mapMassToNodes()
+
+        for i in range(self.nCellsX+1):
+            for j in range(self.nCellsY):
+                nodeCoordinates = self.nodes[i][j].getPosition()
+                nodeCoordinates = array([nodeCoordinates[0], nodeCoordinates[1], 0.0])
+                vTranslation = self.nodes[i][j].getvTranslation()
+                Q = self.nodes[i][j].getRotation()
+                rotCenter = array([1.0,1.0,0.0])
+
+                newV = dot(Q, nodeCoordinates-rotCenter) + vTranslation - self.time * dot(Q, vTranslation)
+                self.nodes[i][j].setVelocity(newV[0:2])
+
+        for cell in self.cells:
+            cell.SetVelocity()
+
+        self.time = self.time + dt
+            
+
+
+
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
@@ -242,10 +271,7 @@ class Domain(object):
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
             self.time += dt 
-            
-            self.plot.setData(self.nodes)
-            self.plot.setParticleData(self.particles)
-            self.plot.refresh(self.time)
+
         
     
     def runSingleStep(self, time=0.0, dt=1.0):
@@ -266,6 +292,10 @@ class Domain(object):
             self.updateParticleMotion(dt)
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
+        if (self.analysisControl['plotFigures']):
+            self.plotData()
+        if (self.analysisControl['writeOutput']):
+            self.writeData()
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
@@ -394,34 +424,71 @@ class Domain(object):
         pass
     
     def updateParticleMotion(self, dt):
+        FerrorList = []
         for p in self.particles:
             # this is Runge-Kutta 4
+            c = [1/6, 1/3, 1/3, 1/6] # Butcher Tableau
+            a = [0, 1/2, 1/2, 1]     # Butcher Tableau
+            tn = 0
+
+            vInterim = []
+            finterim = []
+            gradV    = []
             try:
-                pos1  = p.position()
+                ti = tn + a[0]*dt 
+                pos1 = p.position()
                 cell = self.findCell(pos1)
-                vel1  = cell.GetVelocity(pos1)
+                vInterim.append(cell.GetVelocity(pos1))
+                gradV.append(cell.GetGradientV(pos1) + (ti-tn)*cell.GetGradientA(pos1)) 
+                finterim.append(identity(2))
                 
-                pos2 = pos1 + 0.5*vel1*dt
+                ti = tn + a[1]*dt 
+                pos2 = pos1 + 0.5*vInterim[0]*dt
                 cell = self.findCell(pos2, cell)
-                vel2  = cell.GetVelocity(pos2)
+                vInterim.append(cell.GetVelocity(pos2))
+                gradV.append(cell.GetGradientV(pos2) + (ti-tn)*cell.GetGradientA(pos2)) 
+                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
                 
-                pos3 = pos1 + 0.5*vel2*dt
+                ti = tn + a[2]*dt 
+                pos3 = pos1 + 0.5*vInterim[1]*dt
                 cell = self.findCell(pos3, cell)
-                vel3 = cell.GetVelocity(pos3)
+                vInterim.append(cell.GetVelocity(pos3))
+                gradV.append(cell.GetGradientV(pos3) + (ti-tn)*cell.GetGradientA(pos3)) 
+                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
                 
-                pos4 = pos1 + vel3*dt
+                ti = tn + a[3]*dt 
+                pos4 = pos1 + vInterim[2]*dt
                 cell = self.findCell(pos2, cell)
-                vel4  = cell.GetVelocity(pos4)
+                vInterim.append(cell.GetVelocity(pos4))
+                gradV.append(cell.GetGradientV(pos4) + (ti-tn)*cell.GetGradientA(pos4)) 
+                finterim.append(identity(2) + dt * 1.0 * gradV[-1] * finterim[-1])
                 
-                p.addToPosition((vel1+2.*vel2+2.*vel3+vel4)*dt/6.)
+                p.addToPosition((vInterim[0]+2.*vInterim[1]+2.*vInterim[2]+vInterim[3])*dt/6.)
                 pos  = p.position()
                 cell = self.findCell(pos, cell)
                 vel  = cell.GetVelocity(pos)
-                
+
+                f = identity(2)
+                for i in range(4):
+                    f = f + dt * c[i] * dot(gradV[i], finterim[i])
+
                 p.setVelocity(vel)
+                p.setDeformationGradient(f)
+
+                omega = self.nodes[0][0].A[0:2,0:2]
+                Fanalytical = expm(omega*self.time)
+                Ferror = norm(Fanalytical-f)
+                # print(Ferror)
+                FerrorList.append(Ferror)
+
             except CellIndexError as e:
                 print(e)
                 raise e
+        
+        return FerrorList
+
+
+            
                 
     
     def findCell(self, x, testCell=None):
@@ -464,6 +531,27 @@ class Domain(object):
                     newParticle = Particle(mp,xp)
                     self.particles.append(newParticle)
                     cell.addParticle(newParticle)
+
+    def createParticlesMID(self, n, m):
+        for cell in self.cells:
+            if ( cell.getID() != int( (self.nCellsX) * (self.nCellsY) / 2) - int(self.nCellsY/2.0) ):
+                continue
+            # print(cell.getID())
+            h = cell.getSize()
+            mp = self.rho,h[0]*h[1]/n/m
+            
+            for i in range(n):
+                s = -1. + (2*i+1)/n
+                # s = 0.5
+                for j in range(m):
+                    t = -1. + (2*j+1)/m
+                    # t = 0.5
+                    xl = array([s,t])
+                    xp = cell.getGlobal(xl)
+                    # print(xp)
+                    newParticle = Particle(mp,xp)
+                    self.particles.append(newParticle)
+                    cell.addParticle(newParticle)        
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
@@ -481,4 +569,15 @@ class Domain(object):
                         dt = dty
 
         return dt*CFL
-                
+
+    def plotData(self):
+        self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
+        self.plot.refresh(self.time)
+
+    def writeData(self):
+        self.plot.setData(self.nodes)
+        self.plot.writeData(self.time)
+
+
+
