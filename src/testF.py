@@ -19,7 +19,7 @@ def Main():
     errorList = []
     dtList = []
     dt = 1.0
-    for i in range(30):
+    while ( dt>1.0e-10 ):
         dtList.append(dt)
         domain = Domain(width=2, height=2, nCellsX=8, nCellsY=8)
         domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput)
@@ -28,7 +28,7 @@ def Main():
         domain.setState(dt=dt)
         errorList.append(domain.updateParticleMotion(dt)[5]) # returns error for all particles. Use [0] for first [1] for second etc..
         print('dt = {:.2E}, error = {:.3E}'.format(dt, errorList[-1]))
-        dt = dt/2.0
+        dt /= 10.0
         # domain.plotData()
 
     plt.figure(1)

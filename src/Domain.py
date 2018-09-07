@@ -46,7 +46,7 @@ class Domain(object):
         def setBoundaryConditions(self)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
         def getAnalysisControl(self)
-        def setStateN(self)
+        def setInitialState(self)
         def setParameters(self, Re, density, velocity)
         def runAnalysis(self, maxtime=1.0)
         def runSingleStep(self, dt=1.0)
@@ -128,6 +128,10 @@ class Domain(object):
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+        
+        self.Omega = zeros((2,2))
+        self.Q     = identity(2)
+        self.Vel0  = zeros(2)
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -231,30 +235,21 @@ class Domain(object):
         # initial conditions are now set
         self.plotData()
         self.writeData()
+        
 
     def setState(self, dt):
+        for nodeList in self.nodes:
+            for node in nodeList:
+                node.setVelocity(zeros(2))
+        
         for cell in self.cells:
             cell.mapMassToNodes()
 
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY):
-                nodeCoordinates = self.nodes[i][j].getPosition()
-                nodeCoordinates = array([nodeCoordinates[0], nodeCoordinates[1], 0.0])
-                vTranslation = self.nodes[i][j].getvTranslation()
-                Q = self.nodes[i][j].getRotation()
-                rotCenter = array([1.0,1.0,0.0])
+        self.setMotion(dt)
 
-                newV = dot(Q, nodeCoordinates-rotCenter) + vTranslation - self.time * dot(Q, vTranslation)
-                self.nodes[i][j].setVelocity(newV[0:2])
-
-        for cell in self.cells:
-            cell.SetVelocity()
-
-        self.time = self.time + dt
+        self.time += dt   # WHAT IS THAT FOR ?????
+        
             
-
-
-
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
@@ -424,60 +419,59 @@ class Domain(object):
         pass
     
     def updateParticleMotion(self, dt):
+            
+        # this is the Butcher tableau for Runge-Kutta 4
+        a = dt*array([0., 1./2., 1./2., 1.])       # time factors
+        b = dt*array([[0. ,0. ,0.,0.],
+                      [0.5,0. ,0.,0.],
+                      [0. ,0.5,0.,0.],
+                      [0. ,0. ,1.,0.]])              # position factors
+        c = dt*array([1./6., 1./3., 1./3., 1./6.]) # update factors
+        tn = 0.  # WHY
+        
         FerrorList = []
+        
         for p in self.particles:
-            # this is Runge-Kutta 4
-            c = [1/6, 1/3, 1/3, 1/6] # Butcher Tableau
-            a = [0, 1/2, 1/2, 1]     # Butcher Tableau
-            tn = 0
 
-            vInterim = []
-            finterim = []
-            gradV    = []
+            kI = []
+            fI = []
+            Dv = []
+            
+            dF  = identity(2)
+            vel = p.velocity()
+            
+            Nsteps = len(a)
+            
             try:
-                ti = tn + a[0]*dt 
-                pos1 = p.position()
-                cell = self.findCell(pos1)
-                vInterim.append(cell.GetVelocity(pos1))
-                gradV.append(cell.GetGradientV(pos1) + (ti-tn)*cell.GetGradientA(pos1)) 
-                finterim.append(identity(2))
-                
-                ti = tn + a[1]*dt 
-                pos2 = pos1 + 0.5*vInterim[0]*dt
-                cell = self.findCell(pos2, cell)
-                vInterim.append(cell.GetVelocity(pos2))
-                gradV.append(cell.GetGradientV(pos2) + (ti-tn)*cell.GetGradientA(pos2)) 
-                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
-                
-                ti = tn + a[2]*dt 
-                pos3 = pos1 + 0.5*vInterim[1]*dt
-                cell = self.findCell(pos3, cell)
-                vInterim.append(cell.GetVelocity(pos3))
-                gradV.append(cell.GetGradientV(pos3) + (ti-tn)*cell.GetGradientA(pos3)) 
-                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
-                
-                ti = tn + a[3]*dt 
-                pos4 = pos1 + vInterim[2]*dt
-                cell = self.findCell(pos2, cell)
-                vInterim.append(cell.GetVelocity(pos4))
-                gradV.append(cell.GetGradientV(pos4) + (ti-tn)*cell.GetGradientA(pos4)) 
-                finterim.append(identity(2) + dt * 1.0 * gradV[-1] * finterim[-1])
-                
-                p.addToPosition((vInterim[0]+2.*vInterim[1]+2.*vInterim[2]+vInterim[3])*dt/6.)
-                pos  = p.position()
-                cell = self.findCell(pos, cell)
-                vel  = cell.GetVelocity(pos)
-
-                f = identity(2)
-                for i in range(4):
-                    f = f + dt * c[i] * dot(gradV[i], finterim[i])
+                for i in range(Nsteps):
+                    
+                    ti = tn + a[i]
+                     
+                    xi = p.position()
+                    f  = identity(2)      
+                    
+                    for j in range(i-1):
+                        if (b[i][j] != 0.):
+                            xi += b[i][j] * kI[j]
+                            f  += b[i][j] * dot( Dv[j], fI[j] )
+                            
+                    cell = self.findCell(xi)
+                    kI.append(cell.GetVelocity(xi) + a[i]*cell.GetApparentAccel(xi))
+                    Dv.append(cell.GetGradientV(xi) + a[i]*cell.GetGradientA(xi))
+                    
+                    fI.append(f)
+                    
+                    # particle velocity
+                    vel += c[i] * kI[-1]
+                    #incremental deformation gradient
+                    dF  += c[i] * dot(Dv[-1], fI[-1])
+                    
 
                 p.setVelocity(vel)
-                p.setDeformationGradient(f)
+                p.setDeformationGradient(dF)  # this is not the deformation gradient.  SHOULD BE UPDATE F = dF*F
 
-                omega = self.nodes[0][0].A[0:2,0:2]
-                Fanalytical = expm(omega*self.time)
-                Ferror = norm(Fanalytical-f)
+                Fanalytical = self.Q
+                Ferror = norm(Fanalytical - dF)
                 # print(Ferror)
                 FerrorList.append(Ferror)
 
@@ -487,10 +481,6 @@ class Domain(object):
         
         return FerrorList
 
-
-            
-                
-    
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
             return testCell
@@ -579,5 +569,36 @@ class Domain(object):
         self.plot.setData(self.nodes)
         self.plot.writeData(self.time)
 
+    def setMotion(self, dt=0.0):
+        
+        # set global motion parameters
+        theta = pi
+        
+        self.Vel0 = array([0.1,0.0]) # translation velocity   
+        
+        # compute rotation tensor(s)
+        
+        # define rotation axis as z axis
+        #w = array([0.0, 0.0, time*theta])
 
+        # calculate rotation matrix
+        self.Omega = array([ [  0.0, -theta ],\
+                             [ theta,   0.0 ] ]) # skew symmetric matrix 
+        
+        self.Q = expm(dt*self.Omega)                     # brute force matrix exponential
 
+        # set nodal velovity field
+        for i in range(self.nCellsX+1):
+            for j in range(self.nCellsY):
+                # xIJ is Eulerial nodal position
+                xIJ = self.nodes[i][j].getPosition()
+                
+                #newV = dot(Q, nodeCoordinates-rotCenter) + vTranslation - self.time * dot(Q, vTranslation)
+                newV = dot(self.Omega, (xIJ - (self.time + dt) * self.Vel0)) + self.Vel0 
+                self.nodes[i][j].setVelocity(newV)
+                self.nodes[i][j].setApparentAccel(zeros(2))
+
+        for cell in self.cells:
+            cell.SetVelocity()
+            
+            
