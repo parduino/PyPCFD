@@ -181,14 +181,14 @@ class Domain(object):
     
     def setParameters(self, Re, density, velocity):
         
-        if (self.hx < self.hy ):
-            L = self.hx
+        if (self.width < self.height ):
+            L = self.width
         else:
-            L = self.hy
+            L = self.height
             
         viscosity = density * velocity * L / Re
         
-        self.Re = Re
+        self.Re  = Re
         self.rho = density
         self.v0  = velocity
         self.mu  = viscosity
