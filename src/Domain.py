@@ -12,13 +12,16 @@ from Particle import *
 from Output import *
 
 from Errors import *
+from ButcherTableau import *
 
-from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
-    ceil
+from numpy import array, linspace, dot, cross, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
+    ceil, transpose
 from numpy.linalg import solve
-from scipy.sparse.linalg import spsolve
+from scipy.sparse.linalg import spsolve, expm
+from numpy.linalg import norm
 
 from time import process_time
+import copy
 
 class Domain(object):
     '''
@@ -45,7 +48,7 @@ class Domain(object):
         def setBoundaryConditions(self)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
         def getAnalysisControl(self)
-        def setStateN(self)
+        def setInitialState(self)
         def setParameters(self, Re, density, velocity)
         def runAnalysis(self, maxtime=1.0)
         def runSingleStep(self, dt=1.0)
@@ -57,10 +60,16 @@ class Domain(object):
         def updateParticleStress(self)
         def updateParticleMotion(self)
         def findCell(self, x)
-        def createParticles(self, n, m)
+        def createParticles(self, n, m)     # Default particle creator that generates particles in all cells
+        def createParticlesMID(self, n, m)  # Particle creator that generates particle only in the middle cell
+        def createParticleAtX(self, mp, xp) # Particle creator that generates a single particle of mass mp at position xp 
+        def getTimeStep(self, CFL)
+        def plotData(self)
+        def writeData(self)
+        def setMotion(self, dt=0.0)
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, motion=None, particleUpdateScheme=RungeKutta4()):
         '''
         Constructor
         '''
@@ -85,6 +94,8 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
+        self.motion = motion
+        self.particleUpdateScheme = particleUpdateScheme
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -116,12 +127,21 @@ class Domain(object):
         self.setParameters(self.Re, self.rho, self.v0)
         
         self.particles = []
-        self.createParticles(2,2)
+
+        # create some particles ...
         
-        self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
+        # self.createParticles(2,2)
+        #self.createParticlesMID(3,3)
+        self.createParticleAtX(1.0, array([width/2.,height/3.]))
+        
+        # self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+        
+        self.Omega = zeros((2,2))
+        self.Q     = identity(2)
+        self.Vel0  = zeros(2)
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -172,8 +192,10 @@ class Domain(object):
             }
 
         for cell in self.cells:
-            cell.setEnhanced(True)
-                
+            # cell.setEnhanced(True)
+            cell.setEnhanced(solveVenhanced)
+
+
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
@@ -225,7 +247,21 @@ class Domain(object):
         # initial conditions are now set
         self.plotData()
         self.writeData()
-     
+        
+
+    def setState(self, dt):
+        for nodeList in self.nodes:
+            for node in nodeList:
+                node.setVelocity(zeros(2))
+        
+        for cell in self.cells:
+            cell.mapMassToNodes()
+
+        self.setMotion(dt)
+
+        ###self.time += dt   # WHAT IS THAT FOR ?????
+        
+            
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
@@ -395,70 +431,80 @@ class Domain(object):
         pass
     
     def updateParticleMotion(self, dt):
+        # this is the Butcher tableau
+        a = dt*self.particleUpdateScheme.get_a()  # time factors
+        b = dt*self.particleUpdateScheme.get_b()  # position factors
+        c = dt*self.particleUpdateScheme.get_c()  # update factors
+        
+        tn = self.time 
+        
+        FerrorList = []
+        positionErrorList=[]
+        
         for p in self.particles:
-            # this is Runge-Kutta 4
-            c = [1/6, 1/3, 1/3, 1/6] # Butcher Tableau
-            a = [0, 1/2, 1/2, 1]     # Butcher Tableau
-            tn = 0
 
-            vInterim = []
-            finterim = []
-            gradV    = []
+            kI = []
+            fI = []
+            Dv = []
+            
+            dF  = identity(2)
+            xn1 = p.position()
+            xOld = copy.copy(xn1)
+
+            Nsteps = len(a)
+            
             try:
-                ti = tn + a[0]*dt 
-                pos1  = p.position()
-                cell = self.findCell(pos1)
-                vInterim.append(cell.GetVelocity(pos1))
-                gradV.append(cell.GetGradientV(pos1) + (ti-tn)*cell.GetGradientA(pos1)) 
-                finterim.append(identity(2))
-                
-                ti = tn + a[1]*dt 
-                pos2 = pos1 + 0.5*vInterim[0]*dt
-                cell = self.findCell(pos2, cell)
-                vInterim.append(cell.GetVelocity(pos2))
-                gradV.append(cell.GetGradientV(pos2) + (ti-tn)*cell.GetGradientA(pos2)) 
-                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
-                
-                ti = tn + a[2]*dt 
-                pos3 = pos1 + 0.5*vInterim[1]*dt
-                cell = self.findCell(pos3, cell)
-                vInterim.append(cell.GetVelocity(pos3))
-                gradV.append(cell.GetGradientV(pos3) + (ti-tn)*cell.GetGradientA(pos3)) 
-                finterim.append(identity(2) + dt * 0.5 * gradV[-1] * finterim[-1])
-                
-                ti = tn + a[3]*dt 
-                pos4 = pos1 + vInterim[2]*dt
-                cell = self.findCell(pos2, cell)
-                vInterim.append(cell.GetVelocity(pos4))
-                gradV.append(cell.GetGradientV(pos4) + (ti-tn)*cell.GetGradientA(pos4)) 
-                finterim.append(identity(2) + dt * 1.0 * gradV[-1] * finterim[-1])
-                
-                p.addToPosition((vInterim[0]+2.*vInterim[1]+2.*vInterim[2]+vInterim[3])*dt/6.)
-                pos  = p.position()
-                cell = self.findCell(pos, cell)
-                vel  = cell.GetVelocity(pos)
+                for i in range(Nsteps):
+                    xi = p.position()
+                    f  = identity(2)      
+                    
+                    for j in range(i):
+                        if (b[i][j] != 0.):
+                            xi += b[i][j] * kI[j]
+                            f  += b[i][j] * dot(Dv[j], fI[j])
+                            
+                    cell = self.findCell(xi)
 
-                f = identity(2)
-                for i in range(4):
-                    f = f + dt * c[i] * gradV[i] * finterim[i]
+                    kI.append(cell.GetVelocity(xi) + a[i]*cell.GetApparentAccel(xi))
+                    # kI.append(cell.GetVelocity(xi) + a[i]*cell.GetAcceleration(xi))
 
+                    Dv.append(cell.GetGradientV(xi) + a[i]*cell.GetGradientA(xi))
+                    
+                    fI.append(f)
+                    
+                    # particle position
+                    xn1 += c[i] * kI[-1]
+                    #incremental deformation gradient
+                    dF  += c[i] * dot(Dv[-1], fI[-1])
+                    
+
+                # update particle position ...
+                p.addToPosition(xn1 - p.position())
+                positionError = norm(xn1 - self.motion.getAnalyticalPosition(xOld, dt))
+                positionErrorList.append(positionError)
+                
+                # update particle velocity ...
+                cell = self.findCell(xn1)
+                vel  = cell.GetVelocity(xn1) + a[i]*cell.GetApparentAccel(xn1)
                 p.setVelocity(vel)
-                p.setDeformationGradient(f)
+                
+                # update the deformation gradient ...
+                p.setDeformationGradient(dot(dF, p.getDeformationGradient()))
+
+                # compute error measures ...
+                Fanalytical = self.motion.getAnalyticalF(dt)
+                # print("analytical:", Fanalytical)
+                # print("mpm:", dF)
+                Ferror = norm(Fanalytical - dF)
+                FerrorList.append(Ferror)
 
             except CellIndexError as e:
                 print(e)
                 raise e
 
-        # RK4 HACK for deformation Gradient
-            f = identity(2) # initialize Consistent Deformation Gradient
-            for i in range(4):
+        # print(self.time)
+        return (FerrorList, positionErrorList)
 
-                f = f + dt * c[i]
-
-
-            
-                
-    
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
             return testCell
@@ -499,6 +545,35 @@ class Domain(object):
                     newParticle = Particle(mp,xp)
                     self.particles.append(newParticle)
                     cell.addParticle(newParticle)
+
+    def createParticlesMID(self, n, m):
+        for cell in self.cells:
+            if ( cell.getID() != int( (self.nCellsX) * (self.nCellsY) / 2) - int(self.nCellsY/2.0) ):
+                continue
+            # print(cell.getID())
+            h = cell.getSize()
+            mp = self.rho,h[0]*h[1]/n/m
+            
+            for i in range(n):
+                s = -1. + (2*i+1)/n
+                # s = 0.5
+                for j in range(m):
+                    t = -1. + (2*j+1)/m
+                    # t = 0.5
+                    xl = array([s,t])
+                    xp = cell.getGlobal(xl)
+                    # print(xp)
+                    newParticle = Particle(mp,xp)
+                    self.particles.append(newParticle)
+                    cell.addParticle(newParticle)        
+                    
+    
+    def createParticleAtX(self, mp, xp):     # Particle creator that generates a single particle at position X
+        newParticle = Particle(mp,xp)
+        self.particles.append(newParticle)
+        cell = self.findCell(xp)
+        if (cell):
+            cell.addParticle(newParticle)
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
@@ -525,3 +600,18 @@ class Domain(object):
     def writeData(self):
         self.plot.setData(self.nodes)
         self.plot.writeData(self.time)
+
+
+    def setMotion(self, dt=0.0):
+        # set nodal velocity field
+        for i in range(self.nCellsX + 1):
+            for j in range(self.nCellsY + 1):
+                # xIJ is Eulerial nodal position
+                xIJ = self.nodes[i][j].getPosition()
+                newV = self.motion.getVel(xIJ, self.time)
+                self.nodes[i][j].setVelocity(newV)
+                newA = -dot(self.Omega, self.Vel0)
+                self.nodes[i][j].setApparentAccel(newA)
+
+        for cell in self.cells:
+            cell.SetVelocity()
