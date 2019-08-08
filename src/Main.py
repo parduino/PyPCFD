@@ -36,6 +36,7 @@ def Main():
     solveVenhanced = False
     updatePosition = False
     updateStress   = False
+    #addTransient   = True
     addTransient   = False
     plotFigures    = True
     writeOutput    = False

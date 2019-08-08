@@ -175,8 +175,7 @@ class Domain(object):
             
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
-        
-        
+
     def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput):
         self.analysisControl = {
             'doInit':doInit,
@@ -247,7 +246,6 @@ class Domain(object):
         # initial conditions are now set
         self.plotData()
         self.writeData()
-        
 
     def setState(self, dt):
         for nodeList in self.nodes:
@@ -260,7 +258,6 @@ class Domain(object):
         self.setMotion(dt)
 
         ###self.time += dt   # WHAT IS THAT FOR ?????
-        
             
     def runAnalysis(self, maxtime=1.0):
         
@@ -279,8 +276,6 @@ class Domain(object):
             self.runSingleStep(self.time, dt)
             self.time += dt 
 
-        
-    
     def runSingleStep(self, time=0.0, dt=1.0):
 
         t = process_time()
@@ -306,8 +301,7 @@ class Domain(object):
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
-        
-    
+
     def initStep(self):
         # reset nodal mass, momentum, and force
         for nodeList in self.nodes:
@@ -318,7 +312,7 @@ class Domain(object):
         for cell in self.cells:
             # cell.mapMassToNodes()  # for particle formulation only
             cell.mapMomentumToNodes()
-    
+
     def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
         for i in range(self.nCellsX+1):
@@ -333,11 +327,11 @@ class Domain(object):
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
                 self.nodes[i][j].updateVstar(dt)
-    
+
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
         
-        # sparese outperformes dense very quickly for this problem.  
+        # sparse outperformes dense very quickly for this problem.
         # I lowered this number to 100 and might want to switch to sparse entirely.
         if ndof <= 100:
             useDense = True
@@ -403,7 +397,7 @@ class Domain(object):
                 self.nodes[i][j].setPressure(pressure[dof])
                 
         #print(pressure)
-        
+
     def solveVtilde(self, dt):
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
@@ -421,15 +415,15 @@ class Domain(object):
                 # update nodal velocity
                 dv = -dt/self.rho * array([dpx,dpy])
                 self.nodes[i][j].addVelocity(dv)
-                
+
     def solveVenhanced(self, dt):
         for cell in self.cells:
             # initialize the divergence terms in the cell
             cell.SetVelocity()
-    
+
     def updateParticleStress(self):
         pass
-    
+
     def updateParticleMotion(self, dt):
         # this is the Butcher tableau
         a = dt*self.particleUpdateScheme.get_a()  # time factors
@@ -601,7 +595,6 @@ class Domain(object):
         self.plot.setData(self.nodes)
         self.plot.writeData(self.time)
 
-
     def setMotion(self, dt=0.0):
         # set nodal velocity field
         for i in range(self.nCellsX + 1):
@@ -610,7 +603,10 @@ class Domain(object):
                 xIJ = self.nodes[i][j].getPosition()
                 newV = self.motion.getVel(xIJ, self.time)
                 self.nodes[i][j].setVelocity(newV)
+
+                ### the next line is WRONG
                 newA = -dot(self.Omega, self.Vel0)
+
                 self.nodes[i][j].setApparentAccel(newA)
 
         for cell in self.cells:

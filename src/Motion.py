@@ -22,6 +22,10 @@ class Motion(object):
         pass
 
     @abstractmethod
+    def getDvDt(self, xIJ, time):
+        pass
+
+    @abstractmethod
     def getAnalyticalF(self, time):
         pass
 
@@ -51,11 +55,6 @@ class Motion1(Motion):
         #                     [theta, 0.0]])  # skew symmetric matrix
         # #############
 
-
-        self.Q = zeros_like(self.Omega)
-
-        self.analyticalPosition = zeros_like(self.Vel0)
-
     def __str__(self):
         return "motion_1"
 
@@ -63,14 +62,16 @@ class Motion1(Motion):
         # print("time:", time)
         return dot(self.Omega, (xIJ - time * self.Vel0)) + self.Vel0
 
+    def getDvDt(self, xIJ, time):
+        return zeros_like(xIJ)
+
     def getAnalyticalF(self, time):
-        self.Q = expm(time * self.Omega)  # brute force matrix exponential
-        return self.Q
+        return expm(time * self.Omega)  # brute force matrix exponential
 
     def getAnalyticalPosition(self, x0, time):
-        self.Q = expm(time * self.Omega)
-        self.analyticalPosition = self.Q @ (x0 - self.X0) + time * self.Vel0
-        return self.analyticalPosition
+        Q = expm(time * self.Omega)
+        x = Q @ (x0 - self.X0) + time * self.Vel0
+        return x
 
 
 class Motion2(Motion):
@@ -108,8 +109,6 @@ class Motion2(Motion):
 
         self.xTilde = zeros_like(self.X1)
 
-        self.analyticalPosition = zeros_like(self.x0)
-
     def __str__(self):
         return "motion_2"
 
@@ -140,21 +139,25 @@ class Motion2(Motion):
 
         return v
 
-    def getAnalyticalF(self, time):
-        self.Q1 = expm(time*self.Omega1)
-        self.Q2 = expm(time*self.Omega2)
+    def getDvDt(self, xIJ, time):
+        print("Krish has work to do")
+        raise
 
-        self.R = self.gamma1 * self.Q1 + self.gamma2 * self.Q2
-        return self.R
+    def getAnalyticalF(self, time):
+        Q1 = expm(time*self.Omega1)
+        Q2 = expm(time*self.Omega2)
+
+        R = self.gamma1 * Q1 + self.gamma2 * Q2
+        return R
 
     def getAnalyticalPosition(self, x0, time):
-        self.Q1 = expm(time*self.Omega1)
-        self.Q2 = expm(time*self.Omega2)
+        Q1 = expm(time*self.Omega1)
+        Q2 = expm(time*self.Omega2)
 
-        self.analyticalPosition = self.gamma1 * self.Q1 @ (x0 - self.x1) + \
-               self.gamma2 * self.Q2 @ (x0 - self.x2) + \
-               self.x0
+        x = self.gamma1 * Q1 @ (x0 - self.x1) \
+            + self.gamma2 * Q2 @ (x0 - self.x2) \
+            + self.x0
 
-        return self.analyticalPosition
+        return x
 
 
