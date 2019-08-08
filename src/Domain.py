@@ -603,10 +603,7 @@ class Domain(object):
                 xIJ = self.nodes[i][j].getPosition()
                 newV = self.motion.getVel(xIJ, self.time)
                 self.nodes[i][j].setVelocity(newV)
-
-                ### the next line is WRONG
-                newA = -dot(self.Omega, self.Vel0)
-
+                newA = self.motion.getAcceleration(xIJ, self.time)
                 self.nodes[i][j].setApparentAccel(newA)
 
         for cell in self.cells:
