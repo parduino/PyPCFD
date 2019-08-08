@@ -79,9 +79,12 @@ def runAnalysis(numAlg, motion):
     ax1.legend(loc="lower right")
 
     ax1.grid(True)
-    ax1.axis('tight')
-    plt.savefig("images/{}_{}_F_convergence.pdf".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
-    plt.savefig("images/{}_{}_F_convergence.png".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
+    ax1.set_ylim(1e-16, 1e1)
+    # ax1.axis('tight')
+    plt.savefig(os.path.join("images", "{}_{}_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
+                bbox_inches='tight')
+    plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
+                bbox_inches='tight')
 
     slope = log(Ferrors[0] / Ferrors[-1]) / log(dtList[0] / dtList[-1])
     print('{} {} Deformation Gradient convergence slope = {:.2E}'.format(numAlg, motion, slope))
@@ -116,12 +119,16 @@ def runAnalysis(numAlg, motion):
     ax2.set_xlabel('$\Delta t$ (s)')
     ax2.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
 
+    ax2.set_ylim(1e-16, 1e1)
+
     ax2.legend(loc="lower right")
 
     ax2.grid(True)
     ax2.axis('tight')
-    plt.savefig("images/{}_{}_Position_convergence.pdf".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
-    plt.savefig("images/{}_{}_Position_convergence.png".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
+    plt.savefig(os.path.join("images", "{}_{}_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
+                bbox_inches='tight')
+    plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
+                bbox_inches='tight')
 
     slope = log(positionErrors[0] / positionErrors[-1]) / log(dtList[0] / dtList[-1])
     print('{} {} Position convergence slope = {:.2E}'.format(numAlg, motion, slope))
@@ -137,7 +144,8 @@ def Main():
     #         runAnalysis(numalg, motion)
     #         filenames.append("{}_{}_Position_convergence.pdf".format(numalg, motion))
     #         filenames.append("{}_{}_F_convergence.pdf".format(numalg, motion))
-    #
+    #         print("\n")
+
     # for fn in filenames:
     #     print(fn)
 
