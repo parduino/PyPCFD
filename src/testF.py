@@ -2,6 +2,7 @@ from Domain import *
 import matplotlib.pyplot as plt
 import matplotlib
 from math import log
+import os
 from Motion import *
 from ButcherTableau import *
 
@@ -41,6 +42,10 @@ def runAnalysis(numAlg, motion):
             break
         dt /= 10.0
 
+    # create folder to store images
+    if not os.path.isdir("images"):
+        os.mkdir("images")
+
     # Plots for deformation gradient errors
     fig = plt.figure()
     matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
@@ -75,8 +80,8 @@ def runAnalysis(numAlg, motion):
 
     ax1.grid(True)
     ax1.axis('tight')
-    plt.savefig("{}_{}_F_convergence.pdf".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
-    plt.savefig("{}_{}_F_convergence.png".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
+    plt.savefig("images/{}_{}_F_convergence.pdf".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
+    plt.savefig("images/{}_{}_F_convergence.png".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
 
     slope = log(Ferrors[0] / Ferrors[-1]) / log(dtList[0] / dtList[-1])
     print('{} {} Deformation Gradient convergence slope = {:.2E}'.format(numAlg, motion, slope))
@@ -115,8 +120,8 @@ def runAnalysis(numAlg, motion):
 
     ax2.grid(True)
     ax2.axis('tight')
-    plt.savefig("{}_{}_Position_convergence.pdf".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
-    plt.savefig("{}_{}_Position_convergence.png".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
+    plt.savefig("images/{}_{}_Position_convergence.pdf".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
+    plt.savefig("images/{}_{}_Position_convergence.png".format(numAlg, motion), pad_inches=0, bbox_inches='tight')
 
     slope = log(positionErrors[0] / positionErrors[-1]) / log(dtList[0] / dtList[-1])
     print('{} {} Position convergence slope = {:.2E}'.format(numAlg, motion, slope))
