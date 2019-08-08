@@ -36,7 +36,7 @@ class Motion1(Motion):
         super().__init__()
         # set global motion parameters
         theta = pi
-        self.X0 = 0.0
+        self.X0 = array([0., 0.])
 
         self.Vel0 = array([0.1, 0.0])  # translation velocity
 
