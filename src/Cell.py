@@ -3,7 +3,7 @@ Created on Nov 21, 2015
 
 @author: pmackenz
 '''
-from numpy import array, dot, outer, tensordot, zeros, ones, sqrt, stack
+from numpy import array, dot, cross, outer, tensordot, zeros, ones, sqrt, stack, mat
 from _operator import index
 
 class Cell(object):
@@ -39,10 +39,13 @@ class Cell(object):
         def SetNodes(self, nds)
         def SetVelocity(self, u)
         def GetVelocity(self, x)
+        def GetApparentAccel(self, x)
         def SetPressure(self, p)
         def GetPressure(self, x)
         def GetGradientP(self, x)
+        def GetGradientV(self, x)
         def GetStrainRate(self, xl)
+        def GetGradientA(self, x)              # returns gradient of acceleration field
         def GetEnhancedStrainRate(self, xl)
         def computeForces(self)                # compute nodal forces from viscous stress and add them to the nodes
         def GetStiffness(self)                 # "stiffness matrix" for pressure calculation
@@ -52,6 +55,8 @@ class Cell(object):
         def getGridCoordinates(self)
         def mapMassToNodes(self)
         def mapMomentumToNodes(self)
+        def GetAcceleration(self, x)
+        def getID(self)
     '''
 
     def __init__(self, id, hx, hy):
@@ -62,6 +67,9 @@ class Cell(object):
         self.nodes  = []
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
+        
+        self.ax = zeros(4)    # apparent acceleration field
+        self.ay = zeros(4)    # apparent acceleration  field
         
         self.useEnhanced = False
         
@@ -75,10 +83,13 @@ class Cell(object):
         self.uHat = array([0.0,0.0])  # enhanced field parameters
         self.fHat = array([0.0,0.0])  # enhanced field forces
         self.mHat = array([0.0,0.0])  # enhanced field mass
+
         
         self.setShape(array([0.0,0.0]))
         
         self.myParticles = []
+
+        
     
     def __str__(self):
         s = "   cell({}): ({}/{}),({}/{}),({}/{}),({}/{})".format(self.id,
@@ -156,6 +167,11 @@ class Cell(object):
         self.divVa += 0.5*(-self.uy[0] - self.uy[1] + self.uy[2] + self.uy[3]) / self.size[1]
         self.divVb =  0.5*(self.uy[0]-self.uy[1]+self.uy[2]-self.uy[3]) / self.size[1]
         self.divVc =  0.5*(self.ux[0]-self.ux[1]+self.ux[2]-self.ux[3]) / self.size[0]
+
+    # def SetVelocity(self, ux, uy):
+    #      for i in range(4):
+    #         self.nodes[i].SetVelocity(array([ux]))
+
         
     def GetVelocity(self, x):
         xl = self.getLocal(x)
@@ -169,7 +185,27 @@ class Cell(object):
             vel += array([dvx, dvy])
             
         return vel
-    
+
+    def GetApparentAccel(self, x):
+        xl = self.getLocal(x)
+        self.setShape(xl)
+        accel = array([dot(self.shape, self.ax), dot(self.shape, self.ay)])
+            
+        return accel
+
+    def GetAcceleration(self, x):
+        xl = self.getLocal(x)
+        self.setShape(xl)
+        ax = zeros((4,1))
+        ay = zeros((4,1))
+        for i in range(4):
+            nodalforce = self.nodes[i].getForce()
+            ax[i] = nodalforce[0]/self.nodes[i].getMass()
+            ay[i] = nodalforce[1]/self.nodes[i].getMass()
+        accn = array([dot(self.shape, ax), dot(self.shape, ay)])
+            
+        return accn
+
     def SetPressure(self, p):
         self.p = p
 
@@ -183,6 +219,37 @@ class Cell(object):
         self.setShape(xl)
         
         return array([dot(self.DshapeX,self.p), dot(self.DshapeY,self.p) ])
+
+    def GetGradientV(self, x):
+        xl = self.getLocal(x)
+        self.setShape(xl)
+
+        dxu = dot(self.DshapeX, self.ux)
+        dyu = dot(self.DshapeY, self.ux)
+        dxv = dot(self.DshapeX, self.uy)
+        dyv = dot(self.DshapeY, self.uy)
+
+        return array([[dxu, dyu],[dxv, dyv]])
+
+    # HACK to test deformation Gradient
+    def GetGradientA(self, x): 
+        xl = self.getLocal(x)
+        self.setShape(xl)
+        
+        self.ax = zeros(4)
+        self.ay = zeros(4)
+        
+        for i in range(4):
+            accel = self.nodes[i].getApparentAccel()
+            self.ax[i] = accel[0]
+            self.ay[i] = accel[1]
+        
+        dxax = dot(self.DshapeX, self.ax)
+        dyax = dot(self.DshapeY, self.ax)
+        dxay = dot(self.DshapeX, self.ay)
+        dyay = dot(self.DshapeY, self.ay)
+            
+        return array([[dxax, dyax],[dxay, dyay]])
     
     def GetStrainRate(self, xl):
         self.setShape(xl)
@@ -354,6 +421,12 @@ class Cell(object):
                 
         for i in range(4):
             self.nodes[i].addMomentum(momentum[i])
+
+    def getID(self):
+        return self.id
+
+
+
         
         
             
