@@ -5,7 +5,6 @@ Created on Nov 21, 2015
 '''
 from numpy import array, zeros, ones
 from numpy.linalg import norm
-from sympy.physics.units.dimensions import mass
 from scipy.linalg import expm
 from math import pi
 
