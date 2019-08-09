@@ -12,6 +12,7 @@ from Particle import *
 from Output import *
 
 from Errors import *
+from ButcherTableau import *
 
 from numpy import array, linspace, dot, cross, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
     ceil, transpose
@@ -20,6 +21,7 @@ from scipy.sparse.linalg import spsolve, expm
 from numpy.linalg import norm
 
 from time import process_time
+import copy
 
 class Domain(object):
     '''
@@ -67,7 +69,7 @@ class Domain(object):
         def setMotion(self, dt=0.0)
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, motion=None, particleUpdateScheme=RungeKutta4()):
         '''
         Constructor
         '''
@@ -92,7 +94,9 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
-        # self.vTranslation = array([1.0,0]) # for deformation gradient test
+        self.motion = motion
+        self.particleUpdateScheme = particleUpdateScheme
+
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -131,14 +135,10 @@ class Domain(object):
         #self.createParticlesMID(3,3)
         self.createParticleAtX(1.0, array([width/2.,height/3.]))
         
-        self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
+        # self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
-        
-        self.Omega = zeros((2,2))
-        self.Q     = identity(2)
-        self.Vel0  = zeros(2)
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -172,8 +172,7 @@ class Domain(object):
             
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
-        
-        
+
     def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput):
         self.analysisControl = {
             'doInit':doInit,
@@ -189,8 +188,10 @@ class Domain(object):
             }
 
         for cell in self.cells:
-            cell.setEnhanced(True)
-                
+            # cell.setEnhanced(True)
+            cell.setEnhanced(solveVenhanced)
+
+
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
@@ -242,7 +243,6 @@ class Domain(object):
         # initial conditions are now set
         self.plotData()
         self.writeData()
-        
 
     def setState(self, dt):
         for nodeList in self.nodes:
@@ -255,7 +255,6 @@ class Domain(object):
         self.setMotion(dt)
 
         ###self.time += dt   # WHAT IS THAT FOR ?????
-        
             
     def runAnalysis(self, maxtime=1.0):
         
@@ -274,8 +273,6 @@ class Domain(object):
             self.runSingleStep(self.time, dt)
             self.time += dt 
 
-        
-    
     def runSingleStep(self, time=0.0, dt=1.0):
 
         t = process_time()
@@ -301,8 +298,7 @@ class Domain(object):
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
-        
-    
+
     def initStep(self):
         # reset nodal mass, momentum, and force
         for nodeList in self.nodes:
@@ -313,7 +309,7 @@ class Domain(object):
         for cell in self.cells:
             # cell.mapMassToNodes()  # for particle formulation only
             cell.mapMomentumToNodes()
-    
+
     def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
         for i in range(self.nCellsX+1):
@@ -328,11 +324,11 @@ class Domain(object):
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
                 self.nodes[i][j].updateVstar(dt)
-    
+
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
         
-        # sparese outperformes dense very quickly for this problem.  
+        # sparse outperformes dense very quickly for this problem.
         # I lowered this number to 100 and might want to switch to sparse entirely.
         if ndof <= 100:
             useDense = True
@@ -398,7 +394,7 @@ class Domain(object):
                 self.nodes[i][j].setPressure(pressure[dof])
                 
         #print(pressure)
-        
+
     def solveVtilde(self, dt):
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
@@ -416,41 +412,24 @@ class Domain(object):
                 # update nodal velocity
                 dv = -dt/self.rho * array([dpx,dpy])
                 self.nodes[i][j].addVelocity(dv)
-                
+
     def solveVenhanced(self, dt):
         for cell in self.cells:
             # initialize the divergence terms in the cell
             cell.SetVelocity()
-    
+
     def updateParticleStress(self):
         pass
-    
+
     def updateParticleMotion(self, dt):
-            
-        # this is the Butcher tableau for Runge-Kutta 4
-        a = dt*array([0., 1./2., 1./2., 1.])       # time factors
-        b = dt*array([[0. ,0. ,0.,0.],
-                      [0.5,0. ,0.,0.],
-                      [0. ,0.5,0.,0.],
-                      [0. ,0. ,1.,0.]])              # position factors
-        c = dt*array([1./6., 1./3., 1./3., 1./6.]) # update factors
-        
-        # this is the Butcher tableau for explicit Euler
-        a = dt*array([0.])       # time factors
-        b = dt*array([[0.]])              # position factors
-        c = dt*array([1.]) # update factors
-        
-        # this is the Butcher tableau for Heun's method
-        a = dt*array([0., 1.])       # time factors
-        b = dt*array([[0. ,0. ],
-                      [1. ,0. ]])              # position factors
-        c = dt*array([1./2., 1./2.]) # update factors
-        
-        #---
-        
+        # this is the Butcher tableau
+        a = dt*self.particleUpdateScheme.get_a()  # time factors
+        b = dt*self.particleUpdateScheme.get_b()  # position factors
+        c = dt*self.particleUpdateScheme.get_c()  # update factors        
         tn = self.time 
         
         FerrorList = []
+        positionErrorList=[]
         
         for p in self.particles:
 
@@ -460,24 +439,24 @@ class Domain(object):
             
             dF  = identity(2)
             xn1 = p.position()
-            
+            xOld = copy.copy(xn1)
             Nsteps = len(a)
             
             try:
                 for i in range(Nsteps):
-                    
-                    ti = tn + a[i]
-                     
                     xi = p.position()
                     f  = identity(2)      
                     
                     for j in range(i):
                         if (b[i][j] != 0.):
                             xi += b[i][j] * kI[j]
-                            f  += b[i][j] * dot( Dv[j], fI[j] )
+                            f  += b[i][j] * dot(Dv[j], fI[j])
                             
                     cell = self.findCell(xi)
+
                     kI.append(cell.GetVelocity(xi) + a[i]*cell.GetApparentAccel(xi))
+                    # kI.append(cell.GetVelocity(xi) + a[i]*cell.GetAcceleration(xi))
+
                     Dv.append(cell.GetGradientV(xi) + a[i]*cell.GetGradientA(xi))
                     
                     fI.append(f)
@@ -490,6 +469,8 @@ class Domain(object):
 
                 # update particle position ...
                 p.addToPosition(xn1 - p.position())
+                positionError = norm(xn1 - self.motion.getAnalyticalPosition(xOld, dt))
+                positionErrorList.append(positionError)
                 
                 # update particle velocity ...
                 cell = self.findCell(xn1)
@@ -497,12 +478,14 @@ class Domain(object):
                 p.setVelocity(vel)
                 
                 # update the deformation gradient ...
-                p.setDeformationGradient(dF)  # this is not the deformation gradient.  SHOULD BE UPDATE F = dF*F
+                p.setDeformationGradient(dot(dF, p.getDeformationGradient()))
 
                 # compute error measures ...
-                Fanalytical = self.Q
+                Fanalytical = self.motion.getAnalyticalF(dt)
+                # print("analytical:", Fanalytical)
+                # print("mpm:", dF)
                 Ferror = norm(Fanalytical - dF)
-                # print(Ferror)
+
                 FerrorList.append(Ferror)
 
             except CellIndexError as e:
@@ -510,6 +493,9 @@ class Domain(object):
                 raise e
         
         return FerrorList
+
+        # print(self.time)
+        return (FerrorList, positionErrorList)
 
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
@@ -608,36 +594,16 @@ class Domain(object):
         self.plot.writeData(self.time)
 
     def setMotion(self, dt=0.0):
-        
-        # set global motion parameters
-        theta = pi
-        
-        self.Vel0 = array([0.1,0.0]) # translation velocity   
-        
-        # compute rotation tensor(s)
-        
-        # define rotation axis as z axis
-        #w = array([0.0, 0.0, time*theta])
-
-        # calculate rotation matrix
-        self.Omega = array([ [  0.0, -theta ],\
-                             [ theta,   0.0 ] ]) # skew symmetric matrix 
-        
-        self.Q = expm(dt*self.Omega)                     # brute force matrix exponential
-
-        # set nodal velovity field
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY+1):
+        # set nodal velocity field
+        for i in range(self.nCellsX + 1):
+            for j in range(self.nCellsY + 1):
                 # xIJ is Eulerial nodal position
                 xIJ = self.nodes[i][j].getPosition()
-                
-                #newV = dot(Q, nodeCoordinates-rotCenter) + vTranslation - self.time * dot(Q, vTranslation)
-                newV = dot(self.Omega, (xIJ - (self.time) * self.Vel0)) + self.Vel0 
+                newV = self.motion.getVel(xIJ, self.time)
                 self.nodes[i][j].setVelocity(newV)
-                newA = -dot(self.Omega, self.Vel0)
+                newA = self.motion.getDvDt(xIJ, self.time)
+
                 self.nodes[i][j].setApparentAccel(newA)
 
         for cell in self.cells:
             cell.SetVelocity()
-            
-            

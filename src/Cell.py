@@ -177,7 +177,8 @@ class Cell(object):
         xl = self.getLocal(x)
         self.setShape(xl)
         vel = array([dot(self.shape, self.ux), dot(self.shape, self.uy)])
-        
+
+        # self.useEnhanced = False
         if (self.useEnhanced):
             # add the enhanced velocity field
             dvx = 0.5 * self.divVb * (1. - xl[0]*xl[0]) 
@@ -196,12 +197,13 @@ class Cell(object):
     def GetAcceleration(self, x):
         xl = self.getLocal(x)
         self.setShape(xl)
-        ax = zeros((4,1))
-        ay = zeros((4,1))
+        ax = zeros((4,))
+        ay = zeros((4,))
         for i in range(4):
             nodalforce = self.nodes[i].getForce()
-            ax[i] = nodalforce[0]/self.nodes[i].getMass()
-            ay[i] = nodalforce[1]/self.nodes[i].getMass()
+            mass = self.nodes[i].getMass()
+            ax[i] = nodalforce[0]/ mass
+            ay[i] = nodalforce[1]/ mass
         accn = array([dot(self.shape, ax), dot(self.shape, ay)])
             
         return accn
