@@ -28,11 +28,17 @@ def runAnalysis(numAlg, motion):
         domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
                         motion=motion,
                         particleUpdateScheme=numAlg)
+
         domain.setAnalysis(doInit, solveVstar, solveP,
                            solveVtilde, solveVenhanced,
                            updatePosition, updateStress,
                            addTransient, plotFigures, writeOutput)
-        domain.setState(dt)
+
+        # you need to set the velocity field to the initial velocity field
+        # (or to any fixed time throughout the test !!!)
+        #domain.setState(dt)    # this line is wrong
+        domain.setState(0)
+
         # returns error for all particles. Use [0] for first [1] for second etc..
         FerrorList, positionErrorList = domain.updateParticleMotion(dt)
 
@@ -161,7 +167,7 @@ def Main():
     #     print(fn)
 
     #runAnalysis(RungeKutta4(), Motion1())
-    runAnalysis(numAlgorithms['ee'], motionDict['m1'])
+    runAnalysis(numAlgorithms['midpt'], motionDict['m1'])
 
 if __name__ == '__main__':
     Main()
