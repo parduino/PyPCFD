@@ -28,13 +28,23 @@ def runAnalysis(numAlg, motion):
         domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
                         motion=motion,
                         particleUpdateScheme=numAlg)
-        domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress,
+
+        domain.setAnalysis(doInit, solveVstar, solveP,
+                           solveVtilde, solveVenhanced,
+                           updatePosition, updateStress,
                            addTransient, plotFigures, writeOutput)
-        domain.setState(dt)
-        FerrorList, positionErrorList = domain.updateParticleMotion(
-            dt)  # returns error for all particles. Use [0] for first [1] for second etc..
+
+        # you need to set the velocity field to the initial velocity field
+        # (or to any fixed time throughout the test !!!)
+        #domain.setState(dt)    # this line is wrong
+        domain.setState(0)
+
+        # returns error for all particles. Use [0] for first [1] for second etc..
+        FerrorList, positionErrorList = domain.updateParticleMotion(dt)
+
         Ferrors.append(FerrorList[0])
         positionErrors.append(positionErrorList[0])
+
         print('dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(dt, positionErrors[-1], Ferrors[-1]))
         # print('dt = {:.2E}, Position error = {:.3E}'.format(dt, positionErrors[-1]))
         # print("\n")
@@ -76,6 +86,8 @@ def runAnalysis(numAlg, motion):
     # ax1.set_ylim(1e-16, 1e1)
     ax1.set_xlabel('$\Delta t$ (s)')
     ax1.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
+
+    plt.ylim([1e-16,1.])
 
     ax1.legend(loc="best")
 
@@ -123,6 +135,8 @@ def runAnalysis(numAlg, motion):
 
     ax2.legend(loc="best")
 
+    plt.ylim([1e-16,1.])
+
     ax2.grid(True)
     # ax2.axis('tight')
     plt.savefig(os.path.join("images", "{}_{}_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
@@ -152,7 +166,8 @@ def Main():
     # for fn in filenames:
     #     print(fn)
 
-    runAnalysis(RungeKutta4(), Motion1())
+    #runAnalysis(RungeKutta4(), Motion1())
+    runAnalysis(numAlgorithms['rk4'], motionDict['m1'])
 
 if __name__ == '__main__':
     Main()

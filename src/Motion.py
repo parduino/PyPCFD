@@ -59,19 +59,17 @@ class Motion1(Motion):
         return "motion_1"
 
     def getVel(self, xIJ, time):
-        # print("time:", time)
-        return dot(self.Omega, (xIJ - time * self.Vel0)) + self.Vel0
+        return self.Omega @ (xIJ - self.X0 - time * self.Vel0) + self.Vel0
 
     def getDvDt(self, xIJ, time):
-        accn = -self.Omega @ self.Vel0
-        return accn
+        return -self.Omega @ self.Vel0
 
     def getAnalyticalF(self, time):
         return expm(time * self.Omega)  # brute force matrix exponential
 
     def getAnalyticalPosition(self, x0, time):
         Q = expm(time * self.Omega)
-        x = Q @ (x0 - self.X0) + time * self.Vel0
+        x = Q @ (x0 - self.X0) + time * self.Vel0 + self.X0
         return x
 
 
