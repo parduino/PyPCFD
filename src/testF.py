@@ -25,7 +25,7 @@ def runAnalysis(numAlg, motion):
     dt = 1.0
     while (dt > 1.0e-8):
         dtList.append(dt)
-        domain = Domain(width=10, height=10, nCellsX=1, nCellsY=1,
+        domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
                         motion=motion,
                         particleUpdateScheme=numAlg)
         domain.setAnalysis(doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress,
@@ -40,7 +40,7 @@ def runAnalysis(numAlg, motion):
         # print("\n")
         if (Ferrors[-1] < 1.e-16):
             break
-        dt /= 10.0
+        dt /= 2.0
 
     # create folder to store images
     if not os.path.isdir("images"):
@@ -73,7 +73,7 @@ def runAnalysis(numAlg, motion):
     y = array([Ferrors[0], Ferrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
     ax1.loglog(x, y, 'r--', linewidth=2, label="5th order")
 
-    ax1.set_ylim(1e-16, 1e1)
+    # ax1.set_ylim(1e-16, 1e1)
     ax1.set_xlabel('$\Delta t$ (s)')
     ax1.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
 
@@ -117,7 +117,7 @@ def runAnalysis(numAlg, motion):
     y = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
     ax2.loglog(x, y, 'r--', linewidth=2, label="5th order")
 
-    ax2.set_ylim(1e-16, 1e3)
+    # ax2.set_ylim(1e-16, 1e3)
     ax2.set_xlabel('$\Delta t$ (s)')
     ax2.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
 

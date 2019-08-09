@@ -40,7 +40,7 @@ class Motion1(Motion):
         super().__init__()
         # set global motion parameters
         theta = pi
-        self.X0 = array([0., 0.])
+        self.X0 = array([0.5, 0.5])
 
         self.Vel0 = array([0.1, 0.0])  # translation velocity
 
@@ -63,7 +63,8 @@ class Motion1(Motion):
         return dot(self.Omega, (xIJ - time * self.Vel0)) + self.Vel0
 
     def getDvDt(self, xIJ, time):
-        return zeros_like(xIJ)
+        accn = -self.Omega @ self.Vel0
+        return accn
 
     def getAnalyticalF(self, time):
         return expm(time * self.Omega)  # brute force matrix exponential
@@ -83,7 +84,7 @@ class Motion2(Motion):
         # gamma = [gg, 1.-gg]
         # omega =
 
-        self.gamma1 = 1.0
+        self.gamma1 = 0.1
         self.gamma2 = 1. - self.gamma1
 
         self.Omega1 = array([[0., -1.], [1., 0.]])

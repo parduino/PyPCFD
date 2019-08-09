@@ -139,10 +139,7 @@ class Domain(object):
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
         
-        self.Omega = zeros((2,2))
-        self.Q     = identity(2)
-        self.Vel0  = zeros(2)
-        
+
     def __str__(self):
         s = "==== D O M A I N ====\n"
         s += "Nodes:\n"
@@ -603,10 +600,7 @@ class Domain(object):
                 xIJ = self.nodes[i][j].getPosition()
                 newV = self.motion.getVel(xIJ, self.time)
                 self.nodes[i][j].setVelocity(newV)
-
-                ### the next line is WRONG
-                newA = -dot(self.Omega, self.Vel0)
-
+                newA = self.motion.getDvDt(xIJ, self.time)
                 self.nodes[i][j].setApparentAccel(newA)
 
         for cell in self.cells:
