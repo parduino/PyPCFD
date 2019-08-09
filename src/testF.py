@@ -149,8 +149,6 @@ def runAnalysis(numAlg, motion):
     # print(positionErrors)
     # print(dtList)
 
-
-
 def Main():
     numAlgorithms = {"ee": ExplicitEuler(), "rk4": RungeKutta4(), "midpt":MidPointRule(), "heun": HeunsMethod()}
     motionDict = {"m1": Motion1(), "m2": Motion2()}

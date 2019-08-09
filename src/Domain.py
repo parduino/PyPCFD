@@ -96,6 +96,7 @@ class Domain(object):
         self.v0  = 0.0
         self.motion = motion
         self.particleUpdateScheme = particleUpdateScheme
+
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -139,7 +140,6 @@ class Domain(object):
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
         
-
     def __str__(self):
         s = "==== D O M A I N ====\n"
         s += "Nodes:\n"
@@ -425,8 +425,7 @@ class Domain(object):
         # this is the Butcher tableau
         a = dt*self.particleUpdateScheme.get_a()  # time factors
         b = dt*self.particleUpdateScheme.get_b()  # position factors
-        c = dt*self.particleUpdateScheme.get_c()  # update factors
-        
+        c = dt*self.particleUpdateScheme.get_c()  # update factors        
         tn = self.time 
         
         FerrorList = []
@@ -441,7 +440,6 @@ class Domain(object):
             dF  = identity(2)
             xn1 = p.position()
             xOld = copy.copy(xn1)
-
             Nsteps = len(a)
             
             try:
@@ -487,11 +485,14 @@ class Domain(object):
                 # print("analytical:", Fanalytical)
                 # print("mpm:", dF)
                 Ferror = norm(Fanalytical - dF)
+
                 FerrorList.append(Ferror)
 
             except CellIndexError as e:
                 print(e)
                 raise e
+        
+        return FerrorList
 
         # print(self.time)
         return (FerrorList, positionErrorList)
@@ -601,6 +602,7 @@ class Domain(object):
                 newV = self.motion.getVel(xIJ, self.time)
                 self.nodes[i][j].setVelocity(newV)
                 newA = self.motion.getDvDt(xIJ, self.time)
+
                 self.nodes[i][j].setApparentAccel(newA)
 
         for cell in self.cells:
