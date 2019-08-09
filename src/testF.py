@@ -167,7 +167,7 @@ def Main():
     #     print(fn)
 
     #runAnalysis(RungeKutta4(), Motion1())
-    runAnalysis(numAlgorithms['midpt'], motionDict['m1'])
+    runAnalysis(numAlgorithms['rk4'], motionDict['m1'])
 
 if __name__ == '__main__':
     Main()

@@ -67,22 +67,22 @@ class Particle(object):
         self.vel = v
         
     def velocity(self):
-        return self.vel
+        return self.vel.copy()
     
     def addToPosition(self, dx):
         self.pos += dx
         
     def position(self):
-        return self.pos
+        return self.pos.copy()
     
     def mass(self):
         return self.mass
     
     def strain(self):
-        return self.strain
+        return self.strain.copy()
     
     def strainRate(self):
-        return self.strainRate
+        return self.strainRate.copy()
     
     def stress(self):
         stress = array([
