@@ -85,13 +85,13 @@ class RungeKutta4(ButcherTableau):
         return array([1./6., 1./3., 1./3., 1./6.])   # update factors
 
 
-class HeunsMethod(ButcherTableau):
+class MidPointMethod2(ButcherTableau):
 
     def __init__(self):
         super().__init__()
 
     def __str__(self):
-        return "HeunsMethod"
+        return "AltMidPointRule"
 
     def get_a(self):
         return array([0., 1.])        # time factors
