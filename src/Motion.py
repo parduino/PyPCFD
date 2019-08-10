@@ -39,10 +39,10 @@ class Motion1(Motion):
     def __init__(self):
         super().__init__()
         # set global motion parameters
-        theta = pi
+        theta = pi/2.0
         self.X0 = array([0.5, 0.5])
 
-        self.Vel0 = array([0.1, 0.0]) *0.0 # translation velocity
+        self.Vel0 = array([0.1, 0.0])   # translation velocity
 
         # calculate rotation matrix
         self.Omega = array([[0.0, -theta],
@@ -61,7 +61,7 @@ class Motion1(Motion):
 
     def getAnalyticalF(self, time):
         Q = expm(time * self.Omega)
-        print(Q)
+        # print(Q)
         return Q  # brute force matrix exponential
 
     def getAnalyticalPosition(self, x0, time):
@@ -75,23 +75,23 @@ class Motion2(Motion):
     def __init__(self):
         super().__init__()
 
-        # self.gamma1 = 0.5
-        # self.gamma2 = 1. - self.gamma1
-        #
-        # self.Omega1 = array([[0., -1.], [1., 0.]])*pi
-        # self.Omega2 = array([[0., -1.], [1., 0.]])/2.
-        #
-        # self.X1 = array([0.5, 0.5])
-        # self.X2 = array([0.8, 0.8])
-
         self.gamma1 = 0.1
         self.gamma2 = 1. - self.gamma1
 
-        self.Omega1 = array([[0., -1.], [1., 0.]])*pi
-        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/3
+        self.Omega1 = array([[0., -1.], [1., 0.]])*pi/1.
+        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/1.5
 
         self.X1 = array([0.5, 0.5])
-        self.X2 = array([0.5, 0.5])
+        self.X2 = array([5.0, 5.0])
+
+        # self.gamma1 = 0.1
+        # self.gamma2 = 1. - self.gamma1
+        #
+        # self.Omega1 = array([[0., -1.], [1., 0.]])*pi
+        # self.Omega2 = array([[0., -1.], [1., 0.]])*pi/3
+        #
+        # self.X1 = array([0.5, 0.5])
+        # self.X2 = array([0.5, 0.5])
 
         self.x0 = self.gamma1 * self.X1 + self.gamma2 * self.X2
 
@@ -119,7 +119,6 @@ class Motion2(Motion):
         v = self.gamma1 * v1 + self.gamma2 * v2
 
         # print(v)
-
         return v
 
     def getDvDt(self, xIJ, time):
