@@ -150,8 +150,8 @@ def runAnalysis(numAlg, motion):
     # print(dtList)
 
 def Main():
-    numAlgorithms = {ExplicitEuler(), RungeKutta4(), MidPointRule(), MidPointMethod2()}
-    motionList = {Motion1(),  Motion2()}
+    numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule(), MidPointMethod2() )
+    motionList = (Motion1(),  Motion2() )
 
     filenames = []
     for numalg in numAlgorithms:
