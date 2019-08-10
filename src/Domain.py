@@ -491,8 +491,6 @@ class Domain(object):
             except CellIndexError as e:
                 print(e)
                 raise e
-        
-        return FerrorList
 
         # print(self.time)
         return (FerrorList, positionErrorList)
