@@ -48,9 +48,9 @@ def runAnalysis(numAlg, motion):
         print('dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(dt, positionErrors[-1], Ferrors[-1]))
         # print('dt = {:.2E}, Position error = {:.3E}'.format(dt, positionErrors[-1]))
         # print("\n")
-        if (Ferrors[-1] < 1.e-16):
+        if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
             break
-        dt /= 2.0
+        dt /= 10.
 
     # create folder to store images
     if not os.path.isdir("images"):
@@ -83,11 +83,11 @@ def runAnalysis(numAlg, motion):
     y = array([Ferrors[0], Ferrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
     ax1.loglog(x, y, 'r--', linewidth=2, label="5th order")
 
-    # ax1.set_ylim(1e-16, 1e1)
+    ax1.set_ylim(1e-17, 1e2)
     ax1.set_xlabel('$\Delta t$ (s)')
     ax1.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
 
-    plt.ylim([1e-16,1.])
+    plt.ylim([1e-17,1e2])
 
     ax1.legend(loc="best")
 
@@ -96,10 +96,10 @@ def runAnalysis(numAlg, motion):
     # ax1.axis('tight')
     plt.savefig(os.path.join("images", "{}_{}_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
                 bbox_inches='tight')
-    plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
-                bbox_inches='tight')
+    # plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
+    #             bbox_inches='tight')
 
-    slope = log(Ferrors[0] / Ferrors[-1]) / log(dtList[0] / dtList[-1])
+    slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
     print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
     # Plots for position errors
@@ -135,16 +135,16 @@ def runAnalysis(numAlg, motion):
 
     ax2.legend(loc="best")
 
-    plt.ylim([1e-16,1.])
+    ax2.set_ylim([1e-17,1e2])
 
     ax2.grid(True)
     # ax2.axis('tight')
     plt.savefig(os.path.join("images", "{}_{}_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
                 bbox_inches='tight')
-    plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
-                bbox_inches='tight')
+    # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
+    #             bbox_inches='tight')
 
-    slope = log(positionErrors[0] / positionErrors[-1]) / log(dtList[0] / dtList[-1])
+    slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
     print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
     # print(positionErrors)
     # print(dtList)
@@ -152,22 +152,24 @@ def runAnalysis(numAlg, motion):
 
 
 def Main():
-    numAlgorithms = {"ee": ExplicitEuler(), "rk4": RungeKutta4(), "midpt":MidPointRule(), "heun": HeunsMethod()}
-    motionDict = {"m1": Motion1(), "m2": Motion2()}
+    numAlgorithms = {ExplicitEuler(), RungeKutta4(), MidPointRule(), MidPointMethod2()}
+    motionList = {Motion1(),  Motion2()}
 
-    # filenames = []
-    # for algName, numalg in numAlgorithms.items():
-    #     for mName, motion in motionDict.items():
-    #         runAnalysis(numalg, motion)
-    #         filenames.append("{}_{}_Position_convergence.pdf".format(numalg, motion))
-    #         filenames.append("{}_{}_F_convergence.pdf".format(numalg, motion))
-    #         print("\n")
-    #
-    # for fn in filenames:
-    #     print(fn)
+    filenames = []
+    for numalg in numAlgorithms:
+        motion = Motion2()
+        runAnalysis(numalg, motion)
+        filenames.append("{}_{}_Position_convergence.pdf".format(numalg, motion))
+        filenames.append("{}_{}_F_convergence.pdf".format(numalg, motion))
+        print("\n")
 
-    #runAnalysis(RungeKutta4(), Motion1())
-    runAnalysis(numAlgorithms['rk4'], motionDict['m1'])
+    for fn in filenames:
+        print(fn)
+
+    # runAnalysis(RungeKutta4(), Motion1())
+    # print("\n")
+    # runAnalysis(RungeKutta4(), Motion2())
+    # runAnalysis(numAlgorithms['rk4'], motionDict['m2'])
 
 if __name__ == '__main__':
     Main()
