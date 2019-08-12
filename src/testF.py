@@ -1,8 +1,8 @@
 from LocalConvergenceTest import *
+from GlobalConvergenceTest import *
 
 def Main():
-    test1 = LocalConvergenceTest()
-    test1.runAnalysis()
-
+    LocalConvergenceTest().runAnalysis()
+    # GlobalConvergenceTest().runAnalysis()
 if __name__ == '__main__':
     Main()

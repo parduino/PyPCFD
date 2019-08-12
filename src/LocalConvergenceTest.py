@@ -57,12 +57,16 @@ class LocalConvergenceTest(object):
             # (or to any fixed time throughout the test !!!)
             # domain.setState(dt)    # this line is wrong
             domain.setState(0)
+            x0 = domain.getParticles()[0].position() # save original position of particle
 
-            # returns error for all particles. Use [0] for first [1] for second etc..
-            FerrorList, positionErrorList = domain.updateParticleMotion(dt)
-
-            Ferrors.append(FerrorList[0])
-            positionErrors.append(positionErrorList[0])
+            # update particle
+            domain.updateParticleMotion(dt)
+            # calculate and store errors from updated particle position
+            particle = domain.getParticles()[0]
+            posError = norm( particle.position() - motion.getAnalyticalPosition(x0, dt) )
+            FError = norm(particle.getDeformationGradient() - motion.getAnalyticalF(x0, dt) )
+            Ferrors.append(FError)
+            positionErrors.append(posError)
 
             print('dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(dt, positionErrors[-1], Ferrors[-1]))
             # print('dt = {:.2E}, Position error = {:.3E}'.format(dt, positionErrors[-1]))

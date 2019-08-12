@@ -481,19 +481,19 @@ class Domain(object):
                 p.setDeformationGradient(dot(dF, p.getDeformationGradient()))
 
                 # compute error measures ...
-                Fanalytical = self.motion.getAnalyticalF(dt)
+                # Fanalytical = self.motion.getAnalyticalF(dt)
                 # print("analytical:", Fanalytical)
                 # print("mpm:", dF)
-                Ferror = norm(Fanalytical - dF)
+                # Ferror = norm(Fanalytical - dF)
 
-                FerrorList.append(Ferror)
+                # FerrorList.append(Ferror)
 
             except CellIndexError as e:
                 print(e)
                 raise e
 
         # print(self.time)
-        return (FerrorList, positionErrorList)
+        # return (FerrorList, positionErrorList)
 
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
@@ -605,3 +605,6 @@ class Domain(object):
 
         for cell in self.cells:
             cell.SetVelocity()
+
+    def getParticles(self):
+        return self.particles

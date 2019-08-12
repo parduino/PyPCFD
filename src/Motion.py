@@ -26,7 +26,7 @@ class Motion(object):
         pass
 
     @abstractmethod
-    def getAnalyticalF(self, time):
+    def getAnalyticalF(self, xIJ, time):
         pass
 
     @abstractmethod
@@ -59,7 +59,7 @@ class Motion1(Motion):
     def getDvDt(self, xIJ, time):
         return -self.Omega @ self.Vel0
 
-    def getAnalyticalF(self, time):
+    def getAnalyticalF(self, xIJ, time):
         Q = expm(time * self.Omega)
         # print(Q)
         return Q  # brute force matrix exponential
@@ -151,7 +151,7 @@ class Motion2(Motion):
         return dvdt
 
 
-    def getAnalyticalF(self, time):
+    def getAnalyticalF(self, xIJ, time):
         Q1 = expm(time*self.Omega1)
         Q2 = expm(time*self.Omega2)
 
