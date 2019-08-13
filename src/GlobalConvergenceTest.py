@@ -10,8 +10,10 @@ from ButcherTableau import *
 class GlobalConvergenceTest(object):
 
     def __init__(self):
-        # self.numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule(), MidPointMethod2())
-        # self.motionList = (Motion1(), Motion2())
+        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        self.motionList = (Motion1(), Motion2())
+        # self.numAlgorithms = [RungeKutta4()]
+        # self.motionList = [Motion2()]
 
         # configure the analysis type
         self.doInit = False
@@ -24,9 +26,6 @@ class GlobalConvergenceTest(object):
         self.addTransient = False
         self.plotFigures = True
         self.writeOutput = False
-
-        self.numAlgorithms = [MidPointRule()]
-        self.motionList = [Motion1()]
 
         # create folder to store images
         if not os.path.isdir("images"):
@@ -68,7 +67,10 @@ class GlobalConvergenceTest(object):
 
             # update particle
             for j in range(N):
+                domain.setTime(j*dt)
+                domain.setMotion(motion)
                 domain.updateParticleMotion(dt)
+
             # calculate and store errors from updated particle position
             particle = domain.getParticles()[0]
             posError = norm( particle.position() - motion.getAnalyticalPosition(x0, dt*N))
