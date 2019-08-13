@@ -244,7 +244,7 @@ class Domain(object):
         self.plotData()
         self.writeData()
 
-    def setState(self, dt):
+    def setState(self, time):
         for nodeList in self.nodes:
             for node in nodeList:
                 node.setVelocity(zeros(2))
@@ -252,7 +252,7 @@ class Domain(object):
         for cell in self.cells:
             cell.mapMassToNodes()
 
-        self.setMotion(dt)
+        self.setMotion(time)
 
         ###self.time += dt   # WHAT IS THAT FOR ?????
             
@@ -426,10 +426,7 @@ class Domain(object):
         a = dt*self.particleUpdateScheme.get_a()  # time factors
         b = dt*self.particleUpdateScheme.get_b()  # position factors
         c = dt*self.particleUpdateScheme.get_c()  # update factors        
-        tn = self.time 
-        
-        FerrorList = []
-        positionErrorList=[]
+        tn = self.time
         
         for p in self.particles:
 
@@ -439,7 +436,6 @@ class Domain(object):
             
             dF  = identity(2)
             xn1 = p.position()
-            xOld = copy.copy(xn1)
             Nsteps = len(a)
             
             try:
@@ -455,8 +451,6 @@ class Domain(object):
                     cell = self.findCell(xi)
 
                     kI.append(cell.GetVelocity(xi) + a[i]*cell.GetApparentAccel(xi))
-                    # kI.append(cell.GetVelocity(xi) + a[i]*cell.GetAcceleration(xi))
-
                     Dv.append(cell.GetGradientV(xi) + a[i]*cell.GetGradientA(xi))
                     
                     fI.append(f)
@@ -469,8 +463,6 @@ class Domain(object):
 
                 # update particle position ...
                 p.addToPosition(xn1 - p.position())
-                positionError = norm(xn1 - self.motion.getAnalyticalPosition(xOld, dt))
-                positionErrorList.append(positionError)
                 
                 # update particle velocity ...
                 cell = self.findCell(xn1)
@@ -479,14 +471,6 @@ class Domain(object):
                 
                 # update the deformation gradient ...
                 p.setDeformationGradient(dot(dF, p.getDeformationGradient()))
-
-                # compute error measures ...
-                # Fanalytical = self.motion.getAnalyticalF(dt)
-                # print("analytical:", Fanalytical)
-                # print("mpm:", dF)
-                # Ferror = norm(Fanalytical - dF)
-
-                # FerrorList.append(Ferror)
 
             except CellIndexError as e:
                 print(e)
@@ -593,15 +577,15 @@ class Domain(object):
         self.plot.setData(self.nodes)
         self.plot.writeData(self.time)
 
-    def setMotion(self, dt=0.0):
+    def setMotion(self, time=0.0):
         # set nodal velocity field
         for i in range(self.nCellsX + 1):
             for j in range(self.nCellsY + 1):
                 # xIJ is Eulerial nodal position
                 xIJ = self.nodes[i][j].getPosition()
-                newV = self.motion.getVel(xIJ, self.time)
+                newV = self.motion.getVel(xIJ, time)
                 self.nodes[i][j].setVelocity(newV)
-                newA = self.motion.getDvDt(xIJ, self.time)
+                newA = self.motion.getDvDt(xIJ, time)
 
                 self.nodes[i][j].setApparentAccel(newA)
 
@@ -610,3 +594,6 @@ class Domain(object):
 
     def getParticles(self):
         return self.particles
+
+    def setTime(self, time):
+        self.time = time
