@@ -10,10 +10,10 @@ from ButcherTableau import *
 class GlobalConvergenceTest(object):
 
     def __init__(self):
-        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
-        self.motionList = (Motion1(), Motion2())
-        # self.numAlgorithms = [RungeKutta4()]
-        # self.motionList = [Motion2()]
+        # self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        # self.motionList = (Motion1(), Motion2())
+        self.numAlgorithms = [RungeKutta4()]
+        self.motionList = [Motion1()]
 
         # configure the analysis type
         self.doInit = False
@@ -62,13 +62,14 @@ class GlobalConvergenceTest(object):
                                self.addTransient, self.plotFigures, self.writeOutput)
 
             # Set the velocity field to the initial velocity field
-            domain.setState(0)
+            # domain.setState(0)
             x0 = domain.getParticles()[0].position() # save original position of particle for comparison later
 
             # update particle
             for j in range(N):
-                domain.setTime(j*dt)
-                domain.setMotion(motion)
+                # domain.setTime(j*dt)
+                # domain.setMotion(motion)
+                domain.setState(j*dt)
                 domain.updateParticleMotion(dt)
 
             # calculate and store errors from updated particle position
