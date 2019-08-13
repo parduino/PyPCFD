@@ -244,7 +244,7 @@ class Domain(object):
         self.plotData()
         self.writeData()
 
-    def setState(self, dt):
+    def setState(self, time):
         for nodeList in self.nodes:
             for node in nodeList:
                 node.setVelocity(zeros(2))
@@ -252,7 +252,7 @@ class Domain(object):
         for cell in self.cells:
             cell.mapMassToNodes()
 
-        self.setMotion(dt)
+        self.setMotion(time)
 
         ###self.time += dt   # WHAT IS THAT FOR ?????
             
@@ -575,15 +575,15 @@ class Domain(object):
         self.plot.setData(self.nodes)
         self.plot.writeData(self.time)
 
-    def setMotion(self, dt=0.0):
+    def setMotion(self, time=0.0):
         # set nodal velocity field
         for i in range(self.nCellsX + 1):
             for j in range(self.nCellsY + 1):
                 # xIJ is Eulerial nodal position
                 xIJ = self.nodes[i][j].getPosition()
-                newV = self.motion.getVel(xIJ, self.time)
+                newV = self.motion.getVel(xIJ, time)
                 self.nodes[i][j].setVelocity(newV)
-                newA = self.motion.getDvDt(xIJ, self.time)
+                newA = self.motion.getDvDt(xIJ, time)
 
                 self.nodes[i][j].setApparentAccel(newA)
 
