@@ -2,7 +2,7 @@ from LocalConvergenceTest import *
 from GlobalConvergenceTest import *
 
 def Main():
-    # LocalConvergenceTest().runAnalysis()
+    LocalConvergenceTest().runAnalysis()
     GlobalConvergenceTest().runAnalysis()
 
 

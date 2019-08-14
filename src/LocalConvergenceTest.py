@@ -156,7 +156,7 @@ class LocalConvergenceTest(object):
 
         ax2.legend(loc="best")
 
-        ax2.set_ylim([1e-17, 1e2])
+        ax2.set_ylim([1e-17, 1e1])
 
         ax2.grid(True)
         # ax2.axis('tight')
@@ -164,6 +164,8 @@ class LocalConvergenceTest(object):
                     bbox_inches='tight')
         # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
         #             bbox_inches='tight')
+
+        plt.close()
 
         slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
