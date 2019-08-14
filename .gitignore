@@ -17,3 +17,7 @@ src/.DS_Store
 *.iml
 *.pdf
 
+
+src/data/
+
+\.DS_Store

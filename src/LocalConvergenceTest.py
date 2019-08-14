@@ -108,7 +108,7 @@ class LocalConvergenceTest(object):
         ax1.legend(loc="best")
 
         ax1.grid(True)
-        
+
         fileName = "{}_{}_F_convergence.{}".format(numAlg, motion, self.fileType)
         fileNameWithPath = os.path.join("images", fileName)
 
