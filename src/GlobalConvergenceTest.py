@@ -9,11 +9,12 @@ from ButcherTableau import *
 
 class GlobalConvergenceTest(object):
 
-    def __init__(self):
+    def __init__(self, fileType='png'):
         self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
         self.motionList = (Motion1(), Motion2())
         # self.numAlgorithms = (MidPointRule(),)
         # self.motionList = (Motion2(),)
+        self.fileType = fileType
 
         # configure the analysis type
         self.doInit = False
@@ -165,10 +166,10 @@ class GlobalConvergenceTest(object):
 
         ax2.grid(True)
         # ax2.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_Global_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        fileName = "{}_{}_Global_Position_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
+
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         plt.close()
 

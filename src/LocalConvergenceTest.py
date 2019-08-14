@@ -9,21 +9,16 @@ from ButcherTableau import *
 
 class LocalConvergenceTest(object):
 
-    def __init__(self):
+    def __init__(self, fileType='png'):
         self.numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule(), MidPointMethod2())
         self.motionList = (Motion1(), Motion2())
+        self.fileType = fileType
 
     def runAnalysis(self):
-        filenames = []
         for numalg in self.numAlgorithms:
             for motion in self.motionList:
                 self.runCase(numalg, motion)
-                filenames.append("{}_{}_Position_convergence.pdf".format(numalg, motion))
-                filenames.append("{}_{}_F_convergence.pdf".format(numalg, motion))
-                print("\n")
-
-        for fn in filenames:
-            print(fn)
+                print()
 
     def runCase(self, numAlg, motion):
         # configure the analysis type
@@ -160,10 +155,10 @@ class LocalConvergenceTest(object):
 
         ax2.grid(True)
         # ax2.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        fileName = "{}_{}_Position_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
+
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         plt.close()
 
