@@ -12,8 +12,8 @@ class GlobalConvergenceTest(object):
     def __init__(self):
         self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
         self.motionList = (Motion1(), Motion2())
-        # self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
-        # self.motionList = [Motion2()]
+        # self.numAlgorithms = (MidPointRule(),)
+        # self.motionList = (Motion2(),)
 
         # configure the analysis type
         self.doInit = False
@@ -113,7 +113,7 @@ class GlobalConvergenceTest(object):
         ax1.set_xlabel('$N$')
         ax1.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
 
-        # plt.ylim([1e-17, 1e2])
+        plt.ylim([1e-17, 1e1])
 
         ax1.legend(loc="best")
 
@@ -169,6 +169,8 @@ class GlobalConvergenceTest(object):
                     bbox_inches='tight')
         # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
         #             bbox_inches='tight')
+
+        plt.close()
 
         slope = log(positionErrors[0] / positionErrors[3]) / log(NList[0] / NList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
