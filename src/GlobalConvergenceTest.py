@@ -10,9 +10,9 @@ from ButcherTableau import *
 class GlobalConvergenceTest(object):
 
     def __init__(self):
-        # self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
         # self.motionList = (Motion1(), Motion2())
-        self.numAlgorithms = (MidPointRule(),)
+        # self.numAlgorithms = (MidPointRule(),)
         self.motionList = (Motion2(),)
 
         # configure the analysis type

@@ -112,7 +112,7 @@ class Motion2(Motion):
         S2 = Q2 @ Rinv
 
         x1 = Q1 @ self.X1
-        x2 = Q1 @ self.X2
+        x2 = Q2 @ self.X2
 
         xTilde = self.gamma1 * x1 + self.gamma2 * x2
         xTilde -= self.x0
@@ -135,7 +135,7 @@ class Motion2(Motion):
         S2 = Q2 @ Rinv
 
         x1 = Q1 @ self.X1
-        x2 = Q1 @ self.X2
+        x2 = Q2 @ self.X2
 
         xTilde = self.gamma1 * x1 + self.gamma2 * x2
         xTilde -= self.x0
