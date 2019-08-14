@@ -108,12 +108,11 @@ class LocalConvergenceTest(object):
         ax1.legend(loc="best")
 
         ax1.grid(True)
+        
+        fileName = "{}_{}_F_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
 
-        # ax1.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))

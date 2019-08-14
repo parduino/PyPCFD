@@ -1,6 +1,14 @@
 #!/bin/bash
 
-CONVERT=/opt/local/bin/convert
+if [ -x /opt/local/bin/convert ]
+then
+    CONVERT=/opt/local/bin/convert
+elif [ -x /usr/local/bin/convert ]
+then
+    CONVERT=/usr/local/bin/convert
+else
+    exit 2
+fi
 
 if [ -x ${CONVERT} ]
 then
