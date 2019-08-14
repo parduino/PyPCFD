@@ -33,16 +33,10 @@ class GlobalConvergenceTest(object):
             os.mkdir("images")
 
     def runAnalysis(self):
-        filenames = []
         for numalg in self.numAlgorithms:
             for motion in self.motionList:
                 self.runCase(numalg, motion)
-                filenames.append("{}_{}_Global_Position_convergence.pdf".format(numalg, motion))
-                filenames.append("{}_{}_Global_F_convergence.pdf".format(numalg, motion))
-                print("\n")
-
-        for fn in filenames:
-            print(fn)
+                print()
 
     def runCase(self, numAlg, motion):
         maxTime = 1.0
