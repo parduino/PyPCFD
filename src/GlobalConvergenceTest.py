@@ -10,10 +10,10 @@ from ButcherTableau import *
 class GlobalConvergenceTest(object):
 
     def __init__(self):
+        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        self.motionList = (Motion1(), Motion2())
         # self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
-        # self.motionList = (Motion1(), Motion2())
-        self.numAlgorithms = [RungeKutta4()]
-        self.motionList = [Motion1()]
+        # self.motionList = [Motion2()]
 
         # configure the analysis type
         self.doInit = False
@@ -36,8 +36,8 @@ class GlobalConvergenceTest(object):
         for numalg in self.numAlgorithms:
             for motion in self.motionList:
                 self.runCase(numalg, motion)
-                filenames.append("{}_{}_Position_convergence.pdf".format(numalg, motion))
-                filenames.append("{}_{}_F_convergence.pdf".format(numalg, motion))
+                filenames.append("{}_{}_Global_Position_convergence.pdf".format(numalg, motion))
+                filenames.append("{}_{}_Global_F_convergence.pdf".format(numalg, motion))
                 print("\n")
 
         for fn in filenames:
@@ -62,13 +62,10 @@ class GlobalConvergenceTest(object):
                                self.addTransient, self.plotFigures, self.writeOutput)
 
             # Set the velocity field to the initial velocity field
-            # domain.setState(0)
-            x0 = domain.getParticles()[0].position() # save original position of particle for comparison later
+            x0 = domain.getParticles()[0].position()  # save original position of particle for comparison later
 
             # update particle
             for j in range(N):
-                # domain.setTime(j*dt)
-                # domain.setMotion(motion)
                 domain.setState(j*dt)
                 domain.updateParticleMotion(dt)
 
@@ -123,7 +120,7 @@ class GlobalConvergenceTest(object):
         ax1.grid(True)
 
         # ax1.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
+        plt.savefig(os.path.join("images", "{}_{}_Global_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
                     bbox_inches='tight')
         # plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
         #             bbox_inches='tight')
@@ -168,7 +165,7 @@ class GlobalConvergenceTest(object):
 
         ax2.grid(True)
         # ax2.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
+        plt.savefig(os.path.join("images", "{}_{}_Global_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
                     bbox_inches='tight')
         # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
         #             bbox_inches='tight')
