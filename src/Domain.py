@@ -245,6 +245,9 @@ class Domain(object):
         self.writeData()
 
     def setState(self, time):
+
+        self.time = time
+
         for nodeList in self.nodes:
             for node in nodeList:
                 node.setVelocity(zeros(2))
@@ -267,7 +270,6 @@ class Domain(object):
             if (nsteps>50):
                 nsteps= 50
             dt = (maxtime - self.time) / nsteps
-        
 
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)

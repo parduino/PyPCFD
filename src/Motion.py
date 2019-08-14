@@ -82,7 +82,7 @@ class Motion2(Motion):
         # self.Omega2 = array([[0., -1.], [1., 0.]])*pi/1.5
 
         self.Omega1 = array([[0., -1.], [1., 0.]])*pi/4.
-        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/4.
+        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/6.
 
         self.X1 = array([0.5, 0.5])
         self.X2 = array([5.0, 5.0])
