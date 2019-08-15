@@ -84,8 +84,6 @@ def Main():
         time += dt
         domain.runAnalysis(time)
 
-
-
     
     # generate the animation
     subprocess.run('./makeAnim.sh')

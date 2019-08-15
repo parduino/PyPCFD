@@ -9,7 +9,9 @@ from Cell import *
 from matrixDataType import *
 
 from Particle import *
-from Output import *
+
+from Writer import *
+from Plotter import *
 
 from Errors import *
 from ButcherTableau import *
@@ -41,6 +43,9 @@ class Domain(object):
         self.Re
         self.v0
         self.time = 0.0
+
+        self.plot
+        self.writer
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
@@ -139,6 +144,9 @@ class Domain(object):
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+
+        self.writer = Writer()
+        self.writer.setGrid(width, height, nCellsX, nCellsY)
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -567,12 +575,12 @@ class Domain(object):
 
     def plotData(self):
         self.plot.setData(self.nodes)
-        self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
 
     def writeData(self):
-        self.plot.setData(self.nodes)
-        self.plot.writeData(self.time)
+        self.writer.setParticleData(self.particles)
+        self.writer.setData(self.nodes)
+        self.writer.writeData(self.time)
 
     def setMotion(self, time=0.0):
         # set nodal velocity field
