@@ -48,6 +48,7 @@ class GlobalConvergenceTest(object):
         dt = maxTime/N
         while (N<=1e3):
             NList.append(N)
+
             domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
             domain.setMotion(motion)
             domain.setTimeIntegrator(numAlg)
