@@ -1,6 +1,6 @@
 from Domain import *
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
 from math import log
 import os
 from Motion import *
@@ -26,6 +26,10 @@ class GlobalConvergenceTest(object):
         self.updateStress = False
         self.addTransient = False
 
+        # Domain parameters
+        self.domainHeight = 1.0
+        self.domainWidth = 1.0
+
         # create folder to store images
         if not os.path.isdir("images"):
             os.mkdir("images")
@@ -34,7 +38,6 @@ class GlobalConvergenceTest(object):
         for numalg in self.numAlgorithms:
             for motion in self.motionList:
                 self.runCase(numalg, motion)
-                print()
 
     def runCase(self, numAlg, motion):
         maxTime = 1.0
@@ -43,7 +46,7 @@ class GlobalConvergenceTest(object):
         NList = []
         N = 1
         dt = maxTime/N
-        while (dt > 1.0e-8 and N<10000):
+        while (N<=1e3):
             NList.append(N)
             domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
             domain.setMotion(motion)
