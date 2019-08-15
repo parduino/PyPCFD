@@ -181,7 +181,8 @@ class Domain(object):
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
 
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput):
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced,
+                    updatePosition, updateStress, addTransient, plotFigures, writeOutput):
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,

@@ -42,7 +42,7 @@ class Motion1(Motion):
         theta = pi/2.0
         self.X0 = array([0.5, 0.5])
 
-        self.Vel0 = array([0.1, 0.0])   # translation velocity
+        self.Vel0 = array([0.1, 0.1])   # translation velocity
 
         # calculate rotation matrix
         self.Omega = array([[0.0, -theta],
@@ -75,17 +75,23 @@ class Motion2(Motion):
     def __init__(self):
         super().__init__()
 
-        self.gamma1 = 0.1
+        # self.gamma1 = 0.1
+        # self.gamma2 = 1. - self.gamma1
+
+        # self.Omega1 = array([[0., -1.], [1., 0.]])*pi/4.
+        # self.Omega2 = array([[0., -1.], [1., 0.]])*pi/6.
+        #
+        # self.X1 = array([0.5, 0.5])
+        # self.X2 = array([5.0, 5.0])
+
+        self.gamma1 = 0.5
         self.gamma2 = 1. - self.gamma1
 
-        # self.Omega1 = array([[0., -1.], [1., 0.]])*pi/1.
-        # self.Omega2 = array([[0., -1.], [1., 0.]])*pi/1.5
-
         self.Omega1 = array([[0., -1.], [1., 0.]])*pi/4.
-        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/6.
+        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/40.
 
         self.X1 = array([0.5, 0.5])
-        self.X2 = array([5.0, 5.0])
+        self.X2 = array([0.5, 0.5])
 
         # self.gamma1 = 0.1
         # self.gamma2 = 1. - self.gamma1
