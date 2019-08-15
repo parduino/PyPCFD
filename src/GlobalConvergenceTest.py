@@ -25,8 +25,6 @@ class GlobalConvergenceTest(object):
         self.updatePosition = True
         self.updateStress = False
         self.addTransient = False
-        self.plotFigures = True
-        self.writeOutput = False
 
         # create folder to store images
         if not os.path.isdir("images"):
@@ -47,14 +45,17 @@ class GlobalConvergenceTest(object):
         dt = maxTime/N
         while (dt > 1.0e-8 and N<10000):
             NList.append(N)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
-                            motion=motion,
-                            particleUpdateScheme=numAlg)
+            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain.setMotion(motion)
+            domain.setTimeIntegrator(numAlg)
 
             domain.setAnalysis(self.doInit, self.solveVstar, self.solveP,
                                self.solveVtilde, self.solveVenhanced,
                                self.updatePosition, self.updateStress,
-                               self.addTransient, self.plotFigures, self.writeOutput)
+                               self.addTransient)
+
+            domain.setPlotInterval(maxTime)   # plot only at the end
+            domain.setWriteInterval(-1)       # no recorder output
 
             # Set the velocity field to the initial velocity field
             x0 = domain.getParticles()[0].position()  # save original position of particle for comparison later
@@ -71,7 +72,8 @@ class GlobalConvergenceTest(object):
             Ferrors.append(FError)
             positionErrors.append(posError)
 
-            print('N = {}, dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(N, dt, positionErrors[-1], Ferrors[-1]))
+            mask = 'N = {}, dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
+            print(mask.format(N, dt, positionErrors[-1], Ferrors[-1]))
             if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
                 break
             N *= 10
@@ -116,7 +118,6 @@ class GlobalConvergenceTest(object):
 
         fileName = "{}_{}_Global_F_convergence.{}".format(numAlg, motion, self.fileType)
         fileNameWithPath = os.path.join("images", fileName)
-
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         slope = log(Ferrors[0] / Ferrors[3]) / log(NList[0] / NList[-1])

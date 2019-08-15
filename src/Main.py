@@ -36,21 +36,16 @@ def Main():
     solveVenhanced = False
     updatePosition = False
     updateStress   = False
-    #addTransient   = True
-    addTransient   = False
-    plotFigures    = True
-    writeOutput    = False
+    addTransient   = True
     
     domain.setAnalysis(doInit,
                        solveVstar,
-		       solveP,
-		       solveVtilde,
-		       solveVenhanced,
-		       updatePosition,
-		       updateStress,
-		       addTransient,
-		       plotFigures,
-		       writeOutput)
+                       solveP,
+                       solveVtilde,
+                       solveVenhanced,
+                       updatePosition,
+                       updateStress,
+                       addTransient)
     domain.setParameters(Re, density, velocity)
     domain.setInitialState()
     
