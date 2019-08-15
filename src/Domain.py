@@ -477,11 +477,6 @@ class Domain(object):
             except CellIndexError as e:
                 print(e)
                 raise e
-        
-        # return FerrorList
-
-        # print(self.time)
-        # return (FerrorList, positionErrorList)
 
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
