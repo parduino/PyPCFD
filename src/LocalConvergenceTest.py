@@ -10,24 +10,29 @@ from ButcherTableau import *
 class LocalConvergenceTest(object):
 
     def __init__(self, fileType='png'):
-        self.numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule())
+        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
         # self.motionList = (Motion1(), Motion2())
         # self.numAlgorithms = (ExplicitEuler(),)
         self.motionList = (Motion1(),)
         self.fileType = fileType
 
+        # plotting options
+        self.numAlgLineStyles = ["k-o", "k-s", "k-^"]
+
+
     def runAnalysis(self):
         for motion in self.motionList:
             # create POSITION plots for each motion
-            fig, ax = plt.subplots()
-            matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
-            matplotlib.rcParams['font.size'] = 15
-            for numalg in self.numAlgorithms:
+            # fig, ax1 = plt.subplots()
+            # matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+            # matplotlib.rcParams['font.size'] = 15
+            for j, numalg in enumerate(self.numAlgorithms):
                 dtList, positionErrors, Ferrors = self.runCase(numalg, motion)
                 # add position data to plot
-                ax.loglog(dtList, positionErrors, 'k-o', linewidth=2, label=numalg)
+                self.plotPositionErrors(dtList, positionErrors, numalg, motion)
+                # ax1.loglog(dtList, positionErrors, self.numAlgLineStyles[j], linewidth=2, label=numalg)
 
-            self.finalizePositionPlot(ax, dtList, positionErrors)
+            # self.finalizePositionPlot(ax1, dtList, positionErrors)
             # plt.show()
 
     def finalizePositionPlot(self, ax, dtList, positionErrors):
@@ -50,17 +55,6 @@ class LocalConvergenceTest(object):
         ax.set_ylim([1e-17, 1e1])
 
         ax.grid(True)
-        # fileName = "{}_{}_Position_convergence.{}".format(numAlg, motion, self.fileType)
-        # fileNameWithPath = os.path.join("images", fileName)
-        #
-        # plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
-
-        plt.close()
-
-        # slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
-
-
-
 
 
     def runCase(self, numAlg, motion):
