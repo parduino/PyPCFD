@@ -47,14 +47,15 @@ class GlobalConvergenceTest(object):
         dt = maxTime/N
         while (dt > 1.0e-8 and N<10000):
             NList.append(N)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
-                            motion=motion,
-                            particleUpdateScheme=numAlg)
+            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain.setMotion(motion)
+            domain.setTimeIntegrator(numAlg)
 
             domain.setAnalysis(self.doInit, self.solveVstar, self.solveP,
                                self.solveVtilde, self.solveVenhanced,
                                self.updatePosition, self.updateStress,
-                               self.addTransient, self.plotFigures, self.writeOutput)
+                               self.addTransient)
+            , self.plotFigures, self.writeOutput)
 
             # Set the velocity field to the initial velocity field
             x0 = domain.getParticles()[0].position()  # save original position of particle for comparison later

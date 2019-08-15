@@ -11,7 +11,7 @@ from matrixDataType import *
 from Particle import *
 
 from Writer import *
-from Plotter import *
+from Plotter2 import *
 
 from Errors import *
 from ButcherTableau import *
@@ -46,10 +46,15 @@ class Domain(object):
 
         self.plot
         self.writer
+
+        self.motion                 ... manufactured solution for testing
+        self.particleUpdateScheme   ... the timeIntegrator
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
+        def setTimeIntegrator(self, integrator)
+        def setMotion(self, motion)
         def setBoundaryConditions(self)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
         def getAnalysisControl(self)
@@ -74,7 +79,7 @@ class Domain(object):
         def setMotion(self, dt=0.0)
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, motion=None, particleUpdateScheme=RungeKutta4()):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
         '''
         Constructor
         '''
@@ -99,9 +104,8 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
-        self.motion = motion
-        self.particleUpdateScheme = particleUpdateScheme
-
+        self.motion = None
+        self.particleUpdateScheme = ExplicitEuler()
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -158,6 +162,12 @@ class Domain(object):
         for cell in self.cells:
             s += str(cell) + "\n"
         return s
+
+    def setTimeIntegrator(self, integrator):
+        self.particleUpdateScheme = integrator
+
+    def setMotion(self, motion):
+        self.motion = motion
         
     def setBoundaryConditions(self):
         
@@ -181,7 +191,7 @@ class Domain(object):
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
 
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient, plotFigures, writeOutput):
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -191,14 +201,13 @@ class Domain(object):
             'updatePosition':updatePosition,
             'updateStress':updateStress,
             'addTransient':addTransient,
-            'plotFigures':plotFigures,
-            'writeOutput':writeOutput
+            'plotFigures':False,
+            'writeOutput':False
             }
 
         for cell in self.cells:
             # cell.setEnhanced(True)
             cell.setEnhanced(solveVenhanced)
-
 
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")

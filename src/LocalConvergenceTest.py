@@ -39,14 +39,15 @@ class LocalConvergenceTest(object):
         dt = 1.0
         while (dt > 1.0e-8):
             dtList.append(dt)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
-                            motion=motion,
-                            particleUpdateScheme=numAlg)
+            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain.setMotion(motion)
+            domain.setTimeIntegrator(numAlg)
 
             domain.setAnalysis(doInit, solveVstar, solveP,
                                solveVtilde, solveVenhanced,
                                updatePosition, updateStress,
-                               addTransient, plotFigures, writeOutput)
+                               addTransient)
+            plotFigures, writeOutput)
 
             # you need to set the velocity field to the initial velocity field
             # (or to any fixed time throughout the test !!!)
