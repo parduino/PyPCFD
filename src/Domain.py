@@ -214,9 +214,7 @@ class Domain(object):
             'solveVenhanced':solveVenhanced,
             'updatePosition':updatePosition,
             'updateStress':updateStress,
-            'addTransient':addTransient,
-            'plotFigures':False,
-            'writeOutput':False
+            'addTransient':addTransient
             }
 
         for cell in self.cells:
@@ -304,7 +302,15 @@ class Domain(object):
 
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
-            self.time += dt 
+            self.time += dt
+
+            if self.plotControl['Active']:
+                # check if this is a plot interval
+                self.plotData()
+
+            if self.outputControl['Active']:
+                # check if this is an outout interval
+                self.writeData()
 
     def runSingleStep(self, time=0.0, dt=1.0):
 
@@ -324,10 +330,6 @@ class Domain(object):
             self.updateParticleMotion(dt)
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
-        if (self.analysisControl['plotFigures']):
-            self.plotData()
-        if (self.analysisControl['writeOutput']):
-            self.writeData()
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
@@ -598,11 +600,12 @@ class Domain(object):
 
     def plotData(self):
         self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
 
     def writeData(self):
-        self.writer.setParticleData(self.particles)
         self.writer.setData(self.nodes)
+        self.writer.setParticleData(self.particles)
         self.writer.writeData(self.time)
 
     def setMotion(self, time=0.0):
