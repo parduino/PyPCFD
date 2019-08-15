@@ -50,6 +50,9 @@ class Domain(object):
 
         self.motion                 ... manufactured solution for testing
         self.particleUpdateScheme   ... the timeIntegrator
+
+        self.lastWrite    ... time of the last output
+        self.lastPlot     ... time of the last plot
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
@@ -146,17 +149,23 @@ class Domain(object):
         # self.createParticles(2,2)
         #self.createParticlesMID(3,3)
         self.createParticleAtX(1.0, array([width/2.,height/3.]))
-        
+
+        # set default analysis parameters
         self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
 
+        # set default plot parameters
         self.plotControl   = {'Active':False, 'DelTime':-1 }
-        self.outputControl = {'Active':False, 'DelTime':-1 }
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+        self.lastPlot = self.time
+
+        # set default output parameters
+        self.outputControl = {'Active':False, 'DelTime':-1 }
 
         self.writer = Writer()
         self.writer.setGrid(width, height, nCellsX, nCellsY)
+        self.lastWrite = self.time
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -306,11 +315,15 @@ class Domain(object):
 
             if self.plotControl['Active']:
                 # check if this is a plot interval
-                self.plotData()
+                if self.time > (self.lastPlot + self.plotControl['DelTime'] - 0.5*dt) :
+                    self.plotData()
+                    self.lastPlot = self.time
 
             if self.outputControl['Active']:
                 # check if this is an outout interval
-                self.writeData()
+                if self.time > (self.lastPlot + self.outputControl['DelTime'] - 0.5*dt) :
+                    self.writeData()
+                    self.lastWrite = self.time
 
     def runSingleStep(self, time=0.0, dt=1.0):
 
