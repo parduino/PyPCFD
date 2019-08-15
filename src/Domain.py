@@ -11,19 +11,16 @@ from matrixDataType import *
 from Particle import *
 
 from Writer import *
-from Plotter import *
+from Plotter2 import *
 
 from Errors import *
 from ButcherTableau import *
 
-from numpy import array, linspace, dot, cross, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
-    ceil, transpose
+from numpy import array, dot, zeros, linspace, meshgrid, abs, ceil
 from numpy.linalg import solve
-from scipy.sparse.linalg import spsolve, expm
-from numpy.linalg import norm
+from scipy.sparse.linalg import spsolve
 
 from time import process_time
-import copy
 
 class Domain(object):
     '''
@@ -39,19 +36,33 @@ class Domain(object):
         self.nodes 
         self.cells 
         self.particles
+
         self.analysisControl
+        self.plotControl
+        self.outputControl
+
         self.Re
         self.v0
         self.time = 0.0
 
         self.plot
         self.writer
+
+        self.motion                 ... manufactured solution for testing
+        self.particleUpdateScheme   ... the timeIntegrator
+
+        self.lastWrite    ... time of the last output
+        self.lastPlot     ... time of the last plot
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
+        def setTimeIntegrator(self, integrator)
+        def setMotion(self, motion)
         def setBoundaryConditions(self)
-        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
+        def setPlotInterval(self, dt)
+        def setWriteInterval(self, dt)
+        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
         def getAnalysisControl(self)
         def setInitialState(self)
         def setParameters(self, Re, density, velocity)
@@ -74,7 +85,7 @@ class Domain(object):
         def setMotion(self, dt=0.0)
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, motion=None, particleUpdateScheme=RungeKutta4()):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
         '''
         Constructor
         '''
@@ -99,9 +110,8 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
-        self.motion = motion
-        self.particleUpdateScheme = particleUpdateScheme
-
+        self.motion = None
+        self.particleUpdateScheme = ExplicitEuler()
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -139,14 +149,23 @@ class Domain(object):
         # self.createParticles(2,2)
         #self.createParticlesMID(3,3)
         self.createParticleAtX(1.0, array([width/2.,height/3.]))
-        
-        # self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
+
+        # set default analysis parameters
+        self.setAnalysis(False, True, True, True, False, True, True, True)
+
+        # set default plot parameters
+        self.plotControl   = {'Active':False, 'DelTime':-1 }
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+        self.lastPlot = self.time
+
+        # set default output parameters
+        self.outputControl = {'Active':False, 'DelTime':-1 }
 
         self.writer = Writer()
         self.writer.setGrid(width, height, nCellsX, nCellsY)
+        self.lastWrite = self.time
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -158,6 +177,20 @@ class Domain(object):
         for cell in self.cells:
             s += str(cell) + "\n"
         return s
+
+    def setTimeIntegrator(self, integrator):
+        self.particleUpdateScheme = integrator
+
+    def setMotion(self, motion):
+        self.motion = motion
+
+    def setPlotInterval(self, dt):
+        self.plotControl['DelTime'] = dt
+        self.plotControl['Active'] = (dt >= 0)
+
+    def setWriteInterval(self, dt):
+        self.outputControl['DelTime'] = dt
+        self.outputControl['Active'] = (dt >= 0)
         
     def setBoundaryConditions(self):
         
@@ -181,8 +214,9 @@ class Domain(object):
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
 
-    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced,
-                    updatePosition, updateStress, addTransient, plotFigures, writeOutput):
+
+    def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
+
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -191,15 +225,12 @@ class Domain(object):
             'solveVenhanced':solveVenhanced,
             'updatePosition':updatePosition,
             'updateStress':updateStress,
-            'addTransient':addTransient,
-            'plotFigures':plotFigures,
-            'writeOutput':writeOutput
+            'addTransient':addTransient
             }
 
         for cell in self.cells:
             # cell.setEnhanced(True)
             cell.setEnhanced(solveVenhanced)
-
 
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
@@ -282,7 +313,19 @@ class Domain(object):
 
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
-            self.time += dt 
+            self.time += dt
+
+            if self.plotControl['Active']:
+                # check if this is a plot interval
+                if self.time > (self.lastPlot + self.plotControl['DelTime'] - 0.5*dt) :
+                    self.plotData()
+                    self.lastPlot = self.time
+
+            if self.outputControl['Active']:
+                # check if this is an outout interval
+                if self.time > (self.lastPlot + self.outputControl['DelTime'] - 0.5*dt) :
+                    self.writeData()
+                    self.lastWrite = self.time
 
     def runSingleStep(self, time=0.0, dt=1.0):
 
@@ -302,10 +345,6 @@ class Domain(object):
             self.updateParticleMotion(dt)
         if (self.analysisControl['updateStress']):
             self.updateParticleStress()
-        if (self.analysisControl['plotFigures']):
-            self.plotData()
-        if (self.analysisControl['writeOutput']):
-            self.writeData()
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
@@ -576,11 +615,12 @@ class Domain(object):
 
     def plotData(self):
         self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
 
     def writeData(self):
-        self.writer.setParticleData(self.particles)
         self.writer.setData(self.nodes)
+        self.writer.setParticleData(self.particles)
         self.writer.writeData(self.time)
 
     def setMotion(self, time=0.0):

@@ -67,8 +67,6 @@ class LocalConvergenceTest(object):
         updatePosition = True
         updateStress = False
         addTransient = False
-        plotFigures = True
-        writeOutput = False
 
         Ferrors = []
         positionErrors = []
@@ -76,14 +74,17 @@ class LocalConvergenceTest(object):
         dt = 1.0
         while (dt > 1.0e-8):
             dtList.append(dt)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
-                            motion=motion,
-                            particleUpdateScheme=numAlg)
+            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain.setMotion(motion)
+            domain.setTimeIntegrator(numAlg)
 
             domain.setAnalysis(doInit, solveVstar, solveP,
                                solveVtilde, solveVenhanced,
                                updatePosition, updateStress,
-                               addTransient, plotFigures, writeOutput)
+                               addTransient)
+
+            domain.setPlotInterval(dt)        # plot at the end of each time step
+            domain.setWriteInterval(-1)       # no recorder output
 
             # you need to set the velocity field to the initial velocity field
             # (or to any fixed time throughout the test !!!)
@@ -100,7 +101,8 @@ class LocalConvergenceTest(object):
             Ferrors.append(FError)
             positionErrors.append(posError)
 
-            print('dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(dt, positionErrors[-1], Ferrors[-1]))
+            mask = 'dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
+            print(mask.format(dt, positionErrors[-1], Ferrors[-1]))
             if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
                 break
             dt /= 10.
