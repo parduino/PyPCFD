@@ -72,7 +72,8 @@ class GlobalConvergenceTest(object):
             Ferrors.append(FError)
             positionErrors.append(posError)
 
-            print('N = {}, dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(N, dt, positionErrors[-1], Ferrors[-1]))
+            mask = 'N = {}, dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
+            print(mask.format(N, dt, positionErrors[-1], Ferrors[-1]))
             if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
                 break
             N *= 10
