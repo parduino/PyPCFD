@@ -16,14 +16,11 @@ from Plotter2 import *
 from Errors import *
 from ButcherTableau import *
 
-from numpy import array, linspace, dot, cross, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
-    ceil, transpose
+from numpy import array, dot, zeros, linspace, meshgrid, abs, ceil
 from numpy.linalg import solve
-from scipy.sparse.linalg import spsolve, expm
-from numpy.linalg import norm
+from scipy.sparse.linalg import spsolve
 
 from time import process_time
-import copy
 
 class Domain(object):
     '''
