@@ -4,7 +4,9 @@ Created on Nov 21, 2015
 @author: pmackenz
 '''
 from numpy import array, zeros, ones
-from sympy.physics.units.dimensions import mass
+from numpy.linalg import norm
+from scipy.linalg import expm
+from math import pi
 
 class Node(object):
     '''
@@ -17,6 +19,7 @@ class Node(object):
         self.pressure
         self.aStar  = zeros(2)
         self.aTilde = zeros(2)
+        self.appAccel = zeros(2)
         self.ahat   = zeros(2)  # should always remain zero for interpolation purposes
         self.lastX = self.pos   # last converged position
         self.lastV = zeros(2)   # last converged velocity
@@ -35,9 +38,12 @@ class Node(object):
         def getMomentum(self)
         def setMass(self, m)
         def addMass(self, m)
+        def getMass(self)
         def setVelocity(self, v)
         def addVelocity(self, dv)
         def getVelocity(self)
+        def setApparentAccel(self, a)
+        def getApparentAccel(self)
         def setPressure(self, p)
         def getPressure(self)
         def setForce(self, F)
@@ -46,7 +52,7 @@ class Node(object):
         def getFixeties(self)
         def fixDOF(self, i, val=0.0)
         def updateVstar(self)
-        def updateV(self)
+        def updateV(self, v)
     '''
 
 
@@ -63,6 +69,7 @@ class Node(object):
         
         self.mass = 0.0
         self.momentum = zeros(2)
+        self.appAccel = zeros(2)
         self.pressure = 0.0
         
         self.aStar  = zeros(2)
@@ -110,6 +117,9 @@ class Node(object):
     
     def addMass(self, m):
         self.mass += m
+
+    def getMass(self):
+        return self.mass
     
     def setVelocity(self, v):
         self.momentum = self.mass*v
@@ -127,7 +137,13 @@ class Node(object):
         else:
             print("NO mass at node")
             raise
-     
+    
+    def setApparentAccel(self, a):
+        self.appAccel = a
+        
+    def getApparentAccel(self):
+        return self.appAccel
+        
     def setPressure(self, p):
         self.pressure = p
         
@@ -162,6 +178,8 @@ class Node(object):
         self.aStar = self.force / self.mass
         self.addVelocity(self.aStar * dt)
         
-    def updateV(self):
+    def updateV(self, v):
         pass
         
+   
+

@@ -9,12 +9,14 @@ from Cell import *
 from matrixDataType import *
 
 from Particle import *
+
+from Writer import *
 from Plotter2 import *
 
 from Errors import *
+from ButcherTableau import *
 
-from numpy import array, linspace, dot, tensordot, zeros, ones, outer, linspace, meshgrid, abs,\
-    ceil
+from numpy import array, dot, zeros, linspace, meshgrid, abs, ceil
 from numpy.linalg import solve
 from scipy.sparse.linalg import spsolve
 
@@ -34,18 +36,35 @@ class Domain(object):
         self.nodes 
         self.cells 
         self.particles
+
         self.analysisControl
+        self.plotControl
+        self.outputControl
+
         self.Re
         self.v0
         self.time = 0.0
+
+        self.plot
+        self.writer
+
+        self.motion                 ... manufactured solution for testing
+        self.particleUpdateScheme   ... the timeIntegrator
+
+        self.lastWrite    ... time of the last output
+        self.lastPlot     ... time of the last plot
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
         def __str__(self)
+        def setTimeIntegrator(self, integrator)
+        def setMotion(self, motion)
         def setBoundaryConditions(self)
+        def setPlotInterval(self, dt)
+        def setWriteInterval(self, dt)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
         def getAnalysisControl(self)
-        def setStateN(self)
+        def setInitialState(self)
         def setParameters(self, Re, density, velocity)
         def runAnalysis(self, maxtime=1.0)
         def runSingleStep(self, dt=1.0)
@@ -57,7 +76,13 @@ class Domain(object):
         def updateParticleStress(self)
         def updateParticleMotion(self)
         def findCell(self, x)
-        def createParticles(self, n, m)
+        def createParticles(self, n, m)     # Default particle creator that generates particles in all cells
+        def createParticlesMID(self, n, m)  # Particle creator that generates particle only in the middle cell
+        def createParticleAtX(self, mp, xp) # Particle creator that generates a single particle of mass mp at position xp 
+        def getTimeStep(self, CFL)
+        def plotData(self)
+        def writeData(self)
+        def setMotion(self, dt=0.0)
     '''
 
     def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
@@ -85,6 +110,8 @@ class Domain(object):
         self.Re  = 1.0
         self.rho = 1.0
         self.v0  = 0.0
+        self.motion = None
+        self.particleUpdateScheme = ExplicitEuler()
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
@@ -116,12 +143,29 @@ class Domain(object):
         self.setParameters(self.Re, self.rho, self.v0)
         
         self.particles = []
-        self.createParticles(2,2)
+
+        # create some particles ...
         
-        self.setAnalysis(False, True, True, True, True, True, False, False)
+        # self.createParticles(2,2)
+        #self.createParticlesMID(3,3)
+        self.createParticleAtX(1.0, array([width/2.,height/3.]))
+
+        # set default analysis parameters
+        self.setAnalysis(False, True, True, True, False, True, True, True)
+
+        # set default plot parameters
+        self.plotControl   = {'Active':False, 'DelTime':-1 }
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
+        self.lastPlot = self.time
+
+        # set default output parameters
+        self.outputControl = {'Active':False, 'DelTime':-1 }
+
+        self.writer = Writer()
+        self.writer.setGrid(width, height, nCellsX, nCellsY)
+        self.lastWrite = self.time
         
     def __str__(self):
         s = "==== D O M A I N ====\n"
@@ -133,6 +177,20 @@ class Domain(object):
         for cell in self.cells:
             s += str(cell) + "\n"
         return s
+
+    def setTimeIntegrator(self, integrator):
+        self.particleUpdateScheme = integrator
+
+    def setMotion(self, motion):
+        self.motion = motion
+
+    def setPlotInterval(self, dt):
+        self.plotControl['DelTime'] = dt
+        self.plotControl['Active'] = (dt >= 0)
+
+    def setWriteInterval(self, dt):
+        self.outputControl['DelTime'] = dt
+        self.outputControl['Active'] = (dt >= 0)
         
     def setBoundaryConditions(self):
         
@@ -155,9 +213,10 @@ class Domain(object):
             
             #self.nodes[0][j].fixDOF(1, 0.0)             # fully xixed
             #self.nodes[nCellsX][j].fixDOF(1, 0.0)       # fully fixed       
-        
-        
+
+
     def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, addTransient):
+
         self.analysisControl = {
             'doInit':doInit,
             'solveVstar':solveVstar,
@@ -168,11 +227,11 @@ class Domain(object):
             'updateStress':updateStress,
             'addTransient':addTransient
             }
-        
-        if (solveVenhanced):
-            for cell in self.cells:
-                cell.setEnhanced(True)
-                
+
+        for cell in self.cells:
+            # cell.setEnhanced(True)
+            cell.setEnhanced(solveVenhanced)
+
         if (doInit and updatePosition and addTransient):
             print("INCONSISTENCY WARNING: transient active with updatePosition && doInit ")
         
@@ -222,10 +281,24 @@ class Domain(object):
         self.solveVtilde(1.0)
         
         # initial conditions are now set
-        self.plot.setData(self.nodes)
-        self.plot.setParticleData(self.particles)
-        self.plot.refresh(self.time)
-     
+        self.plotData()
+        self.writeData()
+
+    def setState(self, time):
+
+        self.time = time
+
+        for nodeList in self.nodes:
+            for node in nodeList:
+                node.setVelocity(zeros(2))
+        
+        for cell in self.cells:
+            cell.mapMassToNodes()
+
+        self.setMotion(time)
+
+        ###self.time += dt   # WHAT IS THAT FOR ?????
+            
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
@@ -237,17 +310,23 @@ class Domain(object):
             if (nsteps>50):
                 nsteps= 50
             dt = (maxtime - self.time) / nsteps
-        
 
         while (self.time < maxtime-0.1*dt):
             self.runSingleStep(self.time, dt)
-            self.time += dt 
-            
-            self.plot.setData(self.nodes)
-            self.plot.setParticleData(self.particles)
-            self.plot.refresh(self.time)
-        
-    
+            self.time += dt
+
+            if self.plotControl['Active']:
+                # check if this is a plot interval
+                if self.time > (self.lastPlot + self.plotControl['DelTime'] - 0.5*dt) :
+                    self.plotData()
+                    self.lastPlot = self.time
+
+            if self.outputControl['Active']:
+                # check if this is an outout interval
+                if self.time > (self.lastPlot + self.outputControl['DelTime'] - 0.5*dt) :
+                    self.writeData()
+                    self.lastWrite = self.time
+
     def runSingleStep(self, time=0.0, dt=1.0):
 
         t = process_time()
@@ -269,8 +348,7 @@ class Domain(object):
             
         elapsed_time = process_time() - t
         print("starting at t_n = {:.3f}, time step \u0394t = {}, ending at t_(n+1) = {:.3f} (cpu: {:.3f}s)".format(time, dt, time+dt, elapsed_time))
-        
-    
+
     def initStep(self):
         # reset nodal mass, momentum, and force
         for nodeList in self.nodes:
@@ -281,7 +359,7 @@ class Domain(object):
         for cell in self.cells:
             # cell.mapMassToNodes()  # for particle formulation only
             cell.mapMomentumToNodes()
-    
+
     def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
         for i in range(self.nCellsX+1):
@@ -296,11 +374,11 @@ class Domain(object):
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
                 self.nodes[i][j].updateVstar(dt)
-    
+
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
         
-        # sparese outperformes dense very quickly for this problem.  
+        # sparse outperformes dense very quickly for this problem.
         # I lowered this number to 100 and might want to switch to sparse entirely.
         if ndof <= 100:
             useDense = True
@@ -366,7 +444,7 @@ class Domain(object):
                 self.nodes[i][j].setPressure(pressure[dof])
                 
         #print(pressure)
-        
+
     def solveVtilde(self, dt):
         for i in range(self.nCellsX+1):
             for j in range(self.nCellsY+1):
@@ -384,46 +462,70 @@ class Domain(object):
                 # update nodal velocity
                 dv = -dt/self.rho * array([dpx,dpy])
                 self.nodes[i][j].addVelocity(dv)
-                
+
     def solveVenhanced(self, dt):
         for cell in self.cells:
             # initialize the divergence terms in the cell
             cell.SetVelocity()
-    
+
     def updateParticleStress(self):
         pass
-    
+
     def updateParticleMotion(self, dt):
+        # this is the Butcher tableau
+        a = dt*self.particleUpdateScheme.get_a()  # time factors
+        b = dt*self.particleUpdateScheme.get_b()  # position factors
+        c = dt*self.particleUpdateScheme.get_c()  # update factors        
+        tn = self.time
+        
         for p in self.particles:
-            # this is Runge-Kutta 4
+
+            kI = []
+            fI = []
+            Dv = []
+            
+            dF  = identity(2)
+            xn1 = p.position()
+            Nsteps = len(a)
+            
             try:
-                pos1  = p.position()
-                cell = self.findCell(pos1)
-                vel1  = cell.GetVelocity(pos1)
+                for i in range(Nsteps):
+                    xi = p.position()
+                    f  = identity(2)      
+                    
+                    for j in range(i):
+                        if (b[i][j] != 0.):
+                            xi += b[i][j] * kI[j]
+                            f  += b[i][j] * dot(Dv[j], fI[j])
+                            
+                    cell = self.findCell(xi)
+
+                    kI.append(cell.GetVelocity(xi) + a[i]*cell.GetApparentAccel(xi))
+                    Dv.append(cell.GetGradientV(xi) + a[i]*cell.GetGradientA(xi))
+                    
+                    fI.append(f)
+                    
+                    # particle position
+                    xn1 += c[i] * kI[-1]
+                    #incremental deformation gradient
+                    dF  += c[i] * dot(Dv[-1], fI[-1])
+                    
+
+                # update particle position ...
+                p.addToPosition(xn1 - p.position())
                 
-                pos2 = pos1 + 0.5*vel1*dt
-                cell = self.findCell(pos2, cell)
-                vel2  = cell.GetVelocity(pos2)
-                
-                pos3 = pos1 + 0.5*vel2*dt
-                cell = self.findCell(pos3, cell)
-                vel3 = cell.GetVelocity(pos3)
-                
-                pos4 = pos1 + vel3*dt
-                cell = self.findCell(pos2, cell)
-                vel4  = cell.GetVelocity(pos4)
-                
-                p.addToPosition((vel1+2.*vel2+2.*vel3+vel4)*dt/6.)
-                pos  = p.position()
-                cell = self.findCell(pos, cell)
-                vel  = cell.GetVelocity(pos)
-                
+                # update particle velocity ...
+                cell = self.findCell(xn1)
+                vel  = cell.GetVelocity(xn1) + a[i]*cell.GetApparentAccel(xn1)
                 p.setVelocity(vel)
+                
+                # update the deformation gradient ...
+                p.setDeformationGradient(dot(dF, p.getDeformationGradient()))
+
             except CellIndexError as e:
                 print(e)
                 raise e
-                
-    
+
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
             return testCell
@@ -464,6 +566,35 @@ class Domain(object):
                     newParticle = Particle(mp,xp)
                     self.particles.append(newParticle)
                     cell.addParticle(newParticle)
+
+    def createParticlesMID(self, n, m):
+        for cell in self.cells:
+            if ( cell.getID() != int( (self.nCellsX) * (self.nCellsY) / 2) - int(self.nCellsY/2.0) ):
+                continue
+            # print(cell.getID())
+            h = cell.getSize()
+            mp = self.rho,h[0]*h[1]/n/m
+            
+            for i in range(n):
+                s = -1. + (2*i+1)/n
+                # s = 0.5
+                for j in range(m):
+                    t = -1. + (2*j+1)/m
+                    # t = 0.5
+                    xl = array([s,t])
+                    xp = cell.getGlobal(xl)
+                    # print(xp)
+                    newParticle = Particle(mp,xp)
+                    self.particles.append(newParticle)
+                    cell.addParticle(newParticle)        
+                    
+    
+    def createParticleAtX(self, mp, xp):     # Particle creator that generates a single particle at position X
+        newParticle = Particle(mp,xp)
+        self.particles.append(newParticle)
+        cell = self.findCell(xp)
+        if (cell):
+            cell.addParticle(newParticle)
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
@@ -481,4 +612,34 @@ class Domain(object):
                         dt = dty
 
         return dt*CFL
-                
+
+    def plotData(self):
+        self.plot.setData(self.nodes)
+        self.plot.setParticleData(self.particles)
+        self.plot.refresh(self.time)
+
+    def writeData(self):
+        self.writer.setData(self.nodes)
+        self.writer.setParticleData(self.particles)
+        self.writer.writeData(self.time)
+
+    def setMotion(self, time=0.0):
+        # set nodal velocity field
+        for i in range(self.nCellsX + 1):
+            for j in range(self.nCellsY + 1):
+                # xIJ is Eulerial nodal position
+                xIJ = self.nodes[i][j].getPosition()
+                newV = self.motion.getVel(xIJ, time)
+                self.nodes[i][j].setVelocity(newV)
+                newA = self.motion.getDvDt(xIJ, time)
+
+                self.nodes[i][j].setApparentAccel(newA)
+
+        for cell in self.cells:
+            cell.SetVelocity()
+
+    def getParticles(self):
+        return self.particles
+
+    def setTime(self, time):
+        self.time = time
