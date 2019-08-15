@@ -40,7 +40,6 @@ class GlobalConvergenceTest(object):
         for numalg in self.numAlgorithms:
             for motion in self.motionList:
                 self.runCase(numalg, motion)
-                print()
 
     def runCase(self, numAlg, motion):
         maxTime = 1.0

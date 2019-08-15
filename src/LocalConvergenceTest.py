@@ -10,17 +10,58 @@ from ButcherTableau import *
 class LocalConvergenceTest(object):
 
     def __init__(self, fileType='png'):
-        # self.numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule())
+        self.numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule())
         # self.motionList = (Motion1(), Motion2())
-        self.numAlgorithms = (ExplicitEuler(),)
+        # self.numAlgorithms = (ExplicitEuler(),)
         self.motionList = (Motion1(),)
         self.fileType = fileType
 
     def runAnalysis(self):
-        for numalg in self.numAlgorithms:
-            for motion in self.motionList:
-                self.runCase(numalg, motion)
-                print()
+        for motion in self.motionList:
+            # create POSITION plots for each motion
+            fig, ax = plt.subplots()
+            matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+            matplotlib.rcParams['font.size'] = 15
+            for numalg in self.numAlgorithms:
+                dtList, positionErrors, Ferrors = self.runCase(numalg, motion)
+                # add position data to plot
+                ax.loglog(dtList, positionErrors, 'k-o', linewidth=2, label=numalg)
+
+            self.finalizePositionPlot(ax, dtList, positionErrors)
+            # plt.show()
+
+    def finalizePositionPlot(self, ax, dtList, positionErrors):
+        x = array([dtList[0], dtList[-1]])
+        y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
+        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
+        y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
+
+        ax.loglog(x, y1, 'y--', linewidth=2, label="1st order")
+        ax.loglog(x, y2, 'b:',  linewidth=2, label="2nd order")
+        ax.loglog(x, y3, 'g-.', linewidth=2, label="3rd order")
+        ax.loglog(x, y4, 'm--', linewidth=2, label="4th order")
+        ax.loglog(x, y5, 'r--', linewidth=2, label="5th order")
+
+        ax.set_xlabel('$\Delta t$ (s)')
+        ax.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
+        ax.legend(loc="best")
+        ax.set_ylim([1e-17, 1e1])
+
+        ax.grid(True)
+        # fileName = "{}_{}_Position_convergence.{}".format(numAlg, motion, self.fileType)
+        # fileNameWithPath = os.path.join("images", fileName)
+        #
+        # plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+
+        plt.close()
+
+        # slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
+
+
+
+
 
     def runCase(self, numAlg, motion):
         # configure the analysis type
@@ -121,6 +162,7 @@ class LocalConvergenceTest(object):
         slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
+        return (dtList, positionErrors, Ferrors)
 
     def plotPositionErrors(self, dtList, positionErrors, numAlg, motion):
         # Plots for position errors
@@ -130,10 +172,6 @@ class LocalConvergenceTest(object):
         ax2 = fig.gca()
         ax2.loglog(dtList, positionErrors, 'k-o', linewidth=2, label="simulation")
 
-
-        # left, bottom, width, height = [0.25, 0.6, 0.2, 0.2]
-        # ax2 = fig.add_axes([left, bottom, width, height])
-
         x = array([dtList[0], dtList[-1]])
         y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
         y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
@@ -142,7 +180,7 @@ class LocalConvergenceTest(object):
         y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
 
         ax2.loglog(x, y1, 'y--', linewidth=2, label="1st order")
-        ax2.loglog(x, y2, 'b:', linewidth=2, label="2nd order")
+        ax2.loglog(x, y2, 'b:',  linewidth=2, label="2nd order")
         ax2.loglog(x, y3, 'g-.', linewidth=2, label="3rd order")
         ax2.loglog(x, y4, 'm--', linewidth=2, label="4th order")
         ax2.loglog(x, y5, 'r--', linewidth=2, label="5th order")
