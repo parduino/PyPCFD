@@ -1,8 +1,13 @@
 from abc import ABCMeta, abstractmethod
 from scipy.sparse.linalg import expm
-from numpy import array, dot, zeros_like
+from numpy import array, dot, zeros_like, linspace
 from numpy.linalg import inv
 from math import pi
+import matplotlib
+matplotlib.use('TkAgg')
+import matplotlib.pyplot as plt
+import os
+
 
 
 # Just an interface for a motions
@@ -42,7 +47,7 @@ class Motion1(Motion):
         theta = pi/2.0
         self.X0 = array([0.5, 0.5])
 
-        self.Vel0 = array([0.1, 0.0])   # translation velocity
+        self.Vel0 = array([0.1, 0.1])   # translation velocity
 
         # calculate rotation matrix
         self.Omega = array([[0.0, -theta],
@@ -69,23 +74,65 @@ class Motion1(Motion):
         x = Q @ (x0 - self.X0) + time * self.Vel0 + self.X0
         return x
 
+    def plotMotion(self):
+        # create folder to store images
+        if not os.path.isdir("images"):
+            os.mkdir("images")
+
+        n = 1000
+        t = linspace(0, 20, num=n)
+        x0 = array([0.5, 1. / 3.])
+        lims = 0.5
+        xlocs = zeros_like(t)
+        xlocs[0] = x0[0]
+        ylocs = zeros_like(t)
+        ylocs[0] = x0[1]
+
+        plt.ion()
+        fig = plt.figure()
+        matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+        matplotlib.rcParams['font.size'] = 15
+        ax3 = fig.gca()
+        ax3.axis("equal")
+        ax3.grid(True)
+
+        for j in range(1, n):
+            xp = self.getAnalyticalPosition(x0, t[j])
+            xlocs[j] = xp[0]
+            ylocs[j] = xp[1]
+
+        # ax3.scatter(xlocs, ylocs, s=10)
+        ax3.scatter(x0[0], x0[1], s=30, c="k")
+        ax3.scatter(xlocs, ylocs, s=10, c="b")
+
+        fileName = "{}.pdf".format(self)
+        fileNameWithPath = os.path.join("images", fileName)
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+        plt.close()
+
 
 class Motion2(Motion):
 
     def __init__(self):
         super().__init__()
 
-        self.gamma1 = 0.1
+        # self.gamma1 = 0.1
+        # self.gamma2 = 1. - self.gamma1
+        #
+        # self.Omega1 = array([[0., -1.], [1., 0.]])*pi/4.
+        # self.Omega2 = array([[0., -1.], [1., 0.]])*pi/6.
+        #
+        # self.X1 = array([0.5, 0.5])
+        # self.X2 = array([5.0, 5.0])
+
+        self.gamma1 = 0.6
         self.gamma2 = 1. - self.gamma1
 
-        # self.Omega1 = array([[0., -1.], [1., 0.]])*pi/1.
-        # self.Omega2 = array([[0., -1.], [1., 0.]])*pi/1.5
-
         self.Omega1 = array([[0., -1.], [1., 0.]])*pi/4.
-        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/6.
+        self.Omega2 = array([[0., -1.], [1., 0.]])*pi/40.
 
         self.X1 = array([0.5, 0.5])
-        self.X2 = array([5.0, 5.0])
+        self.X2 = array([0.8, 0.8])
 
         # self.gamma1 = 0.1
         # self.gamma2 = 1. - self.gamma1
@@ -171,5 +218,54 @@ class Motion2(Motion):
             +self.x0
 
         return x
+
+    def plotMotion(self):
+        # create folder to store images
+        if not os.path.isdir("images"):
+            os.mkdir("images")
+
+        n = 1000
+        t = linspace(0, 90, num=n)
+        x0 = array([0.5, 1. / 3.])
+        lims = 0.5
+        xlocs = zeros_like(t)
+        xlocs[0] = x0[0]
+        ylocs = zeros_like(t)
+        ylocs[0] = x0[1]
+
+        plt.ion()
+        fig = plt.figure()
+        matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+        matplotlib.rcParams['font.size'] = 15
+        ax3 = fig.gca()
+        ax3.axis("equal")
+        ax3.grid(True)
+
+        for j in range(1, n):
+            xp = self.getAnalyticalPosition(x0, t[j])
+            xlocs[j] = xp[0]
+            ylocs[j] = xp[1]
+
+            # ax3.scatter(xlocs[0:j], ylocs[0:j], s=10, c="b")
+            # ax3.scatter(xlocs[0], ylocs[0], s=30, c="r")
+            # ax3.scatter(m.X1[0], m.X1[1], s=30, c="k")
+            # ax3.scatter(m.X2[0], m.X2[1], s=30, c="m")
+            # # ax3.set_xlim(-lims, lims)
+            # # ax3.set_ylim(-lims, lims)
+            #
+            # plt.draw()
+            # plt.pause(0.00001)
+            # ax3.clear()
+
+        # ax3.scatter(xlocs, ylocs, s=10)
+        ax3.scatter(xlocs, ylocs, s=10, c="b")
+        ax3.scatter(x0[0], x0[1], s=30, c="k")
+        # ax3.scatter(self.X1[0], self.X1[1], s=30, c="k")
+        # ax3.scatter(self.X2[0], self.X2[1], s=30, c="m")
+
+        fileName = "{}.pdf".format(self)
+        fileNameWithPath = os.path.join("images", fileName)
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+        plt.close()
 
 
