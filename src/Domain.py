@@ -36,7 +36,11 @@ class Domain(object):
         self.nodes 
         self.cells 
         self.particles
+
         self.analysisControl
+        self.plotControl
+        self.outputControl
+
         self.Re
         self.v0
         self.time = 0.0
@@ -53,6 +57,8 @@ class Domain(object):
         def setTimeIntegrator(self, integrator)
         def setMotion(self, motion)
         def setBoundaryConditions(self)
+        def setPlotInterval(self, dt)
+        def setWriteInterval(self, dt)
         def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
         def getAnalysisControl(self)
         def setInitialState(self)
@@ -141,7 +147,10 @@ class Domain(object):
         #self.createParticlesMID(3,3)
         self.createParticleAtX(1.0, array([width/2.,height/3.]))
         
-        # self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
+        self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
+
+        self.plotControl   = {'Active':False, 'DelTime':-1 }
+        self.outputControl = {'Active':False, 'DelTime':-1 }
     
         self.plot = Plotter()
         self.plot.setGrid(width, height, nCellsX, nCellsY)
@@ -165,6 +174,14 @@ class Domain(object):
 
     def setMotion(self, motion):
         self.motion = motion
+
+    def setPlotInterval(self, dt):
+        self.plotControl['DelTime'] = dt
+        self.plotControl['Active'] = (dt >= 0)
+
+    def setWriteInterval(self, dt):
+        self.outputControl['DelTime'] = dt
+        self.outputControl['Active'] = (dt >= 0)
         
     def setBoundaryConditions(self):
         

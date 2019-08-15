@@ -25,8 +25,6 @@ class GlobalConvergenceTest(object):
         self.updatePosition = True
         self.updateStress = False
         self.addTransient = False
-        self.plotFigures = True
-        self.writeOutput = False
 
         # create folder to store images
         if not os.path.isdir("images"):
@@ -55,7 +53,9 @@ class GlobalConvergenceTest(object):
                                self.solveVtilde, self.solveVenhanced,
                                self.updatePosition, self.updateStress,
                                self.addTransient)
-            , self.plotFigures, self.writeOutput)
+
+            domain.setPlotInterval(maxTime)   # plot only at the end
+            domain.setWriteInterval(-1)       # no recorder output
 
             # Set the velocity field to the initial velocity field
             x0 = domain.getParticles()[0].position()  # save original position of particle for comparison later

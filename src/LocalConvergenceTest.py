@@ -30,8 +30,6 @@ class LocalConvergenceTest(object):
         updatePosition = True
         updateStress = False
         addTransient = False
-        plotFigures = True
-        writeOutput = False
 
         Ferrors = []
         positionErrors = []
@@ -47,7 +45,9 @@ class LocalConvergenceTest(object):
                                solveVtilde, solveVenhanced,
                                updatePosition, updateStress,
                                addTransient)
-            plotFigures, writeOutput)
+
+            domain.setPlotInterval(dt)        # plot at the end of each time step
+            domain.setWriteInterval(-1)       # no recorder output
 
             # you need to set the velocity field to the initial velocity field
             # (or to any fixed time throughout the test !!!)
