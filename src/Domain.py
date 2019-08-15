@@ -486,9 +486,6 @@ class Domain(object):
                 print(e)
                 raise e
 
-        # print(self.time)
-        # return (FerrorList, positionErrorList)
-
     def findCell(self, x, testCell=None):
         if (testCell != None  and  testCell.contains(x)):
             return testCell
