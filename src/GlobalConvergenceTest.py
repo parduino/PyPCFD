@@ -118,7 +118,6 @@ class GlobalConvergenceTest(object):
 
         fileName = "{}_{}_Global_F_convergence.{}".format(numAlg, motion, self.fileType)
         fileNameWithPath = os.path.join("images", fileName)
-
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         slope = log(Ferrors[0] / Ferrors[3]) / log(NList[0] / NList[-1])
