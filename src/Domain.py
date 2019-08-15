@@ -478,7 +478,7 @@ class Domain(object):
                 print(e)
                 raise e
         
-        return FerrorList
+        # return FerrorList
 
         # print(self.time)
         # return (FerrorList, positionErrorList)
