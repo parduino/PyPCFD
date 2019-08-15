@@ -62,7 +62,7 @@ class Domain(object):
         def setBoundaryConditions(self)
         def setPlotInterval(self, dt)
         def setWriteInterval(self, dt)
-        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress, plotFigures, writeOutput)
+        def setAnalysis(self, doInit, solveVstar, solveP, solveVtilde, solveVenhanced, updatePosition, updateStress)
         def getAnalysisControl(self)
         def setInitialState(self)
         def setParameters(self, Re, density, velocity)
@@ -151,7 +151,7 @@ class Domain(object):
         self.createParticleAtX(1.0, array([width/2.,height/3.]))
 
         # set default analysis parameters
-        self.setAnalysis(False, True, True, True, True, True, False, False, False, False)
+        self.setAnalysis(False, True, True, True, False, True, True, True)
 
         # set default plot parameters
         self.plotControl   = {'Active':False, 'DelTime':-1 }
