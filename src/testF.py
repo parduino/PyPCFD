@@ -11,7 +11,8 @@ def Main():
     # Motion1().plotMotion()
     # Motion2().plotMotion()
     m = Motion3()
-    m. getLagrangianPosition(array([1., 0.]), 1.0)
+
+    m. getLagrangianPosition(array([1., 0.]), 0.5)
     # m.plotMotion()
 
 if __name__ == '__main__':

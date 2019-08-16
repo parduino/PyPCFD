@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from scipy.sparse.linalg import expm
 from numpy import array, dot, zeros_like, linspace, tensordot, zeros, ones
 from numpy.linalg import inv, norm
+from scipy.optimize import newton
 from math import pi
 import matplotlib
 matplotlib.use('TkAgg')
@@ -256,7 +257,7 @@ class Motion3(Motion):
     def __init__(self):
         super().__init__()
         # set global motion parameters
-        theta = pi/2.0
+        theta = pi/20.0
         self.X0 = array([0.5, 0.5])
 
         self.Vel0 = array([0.1, 0.1])   # translation velocity
@@ -273,7 +274,7 @@ class Motion3(Motion):
     def getVel(self, xIJ, time):
         X = self.getLagrangianPosition(xIJ, time)
         R = expm((X @ X) * time * self.Omega)
-        v = (X @ X) @ (self.Omega @ R) @ X
+        v = (X @ X) * (self.Omega @ R) @ X
         return v
 
     def getDvDt(self, xIJ, time):
@@ -336,6 +337,12 @@ class Motion3(Motion):
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
         plt.close()
 
+    def zeroFunc(self, X, xIJ, time):
+        return xIJ - self.getAnalyticalPosition(X, time)
+
+    def funcPrime(self, X, xIJ, time):
+        return -self.getAnalyticalF(X, time)
+
     def getLagrangianPosition(self, xIJ, time):
         Xk = xIJ
         # Xk = array([ 0.30901699, -0.95105652])
@@ -352,6 +359,10 @@ class Motion3(Motion):
             print(norm(Errork))
             Xk = Xnext
 
-        print("Eulerian Position = {}, Lagrangian Position = {}, Constructed Lagrangian Position = {}"
+        print("Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
               .format(xIJ, Xnext, self.getAnalyticalPosition(Xnext, time)))
+
+        # Xnext = newton(self.zeroFunc, xIJ, fprime=self.funcPrime, args=(xIJ,time))
         return Xnext
+
+

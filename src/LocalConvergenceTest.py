@@ -13,7 +13,7 @@ class LocalConvergenceTest(object):
         self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
         # self.motionList = (Motion1(), Motion2())
         # self.numAlgorithms = (ExplicitEuler(),)
-        self.motionList = (Motion1(),)
+        self.motionList = (Motion3(),)
         self.fileType = fileType
 
         # plotting options
