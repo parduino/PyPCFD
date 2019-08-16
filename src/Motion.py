@@ -353,7 +353,8 @@ class Motion3(Motion):
 
     def getLagrangianPosition(self, xIJ, time):
         # WHY? Xk = xIJ/2.
-        X = xIJ   # !!!
+        R = self.getR(xIJ, time)
+        X = xIJ @ R
         error = xIJ - self.getAnalyticalPosition(X, time)
 
         cnt = 0
