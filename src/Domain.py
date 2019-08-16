@@ -295,7 +295,7 @@ class Domain(object):
         for cell in self.cells:
             cell.mapMassToNodes()
 
-        self.setMotion(time)
+        self.setNodalMotion(time)
 
         ###self.time += dt   # WHAT IS THAT FOR ?????
             
@@ -623,7 +623,7 @@ class Domain(object):
         self.writer.setParticleData(self.particles)
         self.writer.writeData(self.time)
 
-    def setMotion(self, time=0.0):
+    def setNodalMotion(self, time=0.0):
         # set nodal velocity field
         for i in range(self.nCellsX + 1):
             for j in range(self.nCellsY + 1):

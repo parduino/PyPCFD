@@ -34,6 +34,8 @@ class Plotter(object):
         def safePlot(self, filename)
         def refresh(self, time=-1)
         def setGrid(self, nodes)
+        def setData(self, nodes)
+        def setParticleData(self, particles)
         
     '''
 
