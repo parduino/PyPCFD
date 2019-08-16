@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 def Main():
     fileType = 'pdf'
     # fileType = 'png'
-    # LocalConvergenceTest(fileType).runAnalysis()
+    LocalConvergenceTest(fileType).runAnalysis()
     # GlobalConvergenceTest(fileType).runAnalysis()
     # Motion1().plotMotion()
     # Motion2().plotMotion()
-    m = Motion3()
+    # m = Motion3()
 
-    m. getLagrangianPosition(array([1., 0.]), 0.5)
+    # m. getLagrangianPosition(array([1., 0.]), 0.0)
     # m.plotMotion()
 
 if __name__ == '__main__':

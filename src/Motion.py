@@ -344,8 +344,7 @@ class Motion3(Motion):
         return -self.getAnalyticalF(X, time)
 
     def getLagrangianPosition(self, xIJ, time):
-        Xk = xIJ
-        # Xk = array([ 0.30901699, -0.95105652])
+        Xk = xIJ/2.
         Errork = xIJ - self.getAnalyticalPosition(Xk, time)
 
         Xnext = zeros(2, )
