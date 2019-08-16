@@ -13,7 +13,7 @@ class LocalConvergenceTest(object):
         self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
         # self.motionList = (Motion1(), Motion2())
         # self.numAlgorithms = (ExplicitEuler(),)
-        self.motionList = (Motion1(),)
+        self.motionList = (Motion3(),)
         self.fileType = fileType
 
         # plotting options
@@ -29,33 +29,11 @@ class LocalConvergenceTest(object):
             for j, numalg in enumerate(self.numAlgorithms):
                 dtList, positionErrors, Ferrors = self.runCase(numalg, motion)
                 # add position data to plot
-                self.plotPositionErrors(dtList, positionErrors, numalg, motion)
+                # self.plotPositionErrors(dtList, positionErrors, numalg, motion)
                 # ax1.loglog(dtList, positionErrors, self.numAlgLineStyles[j], linewidth=2, label=numalg)
 
             # self.finalizePositionPlot(ax1, dtList, positionErrors)
             # plt.show()
-
-    def finalizePositionPlot(self, ax, dtList, positionErrors):
-        x = array([dtList[0], dtList[-1]])
-        y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
-        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
-        y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
-        y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
-        y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
-
-        ax.loglog(x, y1, 'y--', linewidth=2, label="1st order")
-        ax.loglog(x, y2, 'b:',  linewidth=2, label="2nd order")
-        ax.loglog(x, y3, 'g-.', linewidth=2, label="3rd order")
-        ax.loglog(x, y4, 'm--', linewidth=2, label="4th order")
-        ax.loglog(x, y5, 'r--', linewidth=2, label="5th order")
-
-        ax.set_xlabel('$\Delta t$ (s)')
-        ax.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
-        ax.legend(loc="best")
-        ax.set_ylim([1e-17, 1e1])
-
-        ax.grid(True)
-
 
     def runCase(self, numAlg, motion):
         # configure the analysis type
@@ -196,3 +174,24 @@ class LocalConvergenceTest(object):
 
         slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
+
+    def finalizePositionPlot(self, ax, dtList, positionErrors):
+        x = array([dtList[0], dtList[-1]])
+        y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
+        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
+        y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
+
+        ax.loglog(x, y1, 'y--', linewidth=2, label="1st order")
+        ax.loglog(x, y2, 'b:',  linewidth=2, label="2nd order")
+        ax.loglog(x, y3, 'g-.', linewidth=2, label="3rd order")
+        ax.loglog(x, y4, 'm--', linewidth=2, label="4th order")
+        ax.loglog(x, y5, 'r--', linewidth=2, label="5th order")
+
+        ax.set_xlabel('$\Delta t$ (s)')
+        ax.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
+        ax.legend(loc="best")
+        ax.set_ylim([1e-17, 1e1])
+
+        ax.grid(True)
