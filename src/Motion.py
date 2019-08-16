@@ -260,9 +260,7 @@ class Motion3(Motion):
         theta = pi/20.0
         self.X0 = array([0.5, 0.5])
 
-        self.Vel0 = array([0.1, 0.1])   # translation velocity
-
-        # calculate rotation matrix
+        # initialize rotation matrix
         self.Omega = array([[0.0, -theta],
                             [theta, 0.0]])  # skew symmetric matrix
 
@@ -273,33 +271,43 @@ class Motion3(Motion):
 
     def getVel(self, xIJ, time):
         X = self.getLagrangianPosition(xIJ, time)
-        R = expm((X @ X) * time * self.Omega)
-        v = (X @ X) * (self.Omega @ R) @ X
+        R = self.getR(X, time)
+        v = (X @ X) * self.Omega @ R @ X
         return v
 
     def getDvDt(self, xIJ, time):
         X = self.getLagrangianPosition(xIJ, time)
-        R = expm((X @ X) * time * self.Omega)
+        R = self.getR(X, time)
         V = self.getVel(X, time)
-        F = self.getAnalyticalF(X, time)
+        # F = self.getAnalyticalF(X, time)  ... avoid multiple computation of expensive tensor products !
 
-        dVdt = (X @ X) * self.Omega @ V
-        GradV = (X @ X) * self.Omega @ F + 2 * self.Omega @ R @ (tensordot(X, X, axes=0))
-        grad_v = dVdt - GradV @ V
-        dvdt = dVdt - grad_v @ V
+        r2 = dot(X,X)
+        dVdt   = r2 * self.Omega @ V
+
+        Y = self.Omega @ R @ X
+        Z = tensordot(Y, X, axes=0)
+        F = R + 2.0 * time * Z
+        GradV  = r2 * self.Omega @ F + 2.0 * Z
+
+        # grad_v = dVdt - GradV @ V    # WTF ???  del v is a 2nd-order tensor, not a vector !!!!!
+        delV = GradV @ inv(F)
+        dvdt   = dVdt - delV @ V
 
         return dvdt
 
+    def getR(self, X, t):
+        r2 = dot(X,X)
+        return expm(r2*t * self.Omega)
 
     def getAnalyticalF(self, X, time):
-        R = expm((X @ X)*time * self.Omega)
-        F = R + 2.0 * time * (self.Omega @ R) @ tensordot(X, X, axes=0)
+        R = self.getR(X, time)
+        Y = self.Omega @ R @ X
+        F = R + 2.0 * time * tensordot(Y, X, axes=0)
         return F
 
     def getAnalyticalPosition(self, X, time):
-        R = expm((X @ X) * time * self.Omega)
-        x = R @ X
-        return x
+        R = self.getR(X, time)
+        return R @ X
 
     def plotMotion(self):
         # create folder to store images
@@ -344,24 +352,30 @@ class Motion3(Motion):
         return -self.getAnalyticalF(X, time)
 
     def getLagrangianPosition(self, xIJ, time):
-        Xk = xIJ/2.
-        Errork = xIJ - self.getAnalyticalPosition(Xk, time)
+        # WHY? Xk = xIJ/2.
+        X = xIJ   # !!!
+        error = xIJ - self.getAnalyticalPosition(X, time)
 
-        Xnext = zeros(2, )
-        while norm(Errork) > self.tolerance:
-            Fk = self.getAnalyticalF(Xk, time)
-            deltaX = inv(Fk) @ Errork
-            Xnext = Xk + deltaX
+        cnt = 0
+        while norm(error) > self.tolerance:
+            self.F = self.getAnalyticalF(X, time)
+            deltaX = inv(self.F) @ error
+            X += deltaX
 
-            # Errork = Fk @ deltaX
-            Errork = xIJ - self.getAnalyticalPosition(Xnext, time)
-            print(norm(Errork))
-            Xk = Xnext
+            cnt += 1
 
-        print("Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
-              .format(xIJ, Xnext, self.getAnalyticalPosition(Xnext, time)))
+            # error = F @ deltaX
+            error = xIJ - self.getAnalyticalPosition(X, time)
+            print("* step {}: error = {:12.6e}".format(cnt,norm(error)))
 
-        # Xnext = newton(self.zeroFunc, xIJ, fprime=self.funcPrime, args=(xIJ,time))
-        return Xnext
+            if cnt > 10:
+                print("Newton iteration failed to converge")
+                raise
+
+        msg = "Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
+        print(msg.format(xIJ, X, self.getAnalyticalPosition(X, time)))
+
+        # X = newton(self.zeroFunc, xIJ, fprime=self.funcPrime, args=(xIJ,time))
+        return X
 
 
