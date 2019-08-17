@@ -632,12 +632,9 @@ class Domain(object):
         # set nodal velocity field
         for rowOfNodes in self.nodes:
             for node in rowOfNodes:
-                # x is Eulerial nodal position
-                x = node.getPosition()
-                newV = self.motion.getVel(x, time)
-                node.setVelocity(newV)
-                newA = self.motion.getDvDt(x, time)
-                node.setApparentAccel(newA)
+                x = node.getPosition()  # x is Eulerial nodal position
+                node.setVelocity( self.motion.getVel(x, time) )
+                node.setApparentAccel( self.motion.getDvDt(x, time) )
 
         for cell in self.cells:
             cell.SetVelocity()
