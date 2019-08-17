@@ -1,6 +1,6 @@
 from Domain import *
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
 from math import log
 import os
 from Motion import *
@@ -9,11 +9,16 @@ from ButcherTableau import *
 
 class GlobalConvergenceTest(object):
 
-    def __init__(self):
-        # self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
-        # self.motionList = (Motion1(), Motion2())
-        self.numAlgorithms = (MidPointRule(),)
-        self.motionList = (Motion2(),)
+    def __init__(self, fileType='png'):
+        #self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        #self.motionList = (Motion1(), Motion2())
+        #self.numAlgorithms = (ExplicitEuler(),)
+        #self.numAlgorithms = (MidPointRule(),)
+        self.numAlgorithms = (RungeKutta4(),)
+        self.motionList = (Motion1(),)
+        #self.motionList = (Motion2(),)
+
+        self.fileType = fileType
 
         # configure the analysis type
         self.doInit = False
@@ -24,24 +29,19 @@ class GlobalConvergenceTest(object):
         self.updatePosition = True
         self.updateStress = False
         self.addTransient = False
-        self.plotFigures = True
-        self.writeOutput = False
+
+        # Domain parameters
+        self.domainHeight = 1.0
+        self.domainWidth = 1.0
 
         # create folder to store images
         if not os.path.isdir("images"):
             os.mkdir("images")
 
     def runAnalysis(self):
-        filenames = []
         for numalg in self.numAlgorithms:
             for motion in self.motionList:
                 self.runCase(numalg, motion)
-                filenames.append("{}_{}_Global_Position_convergence.pdf".format(numalg, motion))
-                filenames.append("{}_{}_Global_F_convergence.pdf".format(numalg, motion))
-                print("\n")
-
-        for fn in filenames:
-            print(fn)
 
     def runCase(self, numAlg, motion):
         maxTime = 1.0
@@ -50,16 +50,20 @@ class GlobalConvergenceTest(object):
         NList = []
         N = 1
         dt = maxTime/N
-        while (dt > 1.0e-8 and N<10000):
+        while (N<=1000):
             NList.append(N)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
-                            motion=motion,
-                            particleUpdateScheme=numAlg)
+
+            domain = Domain(width=1., height=1., nCellsX=10, nCellsY=10)
+            domain.setMotion(motion)
+            domain.setTimeIntegrator(numAlg)
 
             domain.setAnalysis(self.doInit, self.solveVstar, self.solveP,
                                self.solveVtilde, self.solveVenhanced,
                                self.updatePosition, self.updateStress,
-                               self.addTransient, self.plotFigures, self.writeOutput)
+                               self.addTransient)
+
+            domain.setPlotInterval(maxTime)   # plot only at the end
+            domain.setWriteInterval(-1)       # no recorder output
 
             # Set the velocity field to the initial velocity field
             x0 = domain.getParticles()[0].position()  # save original position of particle for comparison later
@@ -76,7 +80,8 @@ class GlobalConvergenceTest(object):
             Ferrors.append(FError)
             positionErrors.append(posError)
 
-            print('N = {}, dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(N, dt, positionErrors[-1], Ferrors[-1]))
+            mask = 'N = {}, dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
+            print(mask.format(N, dt, positionErrors[-1], Ferrors[-1]))
             if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
                 break
             N *= 10
@@ -113,17 +118,15 @@ class GlobalConvergenceTest(object):
         ax1.set_xlabel('$N$')
         ax1.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
 
-        # plt.ylim([1e-17, 1e2])
+        plt.ylim([1e-17, 1e1])
 
         ax1.legend(loc="best")
 
         ax1.grid(True)
 
-        # ax1.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_Global_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        fileName = "{}_{}_Global_F_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         slope = log(Ferrors[0] / Ferrors[3]) / log(NList[0] / NList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
@@ -165,10 +168,12 @@ class GlobalConvergenceTest(object):
 
         ax2.grid(True)
         # ax2.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_Global_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        fileName = "{}_{}_Global_Position_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
+
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+
+        plt.close()
 
         slope = log(positionErrors[0] / positionErrors[3]) / log(NList[0] / NList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))

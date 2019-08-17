@@ -36,21 +36,16 @@ def Main():
     solveVenhanced = False
     updatePosition = False
     updateStress   = False
-    #addTransient   = True
-    addTransient   = False
-    plotFigures    = True
-    writeOutput    = False
+    addTransient   = True
     
     domain.setAnalysis(doInit,
                        solveVstar,
-		       solveP,
-		       solveVtilde,
-		       solveVenhanced,
-		       updatePosition,
-		       updateStress,
-		       addTransient,
-		       plotFigures,
-		       writeOutput)
+                       solveP,
+                       solveVtilde,
+                       solveVenhanced,
+                       updatePosition,
+                       updateStress,
+                       addTransient)
     domain.setParameters(Re, density, velocity)
     domain.setInitialState()
     
@@ -68,12 +63,19 @@ def Main():
     target1 = 10.0
     
     dt1 = 0.00125
+    dt1 = 0.10000
     target1 = 10.0
 
     dt2 = 0.5
     target2 = 1.0
 
 # ************* don't mess with stuff below *************
+
+    # defining plot settings
+    domain.setPlotInterval(dt1)
+
+    # deining output settings
+    domain.setWriteInterval(-1)
 
     # initializing starting time
     time = 0.0
@@ -83,9 +85,6 @@ def Main():
     while (time+dt <= target1+0.1*dt):
         time += dt
         domain.runAnalysis(time)
-
-
-
     
     # generate the animation
     subprocess.run('./makeAnim.sh')

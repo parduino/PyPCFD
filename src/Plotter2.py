@@ -34,6 +34,8 @@ class Plotter(object):
         def safePlot(self, filename)
         def refresh(self, time=-1)
         def setGrid(self, nodes)
+        def setData(self, nodes)
+        def setParticleData(self, particles)
         
     '''
 
@@ -78,7 +80,7 @@ class Plotter(object):
         except:
             ax0.set_title('Pressure Failed at t={:08.5f}s'.format(time))
         
-        imageName = "Pressure{:03d}.png".format(self.IMAGE_COUNTER)
+        imageName = "Pressure{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/"+imageName)
         
         plt.clf()
@@ -97,7 +99,7 @@ class Plotter(object):
         except:
             ax1.set_title('Nodal Forces Failed at t={:08.5f}s'.format(time))
         
-        imageName = "Forces{:03d}.png".format(self.IMAGE_COUNTER)
+        imageName = "Forces{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/"+imageName)
         
         plt.clf()
@@ -117,7 +119,7 @@ class Plotter(object):
         except:
             ax2.set_title('velocity Failed at t={:08.5f}s'.format(time))
         
-        imageName = "Velocity{:03d}.png".format(self.IMAGE_COUNTER)
+        imageName = "Velocity{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/"+imageName)
         
         plt.clf()
@@ -145,7 +147,7 @@ class Plotter(object):
         ###ax3.plot(self.tracerPoints[0], self.tracerPoints[1], 'bo', markersize=2)
         ax3.axis((0.0, self.width, 0.0, self.height))
         
-        imageName = "Stream{:03d}.png".format(self.IMAGE_COUNTER)
+        imageName = "Stream{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/"+imageName)
         
         plt.clf()
@@ -170,7 +172,7 @@ class Plotter(object):
                 
             #ax4.axis((0, 1, 0, 1))
             
-            imageName = "ParticleVelocity{:03d}.png".format(self.IMAGE_COUNTER)
+            imageName = "ParticleVelocity{:04d}.png".format(self.IMAGE_COUNTER)
             plt.savefig("images/"+imageName)
             
             plt.clf()

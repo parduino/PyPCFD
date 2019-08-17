@@ -9,21 +9,31 @@ from ButcherTableau import *
 
 class LocalConvergenceTest(object):
 
-    def __init__(self):
-        self.numAlgorithms = (ExplicitEuler(), RungeKutta4(), MidPointRule(), MidPointMethod2())
-        self.motionList = (Motion1(), Motion2())
+    def __init__(self, fileType='png'):
+        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        # self.motionList = (Motion1(), Motion2())
+        # self.numAlgorithms = (ExplicitEuler(),)
+        self.motionList = (Motion3(),)
+        self.fileType = fileType
+
+        # plotting options
+        self.numAlgLineStyles = ["k-o", "k-s", "k-^"]
+
 
     def runAnalysis(self):
-        filenames = []
-        for numalg in self.numAlgorithms:
-            for motion in self.motionList:
-                self.runCase(numalg, motion)
-                filenames.append("{}_{}_Position_convergence.pdf".format(numalg, motion))
-                filenames.append("{}_{}_F_convergence.pdf".format(numalg, motion))
-                print("\n")
+        for motion in self.motionList:
+            # create POSITION plots for each motion
+            # fig, ax1 = plt.subplots()
+            # matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+            # matplotlib.rcParams['font.size'] = 15
+            for j, numalg in enumerate(self.numAlgorithms):
+                dtList, positionErrors, Ferrors = self.runCase(numalg, motion)
+                # add position data to plot
+                # self.plotPositionErrors(dtList, positionErrors, numalg, motion)
+                # ax1.loglog(dtList, positionErrors, self.numAlgLineStyles[j], linewidth=2, label=numalg)
 
-        for fn in filenames:
-            print(fn)
+            # self.finalizePositionPlot(ax1, dtList, positionErrors)
+            # plt.show()
 
     def runCase(self, numAlg, motion):
         # configure the analysis type
@@ -35,8 +45,6 @@ class LocalConvergenceTest(object):
         updatePosition = True
         updateStress = False
         addTransient = False
-        plotFigures = True
-        writeOutput = False
 
         Ferrors = []
         positionErrors = []
@@ -44,14 +52,17 @@ class LocalConvergenceTest(object):
         dt = 1.0
         while (dt > 1.0e-8):
             dtList.append(dt)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1,
-                            motion=motion,
-                            particleUpdateScheme=numAlg)
+            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain.setMotion(motion)
+            domain.setTimeIntegrator(numAlg)
 
             domain.setAnalysis(doInit, solveVstar, solveP,
                                solveVtilde, solveVenhanced,
                                updatePosition, updateStress,
-                               addTransient, plotFigures, writeOutput)
+                               addTransient)
+
+            domain.setPlotInterval(dt)        # plot at the end of each time step
+            domain.setWriteInterval(-1)       # no recorder output
 
             # you need to set the velocity field to the initial velocity field
             # (or to any fixed time throughout the test !!!)
@@ -68,7 +79,8 @@ class LocalConvergenceTest(object):
             Ferrors.append(FError)
             positionErrors.append(posError)
 
-            print('dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'.format(dt, positionErrors[-1], Ferrors[-1]))
+            mask = 'dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
+            print(mask.format(dt, positionErrors[-1], Ferrors[-1]))
             if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
                 break
             dt /= 10.
@@ -76,6 +88,8 @@ class LocalConvergenceTest(object):
         # create folder to store images
         if not os.path.isdir("images"):
             os.mkdir("images")
+
+        self.plotPositionErrors(dtList, positionErrors, numAlg, motion)
 
         # Plots for deformation gradient errors
         fig = plt.figure()
@@ -114,58 +128,70 @@ class LocalConvergenceTest(object):
 
         ax1.grid(True)
 
-        # ax1.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_F_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_F_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        fileName = "{}_{}_F_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
+
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
         slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
+        return (dtList, positionErrors, Ferrors)
+
+    def plotPositionErrors(self, dtList, positionErrors, numAlg, motion):
         # Plots for position errors
-        fig = plt.figure()
+        fig, ax2 = plt.subplots()
         matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
         matplotlib.rcParams['font.size'] = 15
         ax2 = fig.gca()
         ax2.loglog(dtList, positionErrors, 'k-o', linewidth=2, label="simulation")
 
         x = array([dtList[0], dtList[-1]])
-        y = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
-        ax2.loglog(x, y, 'y--', linewidth=2, label="1st order")
+        y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
+        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
+        y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
 
-        x = array([dtList[0], dtList[-1]])
-        y = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (2.)])
-        ax2.loglog(x, y, 'b:', linewidth=2, label="2nd order")
+        ax2.loglog(x, y1, 'y--', linewidth=2, label="1st order")
+        ax2.loglog(x, y2, 'b:',  linewidth=2, label="2nd order")
+        ax2.loglog(x, y3, 'g-.', linewidth=2, label="3rd order")
+        ax2.loglog(x, y4, 'm--', linewidth=2, label="4th order")
+        ax2.loglog(x, y5, 'r--', linewidth=2, label="5th order")
 
-        x = array([dtList[0], dtList[-1]])
-        y = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
-        ax2.loglog(x, y, 'g-.', linewidth=2, label="3rd order")
-
-        x = array([dtList[0], dtList[-1]])
-        y = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
-        ax2.loglog(x, y, 'm--', linewidth=2, label="4th order")
-
-        x = array([dtList[0], dtList[-1]])
-        y = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
-        ax2.loglog(x, y, 'r--', linewidth=2, label="5th order")
-
-        # ax2.set_ylim(1e-16, 1e3)
         ax2.set_xlabel('$\Delta t$ (s)')
         ax2.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
-
         ax2.legend(loc="best")
-
-        ax2.set_ylim([1e-17, 1e2])
+        ax2.set_ylim([1e-17, 1e1])
 
         ax2.grid(True)
-        # ax2.axis('tight')
-        plt.savefig(os.path.join("images", "{}_{}_Position_convergence.pdf".format(numAlg, motion)), pad_inches=0,
-                    bbox_inches='tight')
-        # plt.savefig(os.path.join("images", "{}_{}_Position_convergence.png".format(numAlg, motion)), pad_inches=0,
-        #             bbox_inches='tight')
+        fileName = "{}_{}_Position_convergence.{}".format(numAlg, motion, self.fileType)
+        fileNameWithPath = os.path.join("images", fileName)
+
+        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+
+        plt.close()
 
         slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
-        # print(positionErrors)
-        # print(dtList)
+
+    def finalizePositionPlot(self, ax, dtList, positionErrors):
+        x = array([dtList[0], dtList[-1]])
+        y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
+        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
+        y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
+
+        ax.loglog(x, y1, 'y--', linewidth=2, label="1st order")
+        ax.loglog(x, y2, 'b:',  linewidth=2, label="2nd order")
+        ax.loglog(x, y3, 'g-.', linewidth=2, label="3rd order")
+        ax.loglog(x, y4, 'm--', linewidth=2, label="4th order")
+        ax.loglog(x, y5, 'r--', linewidth=2, label="5th order")
+
+        ax.set_xlabel('$\Delta t$ (s)')
+        ax.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
+        ax.legend(loc="best")
+        ax.set_ylim([1e-17, 1e1])
+
+        ax.grid(True)
