@@ -628,16 +628,16 @@ class Domain(object):
         self.writer.writeData(self.time)
 
     def setNodalMotion(self, time=0.0):
-        # set nodal velocity field
-        for i in range(self.nCellsX + 1):
-            for j in range(self.nCellsY + 1):
-                # xIJ is Eulerial nodal position
-                xIJ = self.nodes[i][j].getPosition()
-                newV = self.motion.getVel(xIJ, time)
-                self.nodes[i][j].setVelocity(newV)
-                newA = self.motion.getDvDt(xIJ, time)
 
-                self.nodes[i][j].setApparentAccel(newA)
+        # set nodal velocity field
+        for rowOfNodes in self.nodes:
+            for node in rowOfNodes:
+                # x is Eulerial nodal position
+                x = node.getPosition()
+                newV = self.motion.getVel(x, time)
+                node.setVelocity(newV)
+                newA = self.motion.getDvDt(x, time)
+                node.setApparentAccel(newA)
 
         for cell in self.cells:
             cell.SetVelocity()
