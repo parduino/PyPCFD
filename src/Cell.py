@@ -29,6 +29,8 @@ class Cell(object):
     
     methods:
         def __init__(self, id)
+        def __str__(self)
+        def __repr__(self)
         def setParameters(self, density, viscosity)
         def setEnhanced(self, useEnhanced=True)
         def addParticle(self, particle)
@@ -89,8 +91,6 @@ class Cell(object):
         
         self.myParticles = []
 
-        
-    
     def __str__(self):
         s = "   cell({}): ({}/{}),({}/{}),({}/{}),({}/{})".format(self.id,
                                                                     *self.nodes[0].getGridCoordinates(),
@@ -99,7 +99,15 @@ class Cell(object):
                                                                     *self.nodes[3].getGridCoordinates()
                                                                     )
         return s
-    
+
+    def __repr__(self):
+        s = 'Cell({},({},{},{},{}))'.format(self.id,
+                                            self.nodes[0].id,
+                                            self.nodes[1].id,
+                                            self.nodes[2].id,
+                                            self.nodes[3].id )
+        return s
+
     def setParameters(self, density, viscosity):
         self.rho = density
         self.mu  = viscosity

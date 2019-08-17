@@ -29,6 +29,7 @@ class Node(object):
     methods:
         def __init__(self, id, X,Y)
         def __str__(self)
+        def __repr__(self)
         def wipe(self)
         def setGridCoordinates(self, i,j)
         def getGridCoordinates(self)
@@ -67,7 +68,7 @@ class Node(object):
         
         self.force = zeros(2)
         
-        self.mass = 0.0
+        self.mass = 1.e-16
         self.momentum = zeros(2)
         self.appAccel = zeros(2)
         self.pressure = 0.0
@@ -89,6 +90,10 @@ class Node(object):
                                                                     *(self.momentum/self.mass))
         return s
     
+    def __repr__(self):
+        s = 'Node({},{},{})'.format(self.id, *self.pos)
+        return s
+
     def wipe(self):
         self.mass = 0.0
         self.momentum = 0.0

@@ -148,7 +148,7 @@ class Domain(object):
         
         # self.createParticles(2,2)
         #self.createParticlesMID(3,3)
-        self.createParticleAtX(1.0, array([width/2.,height/3.]))
+        self.createParticleAtX(1.0, array([width/2.,height/10.]))
 
         # set default analysis parameters
         self.setAnalysis(False, True, True, True, False, True, True, True)
@@ -549,6 +549,10 @@ class Domain(object):
             cell = self.cells[k]
         except:
             raise CellIndexError((i,j,k,x))
+
+        # this is used for safety check but will slow down multi-particle simulations
+        if not cell.contains(x):
+            print("warning: particle position ({},{}) outside cell {}".format(*x, cell.id))
         
         return cell
     
