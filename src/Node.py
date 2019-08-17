@@ -103,10 +103,10 @@ class Node(object):
         self.gridCoords = (i,j)
         
     def getGridCoordinates(self):
-        return self.gridCoords
+        return self.gridCoords.copy()
     
     def getPosition(self):
-        return self.pos
+        return self.pos.copy()
                            
     def setMomentum(self, p):
         self.momentum = p
@@ -115,7 +115,7 @@ class Node(object):
         self.momentum += p
         
     def getMomentum(self):
-        return self.momentum
+        return self.momentum.copy()
     
     def setMass(self, m):
         self.mass = m
@@ -147,7 +147,7 @@ class Node(object):
         self.appAccel = a
         
     def getApparentAccel(self):
-        return self.appAccel
+        return self.appAccel.copy()
         
     def setPressure(self, p):
         self.pressure = p
@@ -156,19 +156,19 @@ class Node(object):
         return self.pressure
     
     def setForce(self, F):
-        self.force = F
+        self.force = F.copy()
         
     def addForce(self, F):
         self.force += F
         
     def getForce(self):
-        return self.force
+        return self.force.copy()
         
     def getFixeties(self):
         fixeties = []
         for i in self.fixety.keys():
             fixeties.append((i,fixeties[i]))
-        return fixeties
+        return fixeties.copy()
     
     def fixDOF(self, dof, val=0.0):
         self.fixety[dof] = val
