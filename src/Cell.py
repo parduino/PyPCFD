@@ -40,6 +40,8 @@ class Cell(object):
         def setShape(self,xl)
         def SetNodes(self, nds)
         def SetVelocity(self, u)
+        def updateCellVelocity(self)
+        def updateCellAcceleration(self)
         def GetVelocity(self, x)
         def GetApparentAccel(self, x)
         def SetPressure(self, p)
@@ -162,14 +164,8 @@ class Cell(object):
         return indexes
         
     def SetVelocity(self):
-        
-        self.ux = zeros(4)
-        self.uy = zeros(4)
-        
-        for i in range(4):
-            vel = self.nodes[i].getVelocity()
-            self.ux[i] = vel[0]
-            self.uy[i] = vel[1]
+
+        self.updateCellVelocity()
         
         self.divVa =  0.5*(-self.ux[0] + self.ux[1] + self.ux[2] - self.ux[3]) / self.size[0]
         self.divVa += 0.5*(-self.uy[0] - self.uy[1] + self.uy[2] + self.uy[3]) / self.size[1]
@@ -180,7 +176,26 @@ class Cell(object):
     #      for i in range(4):
     #         self.nodes[i].SetVelocity(array([ux]))
 
-        
+    def updateCellVelocity(self):
+
+        self.ux = zeros(4)
+        self.uy = zeros(4)
+
+        for i in range(4):
+            vel = self.nodes[i].getVelocity()
+            self.ux[i] = vel[0]
+            self.uy[i] = vel[1]
+
+    def updateCellAcceleration(self):
+
+        self.ax = zeros(4)
+        self.ay = zeros(4)
+
+        for i in range(4):
+            accel = self.nodes[i].getApparentAccel()
+            self.ax[i] = accel[0]
+            self.ay[i] = accel[1]
+
     def GetVelocity(self, x):
         xl = self.getLocal(x)
         self.setShape(xl)
@@ -196,6 +211,8 @@ class Cell(object):
         return vel
 
     def GetApparentAccel(self, x):
+        self.updateCellAcceleration()
+
         xl = self.getLocal(x)
         self.setShape(xl)
         accel = array([dot(self.shape, self.ax), dot(self.shape, self.ay)])
@@ -241,18 +258,11 @@ class Cell(object):
 
         return array([[dxu, dyu],[dxv, dyv]])
 
-    # HACK to test deformation Gradient
-    def GetGradientA(self, x): 
+    def GetGradientA(self, x):
+        self.updateCellAcceleration()
+
         xl = self.getLocal(x)
         self.setShape(xl)
-        
-        self.ax = zeros(4)
-        self.ay = zeros(4)
-        
-        for i in range(4):
-            accel = self.nodes[i].getApparentAccel()
-            self.ax[i] = accel[0]
-            self.ay[i] = accel[1]
         
         dxax = dot(self.DshapeX, self.ax)
         dyax = dot(self.DshapeY, self.ax)

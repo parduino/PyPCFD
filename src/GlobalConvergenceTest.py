@@ -50,11 +50,10 @@ class GlobalConvergenceTest(object):
         NList = []
         N = 1
         dt = maxTime/N
-        #while (N<=1000):
-        while (N<=10):
+        while (N<=1000):
             NList.append(N)
 
-            domain = Domain(width=1., height=1., nCellsX=2, nCellsY=2)
+            domain = Domain(width=1., height=1., nCellsX=10, nCellsY=10)
             domain.setMotion(motion)
             domain.setTimeIntegrator(numAlg)
 
@@ -85,8 +84,7 @@ class GlobalConvergenceTest(object):
             print(mask.format(N, dt, positionErrors[-1], Ferrors[-1]))
             if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
                 break
-            #N *= 10
-            N *= 2
+            N *= 10
             dt = maxTime/N
 
         # Plots for deformation gradient errors
