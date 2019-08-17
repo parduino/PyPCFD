@@ -10,10 +10,14 @@ from ButcherTableau import *
 class GlobalConvergenceTest(object):
 
     def __init__(self, fileType='png'):
-        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
-        self.motionList = (Motion1(), Motion2())
-        # self.numAlgorithms = (MidPointRule(),)
-        # self.motionList = (Motion2(),)
+        #self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
+        #self.motionList = (Motion1(), Motion2())
+        #self.numAlgorithms = (ExplicitEuler(),)
+        #self.numAlgorithms = (MidPointRule(),)
+        self.numAlgorithms = (RungeKutta4(),)
+        self.motionList = (Motion1(),)
+        #self.motionList = (Motion2(),)
+
         self.fileType = fileType
 
         # configure the analysis type
@@ -46,10 +50,10 @@ class GlobalConvergenceTest(object):
         NList = []
         N = 1
         dt = maxTime/N
-        while (N<=1e3):
+        while (N<=1000):
             NList.append(N)
 
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain = Domain(width=1., height=1., nCellsX=10, nCellsY=10)
             domain.setMotion(motion)
             domain.setTimeIntegrator(numAlg)
 

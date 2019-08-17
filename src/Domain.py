@@ -148,7 +148,7 @@ class Domain(object):
         
         # self.createParticles(2,2)
         #self.createParticlesMID(3,3)
-        self.createParticleAtX(1.0, array([width/2.,height/3.]))
+        self.createParticleAtX(1.0, array([width/2.,height/10.]))
 
         # set default analysis parameters
         self.setAnalysis(False, True, True, True, False, True, True, True)
@@ -549,6 +549,10 @@ class Domain(object):
             cell = self.cells[k]
         except:
             raise CellIndexError((i,j,k,x))
+
+        # this is used for safety check but will slow down multi-particle simulations
+        if not cell.contains(x):
+            print("warning: particle position ({},{}) outside cell {}".format(*x, cell.id))
         
         return cell
     
@@ -624,16 +628,13 @@ class Domain(object):
         self.writer.writeData(self.time)
 
     def setNodalMotion(self, time=0.0):
-        # set nodal velocity field
-        for i in range(self.nCellsX + 1):
-            for j in range(self.nCellsY + 1):
-                # xIJ is Eulerial nodal position
-                xIJ = self.nodes[i][j].getPosition()
-                newV = self.motion.getVel(xIJ, time)
-                self.nodes[i][j].setVelocity(newV)
-                newA = self.motion.getDvDt(xIJ, time)
 
-                self.nodes[i][j].setApparentAccel(newA)
+        # set nodal velocity field
+        for rowOfNodes in self.nodes:
+            for node in rowOfNodes:
+                x = node.getPosition()  # x is Eulerial nodal position
+                node.setVelocity( self.motion.getVel(x, time) )
+                node.setApparentAccel( self.motion.getDvDt(x, time) )
 
         for cell in self.cells:
             cell.SetVelocity()
