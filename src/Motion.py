@@ -84,50 +84,51 @@ class Motion2(Motion):
 
         self.x0 = self.gamma1 * self.X1 + self.gamma2 * self.X2
 
+        self.lastTime = -1.
+        self.computeTensors(0.0)
+
+    def computeTensors(self, time):
+
+        if abs(time - self.lastTime) <= 1.e-12:
+            return
+
+        self.Q1 = expm(time*self.Omega1)
+        self.Q2 = expm(time*self.Omega2)
+
+        self.R = self.gamma1 * self.Q1 + self.gamma2 * self.Q2
+        self.Rinv = inv(self.R)
+
+        self.S1 = self.Q1 @ self.Rinv
+        self.S2 = self.Q2 @ self.Rinv
+
+        self.x1 = self.Q1 @ self.X1
+        self.x2 = self.Q2 @ self.X2
+
+        self.xTilde = self.gamma1 * self.x1 + self.gamma2 * self.x2
+        self.xTilde -= self.x0
+
+        self.lastTime = 0.0    # last time for which matrix exponentials were computed
+
     def getVel(self, xIJ, time):
-        Q1 = expm(time*self.Omega1)
-        Q2 = expm(time*self.Omega2)
 
-        R = self.gamma1 * Q1 + self.gamma2 * Q2
-        Rinv = inv(R)
+        self.computeTensors(time)
 
-        S1 = Q1 @ Rinv
-        S2 = Q2 @ Rinv
-
-        x1 = Q1 @ self.X1
-        x2 = Q2 @ self.X2
-
-        xTilde = self.gamma1 * x1 + self.gamma2 * x2
-        xTilde -= self.x0
-
-        v1 = self.Omega1 @ (S1 @ (xIJ + xTilde) - x1)
-        v2 = self.Omega2 @ (S2 @ (xIJ + xTilde) - x2)
+        v1 = self.Omega1 @ (self.S1 @ (xIJ + self.xTilde) - self.x1)
+        v2 = self.Omega2 @ (self.S2 @ (xIJ + self.xTilde) - self.x2)
         v = self.gamma1 * v1 + self.gamma2 * v2
 
         # print(v)
         return v
 
     def getDvDt(self, xIJ, time):
-        Q1 = expm(time*self.Omega1)
-        Q2 = expm(time*self.Omega2)
 
-        R = self.gamma1 * Q1 + self.gamma2 * Q2
-        Rinv = inv(R)
+        self.computeTensors(time)
 
-        S1 = Q1 @ Rinv
-        S2 = Q2 @ Rinv
+        v1 = self.Omega1 @ (self.S1 @ (xIJ + self.xTilde) - self.x1)
+        v2 = self.Omega2 @ (self.S2 @ (xIJ + self.xTilde) - self.x2)
 
-        x1 = Q1 @ self.X1
-        x2 = Q2 @ self.X2
-
-        xTilde = self.gamma1 * x1 + self.gamma2 * x2
-        xTilde -= self.x0
-
-        v1 = self.Omega1 @ (S1 @ (xIJ + xTilde) - x1)
-        v2 = self.Omega2 @ (S2 @ (xIJ + xTilde) - x2)
-
-        gradv1 = self.Omega1 @ S1
-        gradv2 = self.Omega2 @ S2
+        gradv1 = self.Omega1 @ self.S1
+        gradv2 = self.Omega2 @ self.S2
         gradv  = self.gamma1 * gradv1 + self.gamma2 * gradv2
 
         dvdt = self.gamma1 * (self.Omega1 @ v1) + self.gamma2 * (self.Omega2 @ v2)
@@ -138,19 +139,17 @@ class Motion2(Motion):
 
 
     def getAnalyticalF(self, x0, time):
-        Q1 = expm(time*self.Omega1)
-        Q2 = expm(time*self.Omega2)
 
-        R = self.gamma1 * Q1 + self.gamma2 * Q2
-        # print(R)
-        return R
+        self.computeTensors(time)
+
+        return self.R
 
     def getAnalyticalPosition(self, x0, time):
-        Q1 = expm(time*self.Omega1)
-        Q2 = expm(time*self.Omega2)
 
-        x = self.gamma1 * Q1 @ (x0 - self.X1) \
-            +self.gamma2 * Q2 @ (x0 - self.X2) \
+        self.computeTensors(time)
+
+        x = self.gamma1 * self.Q1 @ (x0 - self.X1) \
+            +self.gamma2 * self.Q2 @ (x0 - self.X2) \
             +self.x0
 
         return x
