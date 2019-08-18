@@ -122,6 +122,8 @@ class GlobalConvergenceTest(object):
         fileNameWithPath = os.path.join("images", fileName)
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
+        plt.close()
+
         slope = log(Ferrors[0] / Ferrors[3]) / log(NList[0] / NList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
