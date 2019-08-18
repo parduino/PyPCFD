@@ -214,6 +214,11 @@ class Motion3(Motion):
         return -self.getAnalyticalF(X, time)
 
     def getLagrangianPosition(self, xIJ, time):
+        R = self.getR(xIJ, time)
+        X = xIJ @ R
+        return X
+
+    def get_OLD_LagrangianPosition(self, xIJ, time):
         # WHY? Xk = xIJ/2.
         R = self.getR(xIJ, time)
         X = xIJ @ R
