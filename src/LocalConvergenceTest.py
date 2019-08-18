@@ -4,6 +4,8 @@ matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
 matplotlib.rcParams['font.size'] = 15
 
 from math import log
+from numpy import array
+from numpy.linalg import norm
 import os
 
 from Domain import *

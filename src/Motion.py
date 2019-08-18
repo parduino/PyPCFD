@@ -1,10 +1,6 @@
-from scipy.sparse.linalg import expm
-from numpy import array, dot, zeros, zeros_like, linspace, tensordot, pi
+from numpy import array, dot, zeros, tensordot, pi
 from numpy.linalg import inv, norm
-
-#from scipy.optimize import newton
-
-import os
+from scipy.linalg import expm
 
 
 # Just an interface for a motions
@@ -172,28 +168,25 @@ class Motion3(Motion):
         self.tolerance = 1.e-14
 
     def getVel(self, xIJ, time):
-        X = self.getLagrangianPosition(xIJ, time)
-        R = self.getR(X, time)
-        v = (X @ X) * self.Omega @ R @ X
+        r2 = dot(xIJ,xIJ)
+        v = r2 * self.Omega @ xIJ
         return v
 
     def getDvDt(self, xIJ, time):
-        X = self.getLagrangianPosition(xIJ, time)
-        R = self.getR(X, time)
+        R = self.getR(xIJ, time)
+        X = xIJ @ R
         V = self.getVel(X, time)
-        # F = self.getAnalyticalF(X, time)  ... avoid multiple computation of expensive tensor products !
 
         r2 = dot(X,X)
         dVdt   = r2 * self.Omega @ V
 
-        Y = self.Omega @ R @ X
+        Y = self.Omega @ xIJ
         Z = tensordot(Y, X, axes=0)
         F = R + 2.0 * time * Z
         GradV  = r2 * self.Omega @ F + 2.0 * Z
 
-        # grad_v = dVdt - GradV @ V    # WTF ???  del v is a 2nd-order tensor, not a vector !!!!!
         delV = GradV @ inv(F)
-        dvdt   = dVdt - delV @ V
+        dvdt = dVdt - delV @ V
 
         return dvdt
 
@@ -204,18 +197,12 @@ class Motion3(Motion):
     def getAnalyticalF(self, X, time):
         R = self.getR(X, time)
         Y = self.Omega @ R @ X
-        F = R + 2.0 * time * tensordot(Y, X, axes=0)
-        return F
+        self.F = R + 2.0 * time * tensordot(Y, X, axes=0)
+        return self.F
 
     def getAnalyticalPosition(self, X, time):
         R = self.getR(X, time)
         return R @ X
-
-    def zeroFunc(self, X, xIJ, time):
-        return xIJ - self.getAnalyticalPosition(X, time)
-
-    def funcPrime(self, X, xIJ, time):
-        return -self.getAnalyticalF(X, time)
 
     def getLagrangianPosition(self, xIJ, time):
         R = self.getR(xIJ, time)

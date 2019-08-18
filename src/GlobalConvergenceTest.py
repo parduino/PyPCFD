@@ -1,8 +1,13 @@
-from Domain import *
 import matplotlib
 import matplotlib.pyplot as plt
+
 from math import log
+from numpy import array
+from numpy.linalg import norm
+
 import os
+
+from Domain import *
 from Motion import *
 from ButcherTableau import *
 
