@@ -36,6 +36,8 @@ class Motion1(Motion):
 
     def __init__(self):
         super().__init__()
+        self.id = 1
+
         # set global motion parameters
         theta = pi
         self.X0 = array([0.5, 0.5])
@@ -69,6 +71,7 @@ class Motion2(Motion):
 
     def __init__(self):
         super().__init__()
+        self.id = 2
 
         self.gamma1 = 0.6
         self.gamma2 = 1. - self.gamma1
@@ -157,6 +160,8 @@ class Motion3(Motion):
 
     def __init__(self):
         super().__init__()
+        self.id = 3
+
         # set global motion parameters
         theta = pi/20.0
         self.X0 = array([0.5, 0.5])
