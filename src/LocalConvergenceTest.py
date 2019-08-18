@@ -123,6 +123,8 @@ class LocalConvergenceTest(object):
 
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
+        plt.close()
+
         slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
@@ -138,7 +140,7 @@ class LocalConvergenceTest(object):
 
         x = array([dtList[0], dtList[-1]])
         y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
-        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (2.)])
         y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
         y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
         y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
