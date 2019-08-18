@@ -1,43 +1,35 @@
-from abc import ABCMeta, abstractmethod
 from scipy.sparse.linalg import expm
-from numpy import array, dot, zeros_like, linspace, tensordot, zeros, ones
+from numpy import array, dot, zeros, zeros_like, linspace, tensordot, pi
 from numpy.linalg import inv, norm
-from scipy.optimize import newton
-from math import pi
-import matplotlib
-matplotlib.use('TkAgg')
-import matplotlib.pyplot as plt
-import os
 
+#from scipy.optimize import newton
+
+import os
 
 
 # Just an interface for a motions
 class Motion(object):
-    __metaclass__ = ABCMeta
 
-    @abstractmethod
     def __init__(self):
-        pass
+        self.id = -1
 
-    @abstractmethod
     def __str__(self):
-        pass
+        return "motion_{}".format(self.id)
 
-    @abstractmethod
+    def __repr__(self):
+        return "Motion{}()".format(self.id)
+
     def getVel(self, xIJ, time):
-        pass
+        return array([0.0, 0.0])
 
-    @abstractmethod
     def getDvDt(self, xIJ, time):
-        pass
+        return array([0.0, 0.0])
 
-    @abstractmethod
     def getAnalyticalF(self, x0, time):
-        pass
+        return zeros((2,2))
 
-    @abstractmethod
     def getAnalyticalPosition(self, x0, time):
-        pass
+        return array([0.0, 0.0])
 
 
 class Motion1(Motion):
@@ -53,9 +45,6 @@ class Motion1(Motion):
         # calculate rotation matrix
         self.Omega = array([[0.0, -theta],
                             [theta, 0.0]])  # skew symmetric matrix
-
-    def __str__(self):
-        return "motion_1"
 
     def getVel(self, xIJ, time):
         v = self.Omega @ (xIJ - self.X0 - time * self.Vel0) + self.Vel0
@@ -75,42 +64,6 @@ class Motion1(Motion):
         x = Q @ (x0 - self.X0) + time * self.Vel0 + self.X0
         return x
 
-    def plotMotion(self):
-        # create folder to store images
-        if not os.path.isdir("images"):
-            os.mkdir("images")
-
-        n = 1000
-        t = linspace(0, 20, num=n)
-        x0 = array([0.5, 1. / 3.])
-        lims = 0.5
-        xlocs = zeros_like(t)
-        xlocs[0] = x0[0]
-        ylocs = zeros_like(t)
-        ylocs[0] = x0[1]
-
-        plt.ion()
-        fig = plt.figure()
-        matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
-        matplotlib.rcParams['font.size'] = 15
-        ax3 = fig.gca()
-        ax3.axis("equal")
-        ax3.grid(True)
-
-        for j in range(1, n):
-            xp = self.getAnalyticalPosition(x0, t[j])
-            xlocs[j] = xp[0]
-            ylocs[j] = xp[1]
-
-        # ax3.scatter(xlocs, ylocs, s=10)
-        ax3.scatter(x0[0], x0[1], s=30, c="k")
-        ax3.scatter(xlocs, ylocs, s=10, c="b")
-
-        fileName = "{}.pdf".format(self)
-        fileNameWithPath = os.path.join("images", fileName)
-        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
-        plt.close()
-
 
 class Motion2(Motion):
 
@@ -127,9 +80,6 @@ class Motion2(Motion):
         self.X2 = array([0.8, 0.8])
 
         self.x0 = self.gamma1 * self.X1 + self.gamma2 * self.X2
-
-    def __str__(self):
-        return "motion_2"
 
     def getVel(self, xIJ, time):
         Q1 = expm(time*self.Omega1)
@@ -202,55 +152,6 @@ class Motion2(Motion):
 
         return x
 
-    def plotMotion(self):
-        # create folder to store images
-        if not os.path.isdir("images"):
-            os.mkdir("images")
-
-        n = 1000
-        t = linspace(0, 90, num=n)
-        x0 = array([0.5, 1. / 3.])
-        lims = 0.5
-        xlocs = zeros_like(t)
-        xlocs[0] = x0[0]
-        ylocs = zeros_like(t)
-        ylocs[0] = x0[1]
-
-        plt.ion()
-        fig = plt.figure()
-        matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
-        matplotlib.rcParams['font.size'] = 15
-        ax3 = fig.gca()
-        ax3.axis("equal")
-        ax3.grid(True)
-
-        for j in range(1, n):
-            xp = self.getAnalyticalPosition(x0, t[j])
-            xlocs[j] = xp[0]
-            ylocs[j] = xp[1]
-
-            # ax3.scatter(xlocs[0:j], ylocs[0:j], s=10, c="b")
-            # ax3.scatter(xlocs[0], ylocs[0], s=30, c="r")
-            # ax3.scatter(m.X1[0], m.X1[1], s=30, c="k")
-            # ax3.scatter(m.X2[0], m.X2[1], s=30, c="m")
-            # # ax3.set_xlim(-lims, lims)
-            # # ax3.set_ylim(-lims, lims)
-            #
-            # plt.draw()
-            # plt.pause(0.00001)
-            # ax3.clear()
-
-        # ax3.scatter(xlocs, ylocs, s=10)
-        ax3.scatter(xlocs, ylocs, s=10, c="b")
-        ax3.scatter(x0[0], x0[1], s=30, c="k")
-        # ax3.scatter(self.X1[0], self.X1[1], s=30, c="k")
-        # ax3.scatter(self.X2[0], self.X2[1], s=30, c="m")
-
-        fileName = "{}.pdf".format(self)
-        fileNameWithPath = os.path.join("images", fileName)
-        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
-        plt.close()
-
 
 class Motion3(Motion):
 
@@ -265,9 +166,6 @@ class Motion3(Motion):
                             [theta, 0.0]])  # skew symmetric matrix
 
         self.tolerance = 1.e-14
-
-    def __str__(self):
-        return "motion_3"
 
     def getVel(self, xIJ, time):
         X = self.getLagrangianPosition(xIJ, time)
@@ -309,42 +207,6 @@ class Motion3(Motion):
         R = self.getR(X, time)
         return R @ X
 
-    def plotMotion(self):
-        # create folder to store images
-        if not os.path.isdir("images"):
-            os.mkdir("images")
-
-        n = 100
-        t = linspace(0, 20, num=n)
-        x0 = array([0.5, 1. / 3.])
-        lims = 0.5
-        xlocs = zeros_like(t)
-        xlocs[0] = x0[0]
-        ylocs = zeros_like(t)
-        ylocs[0] = x0[1]
-
-        plt.ion()
-        fig = plt.figure()
-        matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
-        matplotlib.rcParams['font.size'] = 15
-        ax3 = fig.gca()
-        ax3.axis("equal")
-        ax3.grid(True)
-
-        for j in range(1, n):
-            xp = self.getAnalyticalPosition(x0, t[j])
-            xlocs[j] = xp[0]
-            ylocs[j] = xp[1]
-
-        # ax3.scatter(xlocs, ylocs, s=10)
-        ax3.scatter(x0[0], x0[1], s=30, c="k")
-        ax3.scatter(xlocs, ylocs, s=2, c="b")
-
-        fileName = "{}.pdf".format(self)
-        fileNameWithPath = os.path.join("images", fileName)
-        plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
-        plt.close()
-
     def zeroFunc(self, X, xIJ, time):
         return xIJ - self.getAnalyticalPosition(X, time)
 
@@ -352,6 +214,11 @@ class Motion3(Motion):
         return -self.getAnalyticalF(X, time)
 
     def getLagrangianPosition(self, xIJ, time):
+        R = self.getR(xIJ, time)
+        X = xIJ @ R
+        return X
+
+    def get_OLD_LagrangianPosition(self, xIJ, time):
         # WHY? Xk = xIJ/2.
         R = self.getR(xIJ, time)
         X = xIJ @ R
