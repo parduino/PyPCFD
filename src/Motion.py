@@ -1,10 +1,6 @@
-from scipy.sparse.linalg import expm
-from numpy import array, dot, zeros, zeros_like, linspace, tensordot, pi
+from numpy import array, dot, zeros, tensordot, pi
 from numpy.linalg import inv, norm
-
-#from scipy.optimize import newton
-
-import os
+from scipy.linalg import expm
 
 
 # Just an interface for a motions
