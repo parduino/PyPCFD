@@ -29,6 +29,7 @@ class Node(object):
     methods:
         def __init__(self, id, X,Y)
         def __str__(self)
+        def __repr__(self)
         def wipe(self)
         def setGridCoordinates(self, i,j)
         def getGridCoordinates(self)
@@ -67,7 +68,7 @@ class Node(object):
         
         self.force = zeros(2)
         
-        self.mass = 0.0
+        self.mass = 1.e-16
         self.momentum = zeros(2)
         self.appAccel = zeros(2)
         self.pressure = 0.0
@@ -89,6 +90,10 @@ class Node(object):
                                                                     *(self.momentum/self.mass))
         return s
     
+    def __repr__(self):
+        s = 'Node({},{},{})'.format(self.id, *self.pos)
+        return s
+
     def wipe(self):
         self.mass = 0.0
         self.momentum = 0.0
@@ -98,10 +103,10 @@ class Node(object):
         self.gridCoords = (i,j)
         
     def getGridCoordinates(self):
-        return self.gridCoords
+        return self.gridCoords.copy()
     
     def getPosition(self):
-        return self.pos
+        return self.pos.copy()
                            
     def setMomentum(self, p):
         self.momentum = p
@@ -110,7 +115,7 @@ class Node(object):
         self.momentum += p
         
     def getMomentum(self):
-        return self.momentum
+        return self.momentum.copy()
     
     def setMass(self, m):
         self.mass = m
@@ -142,7 +147,7 @@ class Node(object):
         self.appAccel = a
         
     def getApparentAccel(self):
-        return self.appAccel
+        return self.appAccel.copy()
         
     def setPressure(self, p):
         self.pressure = p
@@ -151,19 +156,19 @@ class Node(object):
         return self.pressure
     
     def setForce(self, F):
-        self.force = F
+        self.force = F.copy()
         
     def addForce(self, F):
         self.force += F
         
     def getForce(self):
-        return self.force
+        return self.force.copy()
         
     def getFixeties(self):
         fixeties = []
         for i in self.fixety.keys():
             fixeties.append((i,fixeties[i]))
-        return fixeties
+        return fixeties.copy()
     
     def fixDOF(self, dof, val=0.0):
         self.fixety[dof] = val
