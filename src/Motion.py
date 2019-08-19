@@ -373,8 +373,8 @@ class Motion3(Motion):
                 print("Newton iteration failed to converge")
                 raise
 
-        msg = "Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
-        print(msg.format(xIJ, X, self.getAnalyticalPosition(X, time)))
+        # msg = "Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
+        # print(msg.format(xIJ, X, self.getAnalyticalPosition(X, time)))
 
         # X = newton(self.zeroFunc, xIJ, fprime=self.funcPrime, args=(xIJ,time))
         return X

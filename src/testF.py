@@ -3,6 +3,7 @@ from GlobalConvergenceTest import *
 from numpy import array, linspace, zeros, zeros_like, tensordot
 import matplotlib.pyplot as plt
 
+
 def Main():
     fileType = 'pdf'
     # fileType = 'png'
