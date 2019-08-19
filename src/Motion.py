@@ -159,7 +159,45 @@ class Motion3(Motion):
 
         # set global motion parameters
         theta = pi/20.0
-        self.X0 = array([0.5, 0.5])
+
+        # initialize rotation matrix
+        self.Omega = array([[0.0, -theta],
+                            [theta, 0.0]])  # skew symmetric matrix
+
+    def getVel(self, xIJ, time):
+        r2 = dot(xIJ,xIJ)
+        return r2 * self.Omega @ xIJ
+
+    def getDvDt(self, xIJ, time):
+        return array([0.0, 0.0])
+
+    def getR(self, X, t):
+        r2 = dot(X,X)
+        return expm(r2*t * self.Omega)
+
+    def getAnalyticalF(self, X, time):
+        R = self.getR(X, time)
+        Y = self.Omega @ R @ X
+        F = R + 2.0 * time * tensordot(Y, X, axes=0)
+        return F
+
+    def getAnalyticalPosition(self, X, time):
+        R = self.getR(X, time)
+        return R @ X
+
+    def getLagrangianPosition(self, xIJ, time):
+        R = self.getR(xIJ, time)
+        return xIJ @ R
+
+
+class Motion4(Motion):
+
+    def __init__(self):
+        super().__init__()
+        self.id = 4
+
+        # set global motion parameters
+        theta = pi/20.0
 
         # initialize rotation matrix
         self.Omega = array([[0.0, -theta],
@@ -187,6 +225,8 @@ class Motion3(Motion):
 
         delV = GradV @ inv(F)
         dvdt = dVdt - delV @ V
+
+        print("X = ({:6.3f}, {:6.3f})  V = ({:8.5f}, {:8.5f})  dvdt = ({:8.5f}, {:8.5f})".format(*X, *V, *dvdt))
 
         return dvdt
 
@@ -234,7 +274,6 @@ class Motion3(Motion):
         msg = "Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
         print(msg.format(xIJ, X, self.getAnalyticalPosition(X, time)))
 
-        # X = newton(self.zeroFunc, xIJ, fprime=self.funcPrime, args=(xIJ,time))
         return X
 
 
