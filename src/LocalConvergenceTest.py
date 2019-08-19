@@ -1,39 +1,31 @@
-from Domain import *
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
+matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+matplotlib.rcParams['font.size'] = 15
+
 from math import log
+from numpy import array
+from numpy.linalg import norm
 import os
+
+from Domain import *
 from Motion import *
 from ButcherTableau import *
 
 
 class LocalConvergenceTest(object):
 
-    def __init__(self, fileType='png'):
-        self.numAlgorithms = (ExplicitEuler(), MidPointRule(), RungeKutta4())
-        # self.motionList = (Motion1(), Motion2())
-        # self.numAlgorithms = (ExplicitEuler(),)
-        self.motionList = (Motion3(),)
+    def __init__(self, motion, algorithm, fileType='png'):
+        self.numAlgorithms = (algorithm,)
+        self.motionList = (motion,)
         self.fileType = fileType
-
-        # plotting options
-        self.numAlgLineStyles = ["k-o", "k-s", "k-^"]
-
 
     def runAnalysis(self):
         for motion in self.motionList:
             # create POSITION plots for each motion
             # fig, ax1 = plt.subplots()
-            # matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
-            # matplotlib.rcParams['font.size'] = 15
             for j, numalg in enumerate(self.numAlgorithms):
                 dtList, positionErrors, Ferrors = self.runCase(numalg, motion)
-                # add position data to plot
-                # self.plotPositionErrors(dtList, positionErrors, numalg, motion)
-                # ax1.loglog(dtList, positionErrors, self.numAlgLineStyles[j], linewidth=2, label=numalg)
-
-            # self.finalizePositionPlot(ax1, dtList, positionErrors)
-            # plt.show()
 
     def runCase(self, numAlg, motion):
         # configure the analysis type
@@ -133,6 +125,8 @@ class LocalConvergenceTest(object):
 
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
+        plt.close()
+
         slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
@@ -148,7 +142,7 @@ class LocalConvergenceTest(object):
 
         x = array([dtList[0], dtList[-1]])
         y1 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (1.)])
-        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
+        y2 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (2.)])
         y3 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (3.)])
         y4 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (4.)])
         y5 = array([positionErrors[0], positionErrors[0] * (dtList[-1] / dtList[0]) ** (5.)])
