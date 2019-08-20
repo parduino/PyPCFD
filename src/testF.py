@@ -8,7 +8,8 @@ PLOT_MULTI_STEP_TESTS  = False
 
 MOTION1 = False
 MOTION2 = False
-MOTION3 = True
+MOTION3 = False
+MOTION4 = True
 
 ALGORITHM_EXPLICIT    = True
 ALGORITHM_MIDPOINT    = True
@@ -59,6 +60,16 @@ def Main():
             if ALGORITHM_RUNGE_KUTTA:
                 LocalConvergenceTest(Motion3(), RungeKutta4(), fileType).runAnalysis()
 
+        if MOTION4:
+            if ALGORITHM_EXPLICIT:
+                LocalConvergenceTest(Motion4(), ExplicitEuler(), fileType).runAnalysis()
+
+            if ALGORITHM_MIDPOINT:
+                LocalConvergenceTest(Motion4(), MidPointRule(), fileType).runAnalysis()
+
+            if ALGORITHM_RUNGE_KUTTA:
+                LocalConvergenceTest(Motion4(), RungeKutta4(), fileType).runAnalysis()
+
 
     if PLOT_MULTI_STEP_TESTS:
 
@@ -92,6 +103,16 @@ def Main():
             if ALGORITHM_RUNGE_KUTTA:
                 GlobalConvergenceTest(Motion3(), RungeKutta4(), fileType).runAnalysis()
 
+        if MOTION4:
+            if ALGORITHM_EXPLICIT:
+                GlobalConvergenceTest(Motion4(), ExplicitEuler(), fileType).runAnalysis()
+
+            if ALGORITHM_MIDPOINT:
+                GlobalConvergenceTest(Motion4(), MidPointRule(), fileType).runAnalysis()
+
+            if ALGORITHM_RUNGE_KUTTA:
+                GlobalConvergenceTest(Motion4(), RungeKutta4(), fileType).runAnalysis()
+
 
     if PLOT_MOTIONS:
 
@@ -115,6 +136,13 @@ def Main():
             m.setPointsPerSecond(4)
             m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
             m.exportImage("m3.png")
+
+        if MOTION4:
+            m = MotionPlot(Motion4())
+            m.setMaxTime(5.)
+            m.setPointsPerSecond(10)
+            m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
+            m.exportImage("m4.png")
 
 
 if __name__ == '__main__':
