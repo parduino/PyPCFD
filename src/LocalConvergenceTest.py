@@ -127,7 +127,7 @@ class LocalConvergenceTest(object):
 
         plt.close()
 
-        slope = log(Ferrors[0] / Ferrors[3]) / log(dtList[0] / dtList[-1])
+        slope = log(Ferrors[0] / Ferrors[-1]) / log(dtList[0] / dtList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
         return (dtList, positionErrors, Ferrors)
@@ -166,7 +166,7 @@ class LocalConvergenceTest(object):
 
         plt.close()
 
-        slope = log(positionErrors[0] / positionErrors[3]) / log(dtList[0] / dtList[-1])
+        slope = log(positionErrors[0] / positionErrors[-1]) / log(dtList[0] / dtList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
     def finalizePositionPlot(self, ax, dtList, positionErrors):

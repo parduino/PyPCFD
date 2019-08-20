@@ -129,7 +129,7 @@ class GlobalConvergenceTest(object):
 
         plt.close()
 
-        slope = log(Ferrors[0] / Ferrors[3]) / log(NList[0] / NList[-1])
+        slope = log(Ferrors[0] / Ferrors[-1]) / log(NList[0] / NList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
         # Plots for position errors
@@ -176,5 +176,5 @@ class GlobalConvergenceTest(object):
 
         plt.close()
 
-        slope = log(positionErrors[0] / positionErrors[3]) / log(NList[0] / NList[-1])
+        slope = log(positionErrors[0] / positionErrors[-1]) / log(NList[0] / NList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
