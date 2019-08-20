@@ -4,16 +4,16 @@ PLOT_MOTIONS = True
 
 PLOT_SINGLE_STEP_TESTS = True
 
-PLOT_MULTI_STEP_TESTS  = True
+PLOT_MULTI_STEP_TESTS  = False
 
 MOTION1 = False
 MOTION2 = False
-MOTION3 = True
-MOTION4 = False
+MOTION3 = False
+MOTION4 = True
 
-ALGORITHM_EXPLICIT    = False
+ALGORITHM_EXPLICIT    = True
 ALGORITHM_MIDPOINT    = True
-ALGORITHM_RUNGE_KUTTA = False
+ALGORITHM_RUNGE_KUTTA = True
 
 OUTPUT_FILE_TYPE = 'png'
 
@@ -139,10 +139,10 @@ def Main():
 
         if MOTION4:
             m = MotionPlot(Motion4())
-            m.setMaxTime(40.)
-            m.setPointsPerSecond(4)
+            m.setMaxTime(5.)
+            m.setPointsPerSecond(10)
             m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
-            m.exportImage("m3.png")
+            m.exportImage("m4.png")
 
 
 if __name__ == '__main__':

@@ -197,46 +197,49 @@ class Motion4(Motion):
         self.id = 4
 
         # set global motion parameters
+        lam   = 1./10.
         theta = pi/20.0
 
         # initialize rotation matrix
-        self.Omega = array([[0.0, -theta],
-                            [theta, 0.0]])  # skew symmetric matrix
+        self.A = array([[lam, -theta],
+                        [theta, lam]])  # skew symmetric matrix
 
         self.tolerance = 1.e-14
 
     def getVel(self, xIJ, time):
-        r2 = dot(xIJ,xIJ)
-        v = r2 * self.Omega @ xIJ
+        X = self.get_LagrangianPosition(xIJ, time)
+        R = self.getR(X, time)
+        r2 = dot(X,X)
+        v = r2 * self.A @ xIJ
         return v
 
     def getDvDt(self, xIJ, time):
-        R = self.getR(xIJ, time)
-        X = xIJ @ R
+        X = self.get_LagrangianPosition(xIJ, time)
+        R = self.getR(X, time)
         V = self.getVel(X, time)
 
         r2 = dot(X,X)
-        dVdt   = r2 * self.Omega @ V
+        dVdt   = r2 * self.A @ V
 
-        Y = self.Omega @ xIJ
+        Y = self.A @ xIJ
         Z = tensordot(Y, X, axes=0)
         F = R + 2.0 * time * Z
-        GradV  = r2 * self.Omega @ F + 2.0 * Z
+        GradV  = r2 * self.A @ F + 2.0 * Z
 
         delV = GradV @ inv(F)
         dvdt = dVdt - delV @ V
 
-        print("X = ({:6.3f}, {:6.3f})  V = ({:8.5f}, {:8.5f})  dvdt = ({:8.5f}, {:8.5f})".format(*X, *V, *dvdt))
+        #print("X = ({:6.3f}, {:6.3f})  V = ({:8.5f}, {:8.5f})  dvdt = ({:8.5f}, {:8.5f})".format(*X, *V, *dvdt))
 
         return dvdt
 
     def getR(self, X, t):
         r2 = dot(X,X)
-        return expm(r2*t * self.Omega)
+        return expm(r2*t * self.A)
 
     def getAnalyticalF(self, X, time):
         R = self.getR(X, time)
-        Y = self.Omega @ R @ X
+        Y = self.A @ R @ X
         self.F = R + 2.0 * time * tensordot(Y, X, axes=0)
         return self.F
 
@@ -244,21 +247,15 @@ class Motion4(Motion):
         R = self.getR(X, time)
         return R @ X
 
-    def getLagrangianPosition(self, xIJ, time):
-        R = self.getR(xIJ, time)
-        X = xIJ @ R
-        return X
-
-    def get_OLD_LagrangianPosition(self, xIJ, time):
-        # WHY? Xk = xIJ/2.
-        R = self.getR(xIJ, time)
-        X = xIJ @ R
+    def get_LagrangianPosition(self, xIJ, time):
+        X = xIJ
+        R = self.getR(X, time)
         error = xIJ - self.getAnalyticalPosition(X, time)
 
         cnt = 0
         while norm(error) > self.tolerance:
-            self.F = self.getAnalyticalF(X, time)
-            deltaX = inv(self.F) @ error
+            F = self.getAnalyticalF(X, time)
+            deltaX = inv(F) @ error
             X += deltaX
 
             cnt += 1
@@ -271,8 +268,8 @@ class Motion4(Motion):
                 print("Newton iteration failed to converge")
                 raise
 
-        msg = "Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
-        print(msg.format(xIJ, X, self.getAnalyticalPosition(X, time)))
+        #msg = "Eulerian Position = {}, Lagrangian Position = {}, Reconstructed Eulerian Position = {}"
+        #print(msg.format(xIJ, X, self.getAnalyticalPosition(X, time)))
 
         return X
 
