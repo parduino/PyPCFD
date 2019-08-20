@@ -103,7 +103,7 @@ class Motion2(Motion):
         self.xTilde = self.gamma1 * self.x1 + self.gamma2 * self.x2
         self.xTilde -= self.x0
 
-        self.lastTime = 0.0    # last time for which matrix exponentials were computed
+        self.lastTime = time    # last time for which matrix exponentials were computed
 
     def getVel(self, xIJ, time):
 
@@ -122,22 +122,21 @@ class Motion2(Motion):
 
         v1 = self.Omega1 @ (self.S1 @ (xIJ + self.xTilde) - self.x1)
         v2 = self.Omega2 @ (self.S2 @ (xIJ + self.xTilde) - self.x2)
+        v = self.gamma1 * v1 + self.gamma2 * v2
 
         gradv1 = self.Omega1 @ self.S1
         gradv2 = self.Omega2 @ self.S2
         gradv  = self.gamma1 * gradv1 + self.gamma2 * gradv2
 
         dvdt = self.gamma1 * (self.Omega1 @ v1) + self.gamma2 * (self.Omega2 @ v2)
-        dvdt -= dot(gradv, self.getVel(xIJ, time))
+        dvdt -= gradv @ v
 
         # print(dvdt)
         return dvdt
 
 
     def getAnalyticalF(self, x0, time):
-
         self.computeTensors(time)
-
         return self.R
 
     def getAnalyticalPosition(self, x0, time):
@@ -145,8 +144,8 @@ class Motion2(Motion):
         self.computeTensors(time)
 
         x = self.gamma1 * self.Q1 @ (x0 - self.X1) \
-            +self.gamma2 * self.Q2 @ (x0 - self.X2) \
-            +self.x0
+            + self.gamma2 * self.Q2 @ (x0 - self.X2) \
+            + self.x0
 
         return x
 
