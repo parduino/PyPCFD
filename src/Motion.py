@@ -16,15 +16,19 @@ class Motion(object):
         return "Motion{}()".format(self.id)
 
     def getVel(self, xIJ, time):
+        print("*** warning: getVel not implemented ***")
         return array([0.0, 0.0])
 
     def getDvDt(self, xIJ, time):
+        print("*** warning: getDvDt not implemented ***")
         return array([0.0, 0.0])
 
     def getAnalyticalF(self, x0, time):
+        print("*** warning: getAnalyticalF not implemented ***")
         return zeros((2,2))
 
     def getAnalyticalPosition(self, x0, time):
+        print("*** warning: getAnalyticalPosition not implemented ***")
         return array([0.0, 0.0])
 
 
@@ -156,6 +160,11 @@ class Motion3(Motion):
         super().__init__()
         self.id = 3
 
+        '''
+        The reference node, X0, was set to the origin.
+        This has no effect on the nonlinearity but shortens computation.
+        '''
+
         # set global motion parameters
         theta = pi/20.0
 
@@ -183,10 +192,6 @@ class Motion3(Motion):
     def getAnalyticalPosition(self, X, time):
         R = self.getR(X, time)
         return R @ X
-
-    def getLagrangianPosition(self, xIJ, time):
-        R = self.getR(xIJ, time)
-        return xIJ @ R
 
 
 class Motion4(Motion):
