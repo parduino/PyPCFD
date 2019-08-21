@@ -1,7 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 
-from math import log
+from math import log, floor
 from numpy import array
 from numpy.linalg import norm
 
@@ -14,10 +14,14 @@ from ButcherTableau import *
 
 class GlobalConvergenceTest(object):
 
-    def __init__(self, motion, algorithm, fileType='png'):
+    def __init__(self, motion, algorithm, fileType='png', nCells=1):
         self.numAlgorithms = (algorithm,)
         self.motionList = (motion,)
         self.fileType = fileType
+        if nCells >= 1.:
+            self.nCells= floor(nCells)
+        else:
+            self.nCells = 1
 
         # configure the analysis type
         self.doInit = False
@@ -52,7 +56,7 @@ class GlobalConvergenceTest(object):
         while (N<=1000):
             NList.append(N)
 
-            domain = Domain(width=1., height=1., nCellsX=10, nCellsY=10)
+            domain = Domain(width=1., height=1., nCellsX=self.nCells, nCellsY=self.nCells)
             domain.setMotion(motion)
             domain.setTimeIntegrator(numAlg)
 
