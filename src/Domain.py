@@ -516,7 +516,8 @@ class Domain(object):
                 
                 # update particle velocity ...
                 cell = self.findCell(xn1)
-                vel  = cell.GetVelocity(xn1) + a[i]*cell.GetApparentAccel(xn1)
+                vel  = cell.GetVelocity(xn1) + dt*cell.GetApparentAccel(xn1)
+
                 p.setVelocity(vel)
                 
                 # update the deformation gradient ...

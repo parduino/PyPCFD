@@ -1,7 +1,7 @@
 import matplotlib
 import matplotlib.pyplot as plt
 
-from math import log
+from math import log, floor
 from numpy import array
 from numpy.linalg import norm
 
@@ -14,10 +14,14 @@ from ButcherTableau import *
 
 class GlobalConvergenceTest(object):
 
-    def __init__(self, motion, algorithm, fileType='png'):
+    def __init__(self, motion, algorithm, fileType='png', nCells=1):
         self.numAlgorithms = (algorithm,)
         self.motionList = (motion,)
         self.fileType = fileType
+        if nCells >= 1.:
+            self.nCells= floor(nCells)
+        else:
+            self.nCells = 1
 
         # configure the analysis type
         self.doInit = False
@@ -52,7 +56,7 @@ class GlobalConvergenceTest(object):
         while (N<=1000):
             NList.append(N)
 
-            domain = Domain(width=1., height=1., nCellsX=10, nCellsY=10)
+            domain = Domain(width=1., height=1., nCellsX=self.nCells, nCellsY=self.nCells)
             domain.setMotion(motion)
             domain.setTimeIntegrator(numAlg)
 
@@ -129,7 +133,7 @@ class GlobalConvergenceTest(object):
 
         plt.close()
 
-        slope = log(Ferrors[0] / Ferrors[3]) / log(NList[0] / NList[-1])
+        slope = log(Ferrors[0] / Ferrors[-1]) / log(NList[0] / NList[-1])
         print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
         # Plots for position errors
@@ -176,5 +180,5 @@ class GlobalConvergenceTest(object):
 
         plt.close()
 
-        slope = log(positionErrors[0] / positionErrors[3]) / log(NList[0] / NList[-1])
+        slope = log(positionErrors[0] / positionErrors[-1]) / log(NList[0] / NList[-1])
         print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
