@@ -196,7 +196,7 @@ class Motion4(Motion):
         self.id = 4
 
         # set global motion parameters
-        lam   = 1./10.
+        lam   = 1./25.
         theta = pi/20.0
 
         # initialize rotation matrix
@@ -247,21 +247,20 @@ class Motion4(Motion):
         return R @ X
 
     def get_LagrangianPosition(self, xIJ, time):
-        X = xIJ
-        R = self.getR(X, time)
+        R = self.getR(xIJ, time)
+        X = xIJ @ R
         error = xIJ - self.getAnalyticalPosition(X, time)
 
         cnt = 0
         while norm(error) > self.tolerance:
             F = self.getAnalyticalF(X, time)
-            deltaX = inv(F) @ error
-            X += deltaX
+            X += inv(F) @ error
 
             cnt += 1
 
             # error = F @ deltaX
             error = xIJ - self.getAnalyticalPosition(X, time)
-            print("* step {}: error = {:12.6e}".format(cnt,norm(error)))
+            #print("* step {}: error = {:12.6e}".format(cnt,norm(error)))
 
             if cnt > 10:
                 print("Newton iteration failed to converge")

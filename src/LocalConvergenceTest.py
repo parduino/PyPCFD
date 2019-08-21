@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
 matplotlib.rcParams['font.size'] = 15
 
-from math import log
+from math import log, floor
 from numpy import array
 from numpy.linalg import norm
 import os
@@ -15,10 +15,14 @@ from ButcherTableau import *
 
 class LocalConvergenceTest(object):
 
-    def __init__(self, motion, algorithm, fileType='png'):
+    def __init__(self, motion, algorithm, fileType='png', nCells=1):
         self.numAlgorithms = (algorithm,)
         self.motionList = (motion,)
         self.fileType = fileType
+        if nCells >= 1.:
+            self.nCells= floor(nCells)
+        else:
+            self.nCells = 1
 
     def runAnalysis(self):
         for motion in self.motionList:
@@ -44,7 +48,7 @@ class LocalConvergenceTest(object):
         dt = 1.0
         while (dt > 1.0e-8):
             dtList.append(dt)
-            domain = Domain(width=1., height=1., nCellsX=1, nCellsY=1)
+            domain = Domain(width=1., height=1., nCellsX=self.nCells, nCellsY=self.nCells)
             domain.setMotion(motion)
             domain.setTimeIntegrator(numAlg)
 
