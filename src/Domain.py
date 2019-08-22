@@ -500,7 +500,12 @@ class Domain(object):
                             
                     cell = self.findCell(xi)
 
-                    kI.append(cell.GetVelocity(xi) + a[i]*cell.GetApparentAccel(xi))
+                    # this line represents the MPM-style interpolation of the velocity field
+                    kI.append(cell.GetVelocity(xi) + a[i] * cell.GetApparentAccel(xi))
+
+                    # the following line uses the analytic expression for the motion. It yields the proper accuracy
+                    #kI.append(self.motion.getVel(xi, self.time + a[i]))
+
                     Dv.append(cell.GetGradientV(xi) + a[i]*cell.GetGradientA(xi))
                     
                     fI.append(f)
