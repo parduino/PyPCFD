@@ -17,6 +17,8 @@ ALGORITHM_RUNGE_KUTTA = True
 
 OUTPUT_FILE_TYPE = 'png'
 
+NUM_CELLS = 1
+
 # ====== the test function =======
 
 from LocalConvergenceTest import *
@@ -52,23 +54,23 @@ def Main():
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=11).runAnalysis()
+                LocalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=11).runAnalysis()
+                LocalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=11).runAnalysis()
+                LocalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
 
         if MOTION4:
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=10).runAnalysis()
+                LocalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=10).runAnalysis()
+                LocalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=10).runAnalysis()
+                LocalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
 
 
     if PLOT_MULTI_STEP_TESTS:
@@ -95,23 +97,23 @@ def Main():
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=11).runAnalysis()
+                GlobalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=11).runAnalysis()
+                GlobalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=11).runAnalysis()
+                GlobalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
 
         if MOTION4:
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=10).runAnalysis()
+                GlobalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=10).runAnalysis()
+                GlobalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=10).runAnalysis()
+                GlobalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
 
 
     if PLOT_MOTIONS:
@@ -132,8 +134,8 @@ def Main():
 
         if MOTION3:
             m = MotionPlot(Motion3())
-            m.setMaxTime(40.)
-            m.setPointsPerSecond(4)
+            m.setMaxTime(8.)
+            m.setPointsPerSecond(10)
             m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
             m.exportImage("m3.png")
 
