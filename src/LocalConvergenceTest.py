@@ -46,7 +46,7 @@ class LocalConvergenceTest(object):
         positionErrors = []
         dtList = []
         dt = 1.0
-        while (dt > 1.0e-8):
+        while (dt > 1.0e-10):
             dtList.append(dt)
             domain = Domain(width=1., height=1., nCellsX=self.nCells, nCellsY=self.nCells)
             domain.setMotion(motion)
@@ -77,9 +77,10 @@ class LocalConvergenceTest(object):
 
             mask = 'dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
             print(mask.format(dt, positionErrors[-1], Ferrors[-1]))
-            if (Ferrors[-1] < 1.e-14 or positionErrors[-1] < 1.e-14):
+            if (Ferrors[-1] < 1.e-15 or positionErrors[-1] < 1.e-15):
                 break
-            dt /= 10.
+            # dt /= 10.
+            dt /= 2.  # allows for a more precise identification of numeric truncation error
 
         # create folder to store images
         if not os.path.isdir("images"):

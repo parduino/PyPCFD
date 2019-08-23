@@ -166,7 +166,7 @@ class Motion3(Motion):
         '''
 
         # set global motion parameters
-        theta = pi/20.0
+        theta = pi/4.0
 
         # initialize rotation matrix
         self.Omega = array([[0.0, -theta],
