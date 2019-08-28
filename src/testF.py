@@ -2,13 +2,13 @@
 
 PLOT_MOTIONS = True
 
-PLOT_SINGLE_STEP_TESTS = True
+PLOT_SINGLE_STEP_TESTS = False
 
 PLOT_MULTI_STEP_TESTS  = True
 
 MOTION1 = False
-MOTION2 = False
-MOTION3 = True
+MOTION2 = True
+MOTION3 = False
 MOTION4 = False
 
 ALGORITHM_EXPLICIT    = True
@@ -77,43 +77,43 @@ def Main():
 
         if MOTION1:
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion1(), ExplicitEuler(), fileType).runAnalysis()
+                GlobalConvergenceTest(Motion1(), ExplicitEuler(), fileType)
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion1(), MidPointRule(), fileType).runAnalysis()
+                GlobalConvergenceTest(Motion1(), MidPointRule(), fileType)
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion1(), RungeKutta4(), fileType).runAnalysis()
+                GlobalConvergenceTest(Motion1(), RungeKutta4(), fileType)
 
         if MOTION2:
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType).runAnalysis()
+                GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType)
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion2(), MidPointRule(), fileType).runAnalysis()
+                GlobalConvergenceTest(Motion2(), MidPointRule(), fileType)
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType).runAnalysis()
+                GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType)
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
+                GlobalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
+                GlobalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+                GlobalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS)
 
         if MOTION4:
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
+                GlobalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
+                GlobalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+                GlobalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS)
 
 
     if PLOT_MOTIONS:
