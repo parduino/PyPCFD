@@ -51,9 +51,11 @@ class GlobalConvergenceTest(object):
     def getErrors(self):
         return self.NList, self.positionErrors, self.Ferrors
 
-    def runAnalysis(self):
-        pass
-        # self.runCase(self.numAlgorithm, self.motion)
+    def getNumAlg(self):
+        return self.numAlgorithm
+
+    def getMotion(self):
+        return self.motion
 
     def runCase(self, numAlg, motion):
         maxTime = 1.0
