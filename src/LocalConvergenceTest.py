@@ -16,20 +16,16 @@ from ButcherTableau import *
 class LocalConvergenceTest(object):
 
     def __init__(self, motion, algorithm, fileType='png', nCells=1):
-        self.numAlgorithms = (algorithm,)
-        self.motionList = (motion,)
+        self.numAlgorithm = algorithm
+        self.motion = motion
         self.fileType = fileType
         if nCells >= 1.:
             self.nCells= floor(nCells)
         else:
             self.nCells = 1
 
-    def runAnalysis(self):
-        for motion in self.motionList:
-            # create POSITION plots for each motion
-            # fig, ax1 = plt.subplots()
-            for j, numalg in enumerate(self.numAlgorithms):
-                dtList, positionErrors, Ferrors = self.runCase(numalg, motion)
+        self.runCase(self.numAlgorithm, self.motion)
+
 
     def runCase(self, numAlg, motion):
         # configure the analysis type

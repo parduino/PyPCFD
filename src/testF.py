@@ -34,43 +34,43 @@ def Main():
 
         if MOTION1:
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion1(), ExplicitEuler(), fileType).runAnalysis()
+                LocalConvergenceTest(Motion1(), ExplicitEuler(), fileType)
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion1(), MidPointRule(), fileType).runAnalysis()
+                LocalConvergenceTest(Motion1(), MidPointRule(), fileType)
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion1(), RungeKutta4(), fileType).runAnalysis()
+                LocalConvergenceTest(Motion1(), RungeKutta4(), fileType)
 
         if MOTION2:
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion2(), ExplicitEuler(), fileType).runAnalysis()
+                LocalConvergenceTest(Motion2(), ExplicitEuler(), fileType)
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion2(), MidPointRule(), fileType).runAnalysis()
+                LocalConvergenceTest(Motion2(), MidPointRule(), fileType)
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion2(), RungeKutta4(), fileType).runAnalysis()
+                LocalConvergenceTest(Motion2(), RungeKutta4(), fileType)
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
+                LocalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
+                LocalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+                LocalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS)
 
         if MOTION4:
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
+                LocalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
+                LocalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS)
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+                LocalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS)
 
 
     if PLOT_MULTI_STEP_TESTS:
