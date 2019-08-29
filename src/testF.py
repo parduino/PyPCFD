@@ -1,6 +1,6 @@
 # ====== settings ================
 
-PLOT_MOTIONS = True
+PLOT_MOTIONS = False
 
 PLOT_SINGLE_STEP_TESTS = True
 

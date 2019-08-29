@@ -83,7 +83,7 @@ class ErrorPlotter(object):
 
         # HACK
         if "Single" in self.folderName:
-            left = right * (10 ** (0.5 * log(left / right, 10)))
+            left = right * (10 ** ( log(left / right, 10)))
             y1 = array([bottom * (left/right) ** (1.), bottom])
             y2 = array([bottom * (left/right) ** (2.), bottom])
             y3 = array([bottom * (left/right) ** (3.), bottom])
@@ -111,7 +111,7 @@ class ErrorPlotter(object):
                         textcoords="offset points",
                         va="center")
         else:
-            right = left * (10 ** (0.5 * log(right / left, 10)))
+            right = left * (10 ** ( log(right / left, 10)))
             y1 = array([bottom, bottom * (left / right) ** (1.)])
             y2 = array([bottom, bottom * (left / right) ** (2.)])
             y3 = array([bottom, bottom * (left / right) ** (3.)])
