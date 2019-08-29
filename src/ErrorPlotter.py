@@ -55,7 +55,8 @@ class ErrorPlotter(object):
         print('{} {} F convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
     def savePlot(self, motion):
-        self.drawReference()
+        self.drawReference(self.axP)
+        self.drawReference(self.axF)
 
         self.axP.set_xlabel(self.xLabel)
         self.axP.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
@@ -74,10 +75,11 @@ class ErrorPlotter(object):
         fileNameWithPath = os.path.join("images", self.folderName, fileName)
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
-    def drawReference(self):
+    def drawReference(self, ax):
 
-        left, right = self.axP.get_xlim()
-        top, bottom = self.axP.get_ylim()
+        left, right = ax.get_xlim()
+        top, bottom = ax.get_ylim()
+        x = array([left, right])
 
         # HACK
         if "Single" in self.folderName:
@@ -87,6 +89,12 @@ class ErrorPlotter(object):
             y3 = array([bottom * (left/right) ** (3.), bottom])
             y4 = array([bottom * (left/right) ** (4.), bottom])
             y5 = array([bottom * (left/right) ** (5.), bottom])
+
+            ax.annotate('m=1', xy=(x[0], y1[0]))
+            ax.annotate('m=2', xy=(x[0], y2[0]))
+            ax.annotate('m=3', xy=(x[0], y3[0]))
+            ax.annotate('m=4', xy=(x[0], y4[0]))
+            ax.annotate('m=5', xy=(x[0], y5[0]))
         else:
             right = left * (10 ** (0.5 * log(right / left, 10)))
             y1 = array([bottom, bottom * (left / right) ** (1.)])
@@ -95,12 +103,21 @@ class ErrorPlotter(object):
             y4 = array([bottom, bottom * (left / right) ** (4.)])
             y5 = array([bottom, bottom * (left / right) ** (5.)])
 
-        x = array([left, right])
-        self.axP.loglog(x, y1, 'k:', linewidth=2)
-        self.axP.loglog(x, y2, 'k:', linewidth=2)
-        self.axP.loglog(x, y3, 'k:', linewidth=2)
-        self.axP.loglog(x, y4, 'k:', linewidth=2)
-        self.axP.loglog(x, y5, 'k:', linewidth=2)
+            ax.annotate('m=1', xy=(x[-1], y1[-1]))
+            ax.annotate('m=2', xy=(x[-1], y2[-1]))
+            ax.annotate('m=3', xy=(x[-1], y3[-1]))
+            ax.annotate('m=4', xy=(x[-1], y4[-1]))
+            ax.annotate('m=5', xy=(x[-1], y5[-1]))
+
+        ax.loglog(x, y1, 'k:', linewidth=2)
+        ax.loglog(x, y2, 'k:', linewidth=2)
+        ax.loglog(x, y3, 'k:', linewidth=2)
+        ax.loglog(x, y4, 'k:', linewidth=2)
+        ax.loglog(x, y5, 'k:', linewidth=2)
+
+        ax.margins(0.1)
+
+
 
 
 
