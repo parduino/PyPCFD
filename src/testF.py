@@ -4,7 +4,7 @@ PLOT_MOTIONS = True
 
 PLOT_SINGLE_STEP_TESTS = True
 
-PLOT_MULTI_STEP_TESTS  = False
+PLOT_MULTI_STEP_TESTS  = True
 
 MOTION1 = False
 MOTION2 = True
@@ -91,13 +91,13 @@ def Main():
         if MOTION2:
             globalErrorPlot = ErrorPlotter()
             if ALGORITHM_EXPLICIT:
-                globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType))
+                globalErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType))
 
             if ALGORITHM_MIDPOINT:
-                globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), MidPointRule(), fileType))
+                globalErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), MidPointRule(), fileType))
 
             if ALGORITHM_RUNGE_KUTTA:
-                globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType))
+                globalErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType))
 
             globalErrorPlot.savePlot(Motion2())
 

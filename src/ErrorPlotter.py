@@ -75,24 +75,41 @@ class ErrorPlotter(object):
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
     def drawReference(self):
+
         left, right = self.axP.get_xlim()
         top, bottom = self.axP.get_ylim()
 
-        left = left*(10**(0.5*log(right/left, 10)))
-        left = left * (10 ** (0.5 * log(right / left, 10)))
+        if "Single" in self.folderName:
+            # left = left * (10 ** (0.5 * log(right / left, 10)))
+            right = left * (10 ** (0.5 * log(right / left, 10)))
 
-        x = array([left, right])
-        y1 = array([top, top * (right/left) ** (1.)])
-        y2 = array([top, top * (right/left) ** (2.)])
-        y3 = array([top, top * (right/left) ** (3.)])
-        y4 = array([top, top * (right/left) ** (4.)])
-        y5 = array([top, top * (right/left) ** (5.)])
+            x = array([left, right])
+            y1 = array([top, top * (right/left) ** (1.)])
+            y2 = array([top, top * (right/left) ** (2.)])
+            y3 = array([top, top * (right/left) ** (3.)])
+            y4 = array([top, top * (right/left) ** (4.)])
+            y5 = array([top, top * (right/left) ** (5.)])
 
-        self.axP.loglog(x, y1, 'y--', linewidth=2)
-        self.axP.loglog(x, y2, 'b:',  linewidth=2)
-        self.axP.loglog(x, y3, 'g-.', linewidth=2)
-        self.axP.loglog(x, y4, 'm--', linewidth=2)
-        self.axP.loglog(x, y5, 'r--', linewidth=2)
+            self.axP.loglog(x, y1, 'k:', linewidth=2)
+            self.axP.loglog(x, y2, 'k:',  linewidth=2)
+            self.axP.loglog(x, y3, 'k:.', linewidth=2)
+            self.axP.loglog(x, y4, 'k:', linewidth=2)
+            self.axP.loglog(x, y5, 'k:', linewidth=2)
+        else:
+            right = left * (10 ** (0.5 * log(right / left, 10)))
+
+            x = array([left, right])
+            y1 = array([bottom, bottom * (left / right) ** (1.)])
+            y2 = array([bottom, bottom * (left / right) ** (2.)])
+            y3 = array([bottom, bottom * (left / right) ** (3.)])
+            y4 = array([bottom, bottom * (left / right) ** (4.)])
+            y5 = array([bottom, bottom * (left / right) ** (5.)])
+
+            self.axP.loglog(x, y1, 'k:', linewidth=2)
+            self.axP.loglog(x, y2, 'k:', linewidth=2)
+            self.axP.loglog(x, y3, 'k:.', linewidth=2)
+            self.axP.loglog(x, y4, 'k:', linewidth=2)
+            self.axP.loglog(x, y5, 'k:', linewidth=2)
 
 
 
