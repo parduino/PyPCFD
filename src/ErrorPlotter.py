@@ -79,37 +79,28 @@ class ErrorPlotter(object):
         left, right = self.axP.get_xlim()
         top, bottom = self.axP.get_ylim()
 
+        # HACK
         if "Single" in self.folderName:
-            # left = left * (10 ** (0.5 * log(right / left, 10)))
-            right = left * (10 ** (0.5 * log(right / left, 10)))
-
-            x = array([left, right])
-            y1 = array([top, top * (right/left) ** (1.)])
-            y2 = array([top, top * (right/left) ** (2.)])
-            y3 = array([top, top * (right/left) ** (3.)])
-            y4 = array([top, top * (right/left) ** (4.)])
-            y5 = array([top, top * (right/left) ** (5.)])
-
-            self.axP.loglog(x, y1, 'k:', linewidth=2)
-            self.axP.loglog(x, y2, 'k:',  linewidth=2)
-            self.axP.loglog(x, y3, 'k:.', linewidth=2)
-            self.axP.loglog(x, y4, 'k:', linewidth=2)
-            self.axP.loglog(x, y5, 'k:', linewidth=2)
+            left = right * (10 ** (0.5 * log(left / right, 10)))
+            y1 = array([bottom * (left/right) ** (1.), bottom])
+            y2 = array([bottom * (left/right) ** (2.), bottom])
+            y3 = array([bottom * (left/right) ** (3.), bottom])
+            y4 = array([bottom * (left/right) ** (4.), bottom])
+            y5 = array([bottom * (left/right) ** (5.), bottom])
         else:
             right = left * (10 ** (0.5 * log(right / left, 10)))
-
-            x = array([left, right])
             y1 = array([bottom, bottom * (left / right) ** (1.)])
             y2 = array([bottom, bottom * (left / right) ** (2.)])
             y3 = array([bottom, bottom * (left / right) ** (3.)])
             y4 = array([bottom, bottom * (left / right) ** (4.)])
             y5 = array([bottom, bottom * (left / right) ** (5.)])
 
-            self.axP.loglog(x, y1, 'k:', linewidth=2)
-            self.axP.loglog(x, y2, 'k:', linewidth=2)
-            self.axP.loglog(x, y3, 'k:.', linewidth=2)
-            self.axP.loglog(x, y4, 'k:', linewidth=2)
-            self.axP.loglog(x, y5, 'k:', linewidth=2)
+        x = array([left, right])
+        self.axP.loglog(x, y1, 'k:', linewidth=2)
+        self.axP.loglog(x, y2, 'k:', linewidth=2)
+        self.axP.loglog(x, y3, 'k:', linewidth=2)
+        self.axP.loglog(x, y4, 'k:', linewidth=2)
+        self.axP.loglog(x, y5, 'k:', linewidth=2)
 
 
 
