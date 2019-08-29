@@ -1,11 +1,5 @@
-import matplotlib
-import matplotlib.pyplot as plt
-
-from math import log, floor
-from numpy import array
+from math import floor
 from numpy.linalg import norm
-
-import os
 
 from Domain import *
 from Motion import *

@@ -89,7 +89,7 @@ def Main():
                 GlobalConvergenceTest(Motion1(), RungeKutta4(), fileType)
 
         if MOTION2:
-            globalPositionErrorPlot = ErrorPlotter()
+            globalErrorPlot = ErrorPlotter()
             if ALGORITHM_EXPLICIT:
                 globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType))
 
@@ -99,7 +99,7 @@ def Main():
             if ALGORITHM_RUNGE_KUTTA:
                 globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType))
 
-            globalPositionErrorPlot.savePlot(Motion2())
+            globalErrorPlot.savePlot(Motion2())
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
