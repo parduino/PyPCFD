@@ -81,7 +81,7 @@ class LocalConvergenceTest(object):
             self.positionErrors.append(posError)
 
             mask = 'dt = {:.2E}, Position error = {:.3E}, F error = {:.3E}'
-            print(mask.format(dt, positionErrors[-1], Ferrors[-1]))
+            print(mask.format(dt, self.positionErrors[-1], self.Ferrors[-1]))
             if self.Ferrors[-1] < 1.e-15 or self.positionErrors[-1] < 1.e-15:
                 break
             # dt /= 10.

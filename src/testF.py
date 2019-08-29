@@ -2,9 +2,9 @@
 
 PLOT_MOTIONS = True
 
-PLOT_SINGLE_STEP_TESTS = False
+PLOT_SINGLE_STEP_TESTS = True
 
-PLOT_MULTI_STEP_TESTS  = True
+PLOT_MULTI_STEP_TESTS  = False
 
 MOTION1 = False
 MOTION2 = True
@@ -44,14 +44,16 @@ def Main():
                 LocalConvergenceTest(Motion1(), RungeKutta4(), fileType)
 
         if MOTION2:
+            localErrorPlot = ErrorPlotter()
             if ALGORITHM_EXPLICIT:
-                LocalConvergenceTest(Motion2(), ExplicitEuler(), fileType)
+                localErrorPlot.addTestData(LocalConvergenceTest(Motion2(), ExplicitEuler(), fileType))
 
             if ALGORITHM_MIDPOINT:
-                LocalConvergenceTest(Motion2(), MidPointRule(), fileType)
+                localErrorPlot.addTestData(LocalConvergenceTest(Motion2(), MidPointRule(), fileType))
 
             if ALGORITHM_RUNGE_KUTTA:
-                LocalConvergenceTest(Motion2(), RungeKutta4(), fileType)
+                localErrorPlot.addTestData(LocalConvergenceTest(Motion2(), RungeKutta4(), fileType))
+            localErrorPlot.savePlot(Motion2())
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
