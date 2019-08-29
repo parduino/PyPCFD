@@ -90,11 +90,26 @@ class ErrorPlotter(object):
             y4 = array([bottom * (left/right) ** (4.), bottom])
             y5 = array([bottom * (left/right) ** (5.), bottom])
 
-            ax.annotate('m=1', xy=(x[0], y1[0]))
-            ax.annotate('m=2', xy=(x[0], y2[0]))
-            ax.annotate('m=3', xy=(x[0], y3[0]))
-            ax.annotate('m=4', xy=(x[0], y4[0]))
-            ax.annotate('m=5', xy=(x[0], y5[0]))
+            ax.annotate('m=1', xy=(x[0], y1[0]),
+                        xycoords = ax.get_yaxis_transform(),
+                        textcoords="offset points",
+                        va="center")
+            ax.annotate('m=2', xy=(x[0], y2[0]),
+                        xycoords = ax.get_yaxis_transform(),
+                        textcoords="offset points",
+                        va="center")
+            ax.annotate('m=3', xy=(x[0], y3[0]),
+                        xycoords = ax.get_yaxis_transform(),
+                        textcoords="offset points",
+                        va="center")
+            ax.annotate('m=4', xy=(x[0], y4[0]),
+                        xycoords = ax.get_yaxis_transform(),
+                        textcoords="offset points",
+                        va="center")
+            ax.annotate('m=5', xy=(x[0], y5[0]),
+                        xycoords = ax.get_yaxis_transform(),
+                        textcoords="offset points",
+                        va="center")
         else:
             right = left * (10 ** (0.5 * log(right / left, 10)))
             y1 = array([bottom, bottom * (left / right) ** (1.)])
