@@ -8,9 +8,22 @@ class ErrorPlotter(object):
     def __init__(self):
 
         self.xLabel = "'$\Delta t$ (s)'"
+        self.folderName = "Single_Step"
 
         self.figF, self.axF = plt.subplots()
         self.figP, self.axP = plt.subplots()
+
+        self.createFolders()
+
+    def createFolders(self):
+        if not os.path.isdir("images"):
+            os.mkdir("images")
+
+        if not os.path.isdir(os.path.join("images", "Single_Step")):
+            os.mkdir(os.path.join("images", "Single_Step"))
+
+        if not os.path.isdir(os.path.join("images", "Multi_Step")):
+            os.mkdir(os.path.join("images", "Multi_Step"))
 
     def getNumAlgLineStyle(self, numAlg):
         if isinstance(numAlg, ExplicitEuler):
@@ -23,6 +36,7 @@ class ErrorPlotter(object):
     def addTestData(self, test):
         if isinstance(test, GlobalConvergenceTest):
             self.xLabel = '$N$'
+            self.folderName = "Multi_Step"
 
         data = test.getErrors()
         self.plotPositionErrors(data[0], data[1], test.getNumAlg(), test.getMotion())
@@ -45,8 +59,8 @@ class ErrorPlotter(object):
         self.axP.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
         self.axP.legend(loc="best")
         self.axP.grid(True)
-        fileName = "{}_MultiStep_Position_convergence.{}".format(motion, 'png')
-        fileNameWithPath = os.path.join("images", fileName)
+        fileName = "{}_Position_convergence.{}".format(motion, 'png')
+        fileNameWithPath = os.path.join("images", self.folderName, fileName)
         self.figP.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
 
@@ -54,7 +68,7 @@ class ErrorPlotter(object):
         self.axF.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
         self.axF.legend(loc="best")
         self.axF.grid(True)
-        fileName = "{}_MultiStep_F_convergence.{}".format(motion, 'png')
-        fileNameWithPath = os.path.join("images", fileName)
+        fileName = "{}_F_convergence.{}".format(motion, 'png')
+        fileNameWithPath = os.path.join("images", self.folderName, fileName)
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
