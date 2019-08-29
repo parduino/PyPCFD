@@ -7,7 +7,7 @@ class ErrorPlotter(object):
 
     def __init__(self):
 
-        self.xLabel = "'$\Delta t$ (s)'"
+        self.xLabel = "$\Delta t$ (s)"
         self.folderName = "Single_Step"
 
         self.figF, self.axF = plt.subplots()
@@ -55,6 +55,8 @@ class ErrorPlotter(object):
         print('{} {} F convergence slope = {:.2f}'.format(numAlg, motion, slope))
 
     def savePlot(self, motion):
+        self.drawReference()
+
         self.axP.set_xlabel(self.xLabel)
         self.axP.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
         self.axP.legend(loc="best")
@@ -71,4 +73,26 @@ class ErrorPlotter(object):
         fileName = "{}_F_convergence.{}".format(motion, 'png')
         fileNameWithPath = os.path.join("images", self.folderName, fileName)
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+
+    def drawReference(self):
+        left, right = self.axP.get_xlim()
+        top, bottom = self.axP.get_ylim()
+
+        left = left*(10**(0.5*log(right/left, 10)))
+        left = left * (10 ** (0.5 * log(right / left, 10)))
+
+        x = array([left, right])
+        y1 = array([top, top * (right/left) ** (1.)])
+        y2 = array([top, top * (right/left) ** (2.)])
+        y3 = array([top, top * (right/left) ** (3.)])
+        y4 = array([top, top * (right/left) ** (4.)])
+        y5 = array([top, top * (right/left) ** (5.)])
+
+        self.axP.loglog(x, y1, 'y--', linewidth=2)
+        self.axP.loglog(x, y2, 'b:',  linewidth=2)
+        self.axP.loglog(x, y3, 'g-.', linewidth=2)
+        self.axP.loglog(x, y4, 'm--', linewidth=2)
+        self.axP.loglog(x, y5, 'r--', linewidth=2)
+
+
 
