@@ -59,9 +59,6 @@ class GlobalConvergenceTest(object):
 
     def runCase(self, numAlg, motion):
         maxTime = 1.0
-        # Ferrors = []
-        # positionErrors = []
-        # NList = []
         N = 1
         dt = maxTime/N
         while (N<=1000):
@@ -144,8 +141,8 @@ class GlobalConvergenceTest(object):
         #
         # plt.close()
         #
-        slope = log(self.Ferrors[0] / self.Ferrors[-1]) / log(self.NList[0] / self.NList[-1])
-        print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
+        # slope = log(self.Ferrors[0] / self.Ferrors[-1]) / log(self.NList[0] / self.NList[-1])
+        # print('{} {} Deformation Gradient convergence slope = {:.2f}'.format(numAlg, motion, slope))
         #
         # # Plots for position errors
         # fig = plt.figure()
@@ -191,5 +188,5 @@ class GlobalConvergenceTest(object):
         #
         # plt.close()
         #
-        slope = log(self.positionErrors[0] / self.positionErrors[-1]) / log(self.NList[0] / self.NList[-1])
-        print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))
+        # slope = log(self.positionErrors[0] / self.positionErrors[-1]) / log(self.NList[0] / self.NList[-1])
+        # print('{} {} Position convergence slope = {:.2f}'.format(numAlg, motion, slope))

@@ -26,6 +26,7 @@ from GlobalConvergenceTest import *
 
 from Motion import *
 from MotionPlot import *
+from ErrorPlotter import *
 
 def Main():
     fileType = OUTPUT_FILE_TYPE
@@ -86,14 +87,17 @@ def Main():
                 GlobalConvergenceTest(Motion1(), RungeKutta4(), fileType)
 
         if MOTION2:
+            globalPositionErrorPlot = ErrorPlotter()
             if ALGORITHM_EXPLICIT:
-                GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType)
+                globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType))
 
             if ALGORITHM_MIDPOINT:
-                GlobalConvergenceTest(Motion2(), MidPointRule(), fileType)
+                globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), MidPointRule(), fileType))
 
             if ALGORITHM_RUNGE_KUTTA:
-                GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType)
+                globalPositionErrorPlot.addTestData(GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType))
+
+            globalPositionErrorPlot.savePlot(Motion2())
 
         if MOTION3:
             if ALGORITHM_EXPLICIT:
