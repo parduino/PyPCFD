@@ -73,7 +73,7 @@ def Main():
     # defining plot settings
     domain.setPlotInterval(dt1)
 
-    # deining output settings
+    # defining output settings
     domain.setWriteInterval(-1)
 
     # initializing starting time
