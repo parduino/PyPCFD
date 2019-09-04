@@ -3,8 +3,10 @@ Created on Nov 21, 2015
 
 @author: pmackenz
 '''
-from numpy import array, dot, cross, outer, tensordot, zeros, ones, sqrt, stack, mat
+from numpy import array, dot, cross, outer, tensordot, zeros, ones, sqrt, stack, mat, seterr
 from _operator import index
+
+seterr(all='warn')
 
 class Cell(object):
     '''
@@ -143,6 +145,10 @@ class Cell(object):
         return x
     
     def setShape(self,xl):
+
+        xl[0] = min( max(xl[0],-1.0), 1.0 )
+        xl[1] = min( max(xl[1],-1.0), 1.0 )
+
         sp = 0.5*(1. + xl[0])
         sm = 0.5*(1. - xl[0])
         tp = 0.5*(1. + xl[1])
@@ -342,9 +348,16 @@ class Cell(object):
                     vx = dot(self.shape, self.ux)
                     vy = dot(self.shape, self.uy)
                     # standard tensor (single) dot product
-                    aTransient[0] = dxu * vx + dyu * vy 
-                    aTransient[1] = dxv * vx + dyv * vy 
-                    
+                    try:
+                        aTransient[0] = dxu * vx + dyu * vy
+                        aTransient[1] = dxv * vx + dyv * vy
+                    except RuntimeWarning:
+                        print(dxu)
+                        print(dyu)
+                        print(vx)
+                        print(vy)
+                        raise
+
                     fTransient = w * self.rho * tensordot(self.shape, aTransient, axes=0)  # tensor product
                     
                     forces -= fTransient
