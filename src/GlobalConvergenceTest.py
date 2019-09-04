@@ -64,6 +64,7 @@ class GlobalConvergenceTest(object):
                                self.solveVtilde, self.solveVenhanced,
                                self.updatePosition, self.updateStress,
                                self.addTransient)
+            domain.createParticleAtX(1.0, array([domain.getWidth() / 2., domain.getHeight() / 10.]))
 
             domain.setPlotInterval(maxTime)   # plot only at the end
             domain.setWriteInterval(-1)       # no recorder output

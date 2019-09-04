@@ -56,6 +56,7 @@ class LocalConvergenceTest(object):
                                solveVtilde, solveVenhanced,
                                updatePosition, updateStress,
                                addTransient)
+            domain.createParticleAtX(1.0, array([domain.getWidth() / 2.,domain.getHeight() / 10.]))
 
             domain.setPlotInterval(dt)        # plot at the end of each time step
             domain.setWriteInterval(-1)       # no recorder output
