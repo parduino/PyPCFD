@@ -146,9 +146,9 @@ class Domain(object):
 
         # create some particles ...
         
-        # self.createParticles(2,2)
+        #self.createParticles(2,2)
         #self.createParticlesMID(3,3)
-        self.createParticleAtX(1.0, array([width/2.,height/10.]))
+        #self.createParticleAtX(1.0, array([width/2.,height/10.]))
 
         # set default analysis parameters
         self.setAnalysis(False, True, True, True, False, True, True, True)

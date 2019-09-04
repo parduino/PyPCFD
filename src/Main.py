@@ -6,10 +6,12 @@ Created on Nov 21, 2015
 
 from Domain import *
 import subprocess
+import ButcherTableau as integrator
 
 def Main():
     # defne the Reynolds number
     Re = 1000
+    Re = 1
     
     # set sliding velocity
     velocity = 1.0
@@ -27,6 +29,8 @@ def Main():
     
     # create an analysis domain
     domain = Domain(edgeDomain,edgeDomain,numCellsPerEdge,numCellsPerEdge)
+    domain.createParticles(2,2)
+    domain.setTimeIntegrator(integrator.RungeKutta4())
     
     # configure the analysis type
     doInit         = False
@@ -34,7 +38,7 @@ def Main():
     solveP         = True
     solveVtilde    = True
     solveVenhanced = False
-    updatePosition = False
+    updatePosition = True
     updateStress   = False
     addTransient   = True
     
