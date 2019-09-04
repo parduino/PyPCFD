@@ -5,7 +5,7 @@ from GlobalConvergenceTest import *
 
 class ErrorPlotter(object):
 
-    def __init__(self):
+    def __init__(self, numCells):
 
         self.xLabel = "$\Delta t$ (s)"
         self.folderName = "Single_Step"
@@ -13,17 +13,21 @@ class ErrorPlotter(object):
         self.figF, self.axF = plt.subplots()
         self.figP, self.axP = plt.subplots()
 
+        self.numCellsStr = str(numCells) + "_cells"
         self.createFolders()
 
     def createFolders(self):
         if not os.path.isdir("images"):
             os.mkdir("images")
 
-        if not os.path.isdir(os.path.join("images", "Single_Step")):
-            os.mkdir(os.path.join("images", "Single_Step"))
+        if not os.path.isdir(os.path.join("images", self.numCellsStr)):
+            os.mkdir(os.path.join("images", self.numCellsStr))
 
-        if not os.path.isdir(os.path.join("images", "Multi_Step")):
-            os.mkdir(os.path.join("images", "Multi_Step"))
+        if not os.path.isdir(os.path.join("images", self.numCellsStr, "Single_Step")):
+            os.mkdir(os.path.join("images", self.numCellsStr, "Single_Step"))
+
+        if not os.path.isdir(os.path.join("images", self.numCellsStr, "Multi_Step")):
+            os.mkdir(os.path.join("images", self.numCellsStr, "Multi_Step"))
 
     def getNumAlgLineStyle(self, numAlg):
         if isinstance(numAlg, ExplicitEuler):
@@ -63,7 +67,7 @@ class ErrorPlotter(object):
         self.axP.legend(loc="best")
         self.axP.grid(True)
         fileName = "{}_Position_convergence.{}".format(motion, 'png')
-        fileNameWithPath = os.path.join("images", self.folderName, fileName)
+        fileNameWithPath = os.path.join("images", self.numCellsStr, self.folderName, fileName)
         self.figP.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
 
@@ -72,8 +76,10 @@ class ErrorPlotter(object):
         self.axF.legend(loc="best")
         self.axF.grid(True)
         fileName = "{}_F_convergence.{}".format(motion, 'png')
-        fileNameWithPath = os.path.join("images", self.folderName, fileName)
+        fileNameWithPath = os.path.join("images", self.numCellsStr, self.folderName, fileName)
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
+
+        plt.close()
 
     def drawReference(self, ax):
 
