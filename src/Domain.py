@@ -650,9 +650,3 @@ class Domain(object):
 
     def setTime(self, time):
         self.time = time
-
-    def getWidth(self):
-        return self.width
-
-    def getHeight(self):
-        return self.height

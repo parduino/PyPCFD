@@ -9,7 +9,7 @@ import subprocess
 
 def Main():
     # defne the Reynolds number
-    Re = 1
+    Re = 1000
     
     # set sliding velocity
     velocity = 1.0
@@ -34,7 +34,7 @@ def Main():
     solveP         = True
     solveVtilde    = True
     solveVenhanced = False
-    updatePosition = True
+    updatePosition = False
     updateStress   = False
     addTransient   = True
     
@@ -46,7 +46,6 @@ def Main():
                        updatePosition,
                        updateStress,
                        addTransient)
-    domain.createParticles(2, 2)
     domain.setParameters(Re, density, velocity)
     domain.setInitialState()
     

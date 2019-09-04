@@ -5,7 +5,7 @@ from GlobalConvergenceTest import *
 
 class ErrorPlotter(object):
 
-    def __init__(self, numCells):
+    def __init__(self, numCells, collateSwitch, numAlg = None, filetype = "png"):
 
         self.xLabel = "$\Delta t$ (s)"
         self.folderName = "Single_Step"
@@ -14,6 +14,10 @@ class ErrorPlotter(object):
         self.figP, self.axP = plt.subplots()
 
         self.numCellsStr = str(numCells) + "_cells"
+        self.fileType = filetype
+
+        self.numAlg = numAlg
+
         self.createFolders()
 
     def createFolders(self):
@@ -66,7 +70,10 @@ class ErrorPlotter(object):
         self.axP.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
         self.axP.legend(loc="best")
         self.axP.grid(True)
-        fileName = "{}_Position_convergence.{}".format(motion, 'png')
+        if self.numAlg is None:
+            fileName = "{}_Position_convergence.{}".format(motion, self.fileType)
+        else:
+            fileName = "{}_{}_Position_convergence.{}".format(self.numAlg, motion, self.fileType)
         fileNameWithPath = os.path.join("images", self.numCellsStr, self.folderName, fileName)
         self.figP.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
@@ -75,7 +82,10 @@ class ErrorPlotter(object):
         self.axF.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
         self.axF.legend(loc="best")
         self.axF.grid(True)
-        fileName = "{}_F_convergence.{}".format(motion, 'png')
+        if self.numAlg is None:
+            fileName = "{}_F_convergence.{}".format(motion, self.fileType)
+        else:
+            fileName = "{}_{}_F_convergence.{}".format(self.numAlg, motion, self.fileType)
         fileNameWithPath = os.path.join("images", self.numCellsStr, self.folderName, fileName)
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
