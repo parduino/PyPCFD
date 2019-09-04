@@ -26,155 +26,132 @@ from GlobalConvergenceTest import *
 
 from Motion import *
 from MotionPlot import *
+from ErrorPlotter import *
+
+
+def testSingleStep(theMotion):
+
+    if COLLATE_PLOTS:
+        localErrorPlot = ErrorPlotter(NUM_CELLS)
+        if ALGORITHM_EXPLICIT:
+            localErrorPlot.addTestData(LocalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, NUM_CELLS))
+
+        if ALGORITHM_MIDPOINT:
+            localErrorPlot.addTestData(LocalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, NUM_CELLS))
+
+        if ALGORITHM_RUNGE_KUTTA:
+            localErrorPlot.addTestData(LocalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, NUM_CELLS))
+        localErrorPlot.savePlot(theMotion)
+
+    else:
+        if ALGORITHM_EXPLICIT:
+            LocalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+
+        if ALGORITHM_MIDPOINT:
+            LocalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+
+        if ALGORITHM_RUNGE_KUTTA:
+            LocalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+
+
+
+def testMultipleSteps(theMotion):
+
+    if COLLATE_PLOTS:
+        globalErrorPlot = ErrorPlotter(NUM_CELLS)
+        if ALGORITHM_EXPLICIT:
+            globalErrorPlot.addTestData(GlobalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE))
+
+        if ALGORITHM_MIDPOINT:
+            globalErrorPlot.addTestData(GlobalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE))
+
+        if ALGORITHM_RUNGE_KUTTA:
+            globalErrorPlot.addTestData(GlobalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE))
+
+        globalErrorPlot.savePlot(theMotion)
+
+    else:
+        if ALGORITHM_EXPLICIT:
+            GlobalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+
+        if ALGORITHM_MIDPOINT:
+            GlobalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+
+        if ALGORITHM_RUNGE_KUTTA:
+            GlobalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+
+
+def plotMotionTraces():
+
+    if MOTION1:
+        m = MotionPlot(Motion1())
+        m.setMaxTime(4.)
+        m.setPointsPerSecond(10)
+        m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
+        m.exportImage("m1.png")
+
+    if MOTION2:
+        m = MotionPlot(Motion2())
+        m.setMaxTime(10.)
+        m.setPointsPerSecond(10)
+        m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
+        m.exportImage("m2.png")
+
+    if MOTION3:
+        m = MotionPlot(Motion3())
+        m.setMaxTime(8.)
+        m.setPointsPerSecond(10)
+        m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
+        m.exportImage("m3.png")
+
+    if MOTION4:
+        m = MotionPlot(Motion4())
+        m.setMaxTime(20.)
+        m.setPointsPerSecond(10)
+        m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
+        m.exportImage("m4.png")
+
+        m = MotionPlot(Motion4())
+        m.setMaxTime(20.)
+        m.setPointsPerSecond(10)
+        m.setTracers(([0.1, .5], [0.3, .5], [0.5, .5], [0.7, .5], [0.9, .5]))
+        m.exportImage("m4b.png")
+
 
 def Main():
-    fileType = OUTPUT_FILE_TYPE
 
     if PLOT_SINGLE_STEP_TESTS:
 
         if MOTION1:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    LocalConvergenceTest(Motion1(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    LocalConvergenceTest(Motion1(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    LocalConvergenceTest(Motion1(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testSingleStep(Motion1())
 
         if MOTION2:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    LocalConvergenceTest(Motion2(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    LocalConvergenceTest(Motion2(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    LocalConvergenceTest(Motion2(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testSingleStep(Motion2())
 
         if MOTION3:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    LocalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    LocalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    LocalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testSingleStep(Motion3())
 
         if MOTION4:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    LocalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    LocalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    LocalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testSingleStep(Motion4())
 
 
     if PLOT_MULTI_STEP_TESTS:
 
         if MOTION1:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    GlobalConvergenceTest(Motion1(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    GlobalConvergenceTest(Motion1(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    GlobalConvergenceTest(Motion1(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testMultipleSteps(Motion1())
 
         if MOTION2:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    GlobalConvergenceTest(Motion2(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    GlobalConvergenceTest(Motion2(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    GlobalConvergenceTest(Motion2(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testMultipleSteps(Motion2())
 
         if MOTION3:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    GlobalConvergenceTest(Motion3(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    GlobalConvergenceTest(Motion3(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    GlobalConvergenceTest(Motion3(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testMultipleSteps(Motion3())
 
         if MOTION4:
-            if COLLATE_PLOTS:
-                pass
-            else:
-                if ALGORITHM_EXPLICIT:
-                    GlobalConvergenceTest(Motion4(), ExplicitEuler(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_MIDPOINT:
-                    GlobalConvergenceTest(Motion4(), MidPointRule(), fileType, nCells=NUM_CELLS).runAnalysis()
-
-                if ALGORITHM_RUNGE_KUTTA:
-                    GlobalConvergenceTest(Motion4(), RungeKutta4(), fileType, nCells=NUM_CELLS).runAnalysis()
+            testMultipleSteps(Motion4())
 
 
     if PLOT_MOTIONS:
-
-        if MOTION1:
-            m = MotionPlot(Motion1())
-            m.setMaxTime(4.)
-            m.setPointsPerSecond(10)
-            m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
-            m.exportImage("m1.png")
-
-        if MOTION2:
-            m = MotionPlot(Motion2())
-            m.setMaxTime(10.)
-            m.setPointsPerSecond(10)
-            m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
-            m.exportImage("m2.png")
-
-        if MOTION3:
-            m = MotionPlot(Motion3())
-            m.setMaxTime(8.)
-            m.setPointsPerSecond(10)
-            m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
-            m.exportImage("m3.png")
-
-        if MOTION4:
-            m = MotionPlot(Motion4())
-            m.setMaxTime(20.)
-            m.setPointsPerSecond(10)
-            m.setTracers( ([0.5, .1],[0.5, .3],[0.5, .5],[0.5, .7],[0.5, .9]) )
-            m.exportImage("m4.png")
-
-            m = MotionPlot(Motion4())
-            m.setMaxTime(20.)
-            m.setPointsPerSecond(10)
-            m.setTracers( ([0.1, .5],[0.3, .5],[0.5, .5],[0.7, .5],[0.9, .5]) )
-            m.exportImage("m4b.png")
+        plotMotionTraces()
 
 
 if __name__ == '__main__':
