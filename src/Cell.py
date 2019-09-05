@@ -63,6 +63,8 @@ class Cell(object):
         def mapMomentumToNodes(self)
         def GetAcceleration(self, x)
         def getID(self)
+        def setFlux(self, flux)
+        def getFlux(self)
     '''
 
     def __init__(self, id, hx, hy):
@@ -89,6 +91,8 @@ class Cell(object):
         self.uHat = array([0.0,0.0])  # enhanced field parameters
         self.fHat = array([0.0,0.0])  # enhanced field forces
         self.mHat = array([0.0,0.0])  # enhanced field mass
+
+        self.flux = 0.
 
         
         self.setShape(array([0.0,0.0]))
@@ -457,6 +461,13 @@ class Cell(object):
 
     def getID(self):
         return self.id
+
+    def setFlux(self, flux):
+        self.flux = flux
+
+    def getFlux(self):
+        return self.flux
+
 
 
 
