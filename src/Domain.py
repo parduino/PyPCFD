@@ -681,15 +681,16 @@ class Domain(object):
 
     def computeCellFlux(self):
         for theCell in self.cells:
+            cellSize = theCell.getSize()
             nodeIndices = theCell.GetNodeIndexes()
             node00 = self.nodes[nodeIndices[0][0]][nodeIndices[0][1]]
             node10 = self.nodes[nodeIndices[1][0]][nodeIndices[1][1]]
             node11 = self.nodes[nodeIndices[2][0]][nodeIndices[2][1]]
             node01 = self.nodes[nodeIndices[3][0]][nodeIndices[3][1]]
-            leftFlux   =  0.5 * (node00.getVelocity() + node01.getVelocity()) @ array([-1.,  0.])
-            rightFlux  =  0.5 * (node10.getVelocity() + node11.getVelocity()) @ array([ 1.,  0.])
-            topFlux    =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0.,  1.])
-            bottomFlux =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0., -1.])
+            leftFlux   =  0.5 * (node00.getVelocity() + node01.getVelocity()) @ array([-1.,  0.]) * cellSize[0]
+            rightFlux  =  0.5 * (node10.getVelocity() + node11.getVelocity()) @ array([ 1.,  0.]) * cellSize[0]
+            topFlux    =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0.,  1.]) * cellSize[1]
+            bottomFlux =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0., -1.]) * cellSize[1]
 
             theCell.setFlux(leftFlux + rightFlux + topFlux + bottomFlux)
 

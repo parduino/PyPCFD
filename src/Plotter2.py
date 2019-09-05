@@ -38,7 +38,7 @@ class Plotter(object):
         def setData(self, nodes)
         def setParticleData(self, particles)
         def setCellFluxData(self, cells)
-        def plotCellFlux(self)
+        def plotCellFlux(self, time)
         
     '''
 
@@ -57,10 +57,7 @@ class Plotter(object):
         if not os.path.isdir("images"):
             os.mkdir("images")
 
-        
-    def safePlot(self, filename):
-        self.fig.saveFig(filename)
-        
+
     def refresh(self, time=-1):
         
         self.IMAGE_COUNTER += 1
