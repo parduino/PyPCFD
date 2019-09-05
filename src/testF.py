@@ -1,15 +1,15 @@
 # ====== settings ================
 
 PLOT_MOTIONS           = True
-PLOT_SINGLE_STEP_TESTS = True
-PLOT_MULTI_STEP_TESTS  = True
+PLOT_SINGLE_STEP_TESTS = False
+PLOT_MULTI_STEP_TESTS  = False
 
 COLLATE_PLOTS = False
 
-MOTION1 = False
-MOTION2 = False
+MOTION1 = True
+MOTION2 = True
 MOTION3 = True
-MOTION4 = False
+MOTION4 = True
 
 ALGORITHM_EXPLICIT    = True
 ALGORITHM_MIDPOINT    = True
@@ -17,7 +17,7 @@ ALGORITHM_RUNGE_KUTTA = True
 
 OUTPUT_FILE_TYPE = 'png'
 
-NUM_CELLS = 1
+NUM_CELLS = 8
 
 # ====== the test function =======
 
@@ -85,6 +85,7 @@ def plotMotionTraces():
 
     if MOTION1:
         m = MotionPlot(Motion1())
+        #m.setGrid(NUM_CELLS,NUM_CELLS)
         m.setMaxTime(4.)
         m.setPointsPerSecond(10)
         m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
@@ -92,6 +93,7 @@ def plotMotionTraces():
 
     if MOTION2:
         m = MotionPlot(Motion2())
+        #m.setGrid(NUM_CELLS,NUM_CELLS)
         m.setMaxTime(10.)
         m.setPointsPerSecond(10)
         m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
@@ -99,6 +101,7 @@ def plotMotionTraces():
 
     if MOTION3:
         m = MotionPlot(Motion3())
+        #m.setGrid(NUM_CELLS,NUM_CELLS)
         m.setMaxTime(8.)
         m.setPointsPerSecond(10)
         m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
@@ -106,12 +109,14 @@ def plotMotionTraces():
 
     if MOTION4:
         m = MotionPlot(Motion4())
+        #m.setGrid(NUM_CELLS,NUM_CELLS)
         m.setMaxTime(20.)
         m.setPointsPerSecond(10)
         m.setTracers(([0.5, .1], [0.5, .3], [0.5, .5], [0.5, .7], [0.5, .9]))
         m.exportImage("m4.png")
 
         m = MotionPlot(Motion4())
+        #m.setGrid(NUM_CELLS,NUM_CELLS)
         m.setMaxTime(20.)
         m.setPointsPerSecond(10)
         m.setTracers(([0.1, .5], [0.3, .5], [0.5, .5], [0.7, .5], [0.9, .5]))

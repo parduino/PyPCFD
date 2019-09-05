@@ -7,11 +7,12 @@ Created on Nov 21, 2015
 from Domain import *
 import subprocess
 import ButcherTableau as integrator
+from math import floor
 
 def Main():
     # defne the Reynolds number
     Re = 1000
-    Re = 5
+    Re = 10
     
     # set sliding velocity
     velocity = 1.0
@@ -22,7 +23,7 @@ def Main():
     # set side-length of the analysis domain
     edgeDomain      = 1.
     # set the number of cells per edge
-    numCellsPerEdge = 8
+    numCellsPerEdge = 4
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
@@ -70,6 +71,8 @@ def Main():
 
 # ************* don't mess with stuff below *************
 
+    domain.particleTrace(True)
+
     # defining plot settings
     domain.setPlotInterval(dt1)
 
@@ -88,6 +91,8 @@ def Main():
         time += dt
         domain.runAnalysis(time)
 
+    domain.plotParticleTrace('tracePlot{:04d}.png'.format(floor(time*100)))
+
     # run second segment
     domain.setTimeIntegrator(integrator.RungeKutta4())
 
@@ -95,6 +100,8 @@ def Main():
     while (time + dt <= target2 + 0.1 * dt):
         time += dt
         domain.runAnalysis(time)
+
+    domain.plotParticleTrace('tracePlot{:04d}.png'.format(floor(time*100)))
 
     
     # generate the animation
