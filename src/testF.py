@@ -1,15 +1,19 @@
 # ====== settings ================
 
+
 PLOT_MOTIONS           = True
 PLOT_SINGLE_STEP_TESTS = False
 PLOT_MULTI_STEP_TESTS  = False
+
 
 COLLATE_PLOTS = False
 
 MOTION1 = True
 MOTION2 = True
+
 MOTION3 = True
 MOTION4 = True
+
 
 ALGORITHM_EXPLICIT    = True
 ALGORITHM_MIDPOINT    = True
@@ -20,65 +24,80 @@ OUTPUT_FILE_TYPE = 'png'
 NUM_CELLS = 8
 
 # ====== the test function =======
-
-from LocalConvergenceTest import *
-from GlobalConvergenceTest import *
-
-from Motion import *
 from MotionPlot import *
 from ErrorPlotter import *
 
 
 def testSingleStep(theMotion):
-
     if COLLATE_PLOTS:
-        localErrorPlot = ErrorPlotter(NUM_CELLS)
+        errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS)
         if ALGORITHM_EXPLICIT:
-            localErrorPlot.addTestData(LocalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, NUM_CELLS))
+            errorPlot.addTestData(LocalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, NUM_CELLS))
 
         if ALGORITHM_MIDPOINT:
-            localErrorPlot.addTestData(LocalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, NUM_CELLS))
+            errorPlot.addTestData(LocalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, NUM_CELLS))
 
         if ALGORITHM_RUNGE_KUTTA:
-            localErrorPlot.addTestData(LocalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, NUM_CELLS))
-        localErrorPlot.savePlot(theMotion)
+            errorPlot.addTestData(LocalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, NUM_CELLS))
+        errorPlot.savePlot(theMotion)
 
     else:
         if ALGORITHM_EXPLICIT:
-            LocalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+            numAlg = ExplicitEuler()
+            errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS, numAlg, OUTPUT_FILE_TYPE)
+            errorPlot.addTestData(
+                LocalConvergenceTest(theMotion, numAlg, OUTPUT_FILE_TYPE, nCells=NUM_CELLS))
+            errorPlot.savePlot(theMotion)
 
         if ALGORITHM_MIDPOINT:
-            LocalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+            numAlg = MidPointRule()
+            errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS, numAlg, OUTPUT_FILE_TYPE)
+            errorPlot.addTestData(
+                LocalConvergenceTest(theMotion, numAlg, OUTPUT_FILE_TYPE, nCells=NUM_CELLS))
+            errorPlot.savePlot(theMotion)
 
         if ALGORITHM_RUNGE_KUTTA:
-            LocalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
-
+            numAlg = RungeKutta4()
+            errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS, numAlg, OUTPUT_FILE_TYPE)
+            errorPlot.addTestData(
+                LocalConvergenceTest(theMotion, numAlg, OUTPUT_FILE_TYPE, nCells=NUM_CELLS))
+            errorPlot.savePlot(theMotion)
 
 
 def testMultipleSteps(theMotion):
-
     if COLLATE_PLOTS:
-        globalErrorPlot = ErrorPlotter(NUM_CELLS)
+        errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS)
         if ALGORITHM_EXPLICIT:
-            globalErrorPlot.addTestData(GlobalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE))
+            errorPlot.addTestData(GlobalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, NUM_CELLS))
 
         if ALGORITHM_MIDPOINT:
-            globalErrorPlot.addTestData(GlobalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE))
+            errorPlot.addTestData(GlobalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, NUM_CELLS))
 
         if ALGORITHM_RUNGE_KUTTA:
-            globalErrorPlot.addTestData(GlobalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE))
-
-        globalErrorPlot.savePlot(theMotion)
+            errorPlot.addTestData(GlobalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, NUM_CELLS))
+        errorPlot.savePlot(theMotion)
 
     else:
         if ALGORITHM_EXPLICIT:
-            GlobalConvergenceTest(theMotion, ExplicitEuler(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+            numAlg = ExplicitEuler()
+            errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS, numAlg, OUTPUT_FILE_TYPE)
+            errorPlot.addTestData(
+                GlobalConvergenceTest(theMotion, numAlg, OUTPUT_FILE_TYPE, nCells=NUM_CELLS))
+            errorPlot.savePlot(theMotion)
 
         if ALGORITHM_MIDPOINT:
-            GlobalConvergenceTest(theMotion, MidPointRule(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+            numAlg = MidPointRule()
+            errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS, numAlg, OUTPUT_FILE_TYPE)
+            errorPlot.addTestData(
+                GlobalConvergenceTest(theMotion, numAlg, OUTPUT_FILE_TYPE, nCells=NUM_CELLS))
+            errorPlot.savePlot(theMotion)
 
         if ALGORITHM_RUNGE_KUTTA:
-            GlobalConvergenceTest(theMotion, RungeKutta4(), OUTPUT_FILE_TYPE, nCells=NUM_CELLS).runAnalysis()
+            numAlg = RungeKutta4()
+            errorPlot = ErrorPlotter(NUM_CELLS, COLLATE_PLOTS, numAlg, OUTPUT_FILE_TYPE)
+            errorPlot.addTestData(
+                GlobalConvergenceTest(theMotion, numAlg, OUTPUT_FILE_TYPE, nCells=NUM_CELLS))
+            errorPlot.savePlot(theMotion)
 
 
 def plotMotionTraces():
@@ -122,9 +141,7 @@ def plotMotionTraces():
         m.setTracers(([0.1, .5], [0.3, .5], [0.5, .5], [0.7, .5], [0.9, .5]))
         m.exportImage("m4b.png")
 
-
 def Main():
-
     if PLOT_SINGLE_STEP_TESTS:
 
         if MOTION1:
@@ -139,7 +156,6 @@ def Main():
         if MOTION4:
             testSingleStep(Motion4())
 
-
     if PLOT_MULTI_STEP_TESTS:
 
         if MOTION1:
@@ -153,7 +169,6 @@ def Main():
 
         if MOTION4:
             testMultipleSteps(Motion4())
-
 
     if PLOT_MOTIONS:
         plotMotionTraces()

@@ -18,7 +18,7 @@ from GlobalConvergenceTest import *
 
 class ErrorPlotter(object):
 
-    def __init__(self, numCells):
+    def __init__(self, numCells, collateSwitch, numAlg = None, filetype = "png"):
 
         self.xLabel = "$\Delta t$ (s)"
         self.folderName = "Single_Step"
@@ -27,6 +27,10 @@ class ErrorPlotter(object):
         self.figP, self.axP = plt.subplots()
 
         self.numCellsStr = str(numCells) + "_cells"
+        self.fileType = filetype
+
+        self.numAlg = numAlg
+
         self.createFolders()
 
     def createFolders(self):
@@ -79,7 +83,12 @@ class ErrorPlotter(object):
         self.axP.set_ylabel('$|| x_{numerical} - x_{analytical} ||_{2}$')
         self.axP.legend(loc="best")
         self.axP.grid(True)
-        fileName = "{}_Position_convergence.{}".format(motion, 'png')
+        self.axP.set_ylim(bottom=1e-16)
+        if self.numAlg is None:
+            fileName = "{}_Position_convergence.{}".format(motion, self.fileType)
+        else:
+            fileName = "{}_{}_Position_convergence.{}".format(self.numAlg, motion, self.fileType)
+            self.axP.set_ylim(top=1e1)
         fileNameWithPath = os.path.join("images", self.numCellsStr, self.folderName, fileName)
         self.figP.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
@@ -88,7 +97,12 @@ class ErrorPlotter(object):
         self.axF.set_ylabel('$|| F_{numerical} - F_{analytical} ||_{2}$')
         self.axF.legend(loc="best")
         self.axF.grid(True)
-        fileName = "{}_F_convergence.{}".format(motion, 'png')
+        self.axF.set_ylim(bottom=1e-16)
+        if self.numAlg is None:
+            fileName = "{}_F_convergence.{}".format(motion, self.fileType)
+        else:
+            fileName = "{}_{}_F_convergence.{}".format(self.numAlg, motion, self.fileType)
+            self.axF.set_ylim(top=1e2)
         fileNameWithPath = os.path.join("images", self.numCellsStr, self.folderName, fileName)
         self.figF.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
@@ -109,26 +123,27 @@ class ErrorPlotter(object):
             y4 = array([bottom * (left/right) ** (4.), bottom])
             y5 = array([bottom * (left/right) ** (5.), bottom])
 
-            ax.annotate('m=1', xy=(x[0], y1[0]),
-                        xycoords = ax.get_yaxis_transform(),
-                        textcoords="offset points",
-                        va="center")
-            ax.annotate('m=2', xy=(x[0], y2[0]),
-                        xycoords = ax.get_yaxis_transform(),
-                        textcoords="offset points",
-                        va="center")
-            ax.annotate('m=3', xy=(x[0], y3[0]),
-                        xycoords = ax.get_yaxis_transform(),
-                        textcoords="offset points",
-                        va="center")
-            ax.annotate('m=4', xy=(x[0], y4[0]),
-                        xycoords = ax.get_yaxis_transform(),
-                        textcoords="offset points",
-                        va="center")
-            ax.annotate('m=5', xy=(x[0], y5[0]),
-                        xycoords = ax.get_yaxis_transform(),
-                        textcoords="offset points",
-                        va="center")
+            if self.numAlg is None:
+                ax.annotate('m=1', xy=(x[0], y1[0]),
+                            xycoords = ax.get_yaxis_transform(),
+                            textcoords="offset points",
+                            va="center")
+                ax.annotate('m=2', xy=(x[0], y2[0]),
+                            xycoords = ax.get_yaxis_transform(),
+                            textcoords="offset points",
+                            va="center")
+                ax.annotate('m=3', xy=(x[0], y3[0]),
+                            xycoords = ax.get_yaxis_transform(),
+                            textcoords="offset points",
+                            va="center")
+                ax.annotate('m=4', xy=(x[0], y4[0]),
+                            xycoords = ax.get_yaxis_transform(),
+                            textcoords="offset points",
+                            va="center")
+                ax.annotate('m=5', xy=(x[0], y5[0]),
+                            xycoords = ax.get_yaxis_transform(),
+                            textcoords="offset points",
+                            va="center")
         else:
             right = left * (10 ** ( log(right / left, 10)))
             y1 = array([bottom, bottom * (left / right) ** (1.)])
@@ -137,17 +152,26 @@ class ErrorPlotter(object):
             y4 = array([bottom, bottom * (left / right) ** (4.)])
             y5 = array([bottom, bottom * (left / right) ** (5.)])
 
-            ax.annotate('m=1', xy=(x[-1], y1[-1]))
-            ax.annotate('m=2', xy=(x[-1], y2[-1]))
-            ax.annotate('m=3', xy=(x[-1], y3[-1]))
-            ax.annotate('m=4', xy=(x[-1], y4[-1]))
-            ax.annotate('m=5', xy=(x[-1], y5[-1]))
+            if self.numAlg is None:
+                ax.annotate('m=1', xy=(x[-1], y1[-1]))
+                ax.annotate('m=2', xy=(x[-1], y2[-1]))
+                ax.annotate('m=3', xy=(x[-1], y3[-1]))
+                ax.annotate('m=4', xy=(x[-1], y4[-1]))
+                ax.annotate('m=5', xy=(x[-1], y5[-1]))
 
-        ax.loglog(x, y1, 'k:', linewidth=2)
-        ax.loglog(x, y2, 'k:', linewidth=2)
-        ax.loglog(x, y3, 'k:', linewidth=2)
-        ax.loglog(x, y4, 'k:', linewidth=2)
-        ax.loglog(x, y5, 'k:', linewidth=2)
+        if self.numAlg is None:
+            ax.loglog(x, y1, 'k:', linewidth=2)
+            ax.loglog(x, y2, 'k:', linewidth=2)
+            ax.loglog(x, y3, 'k:', linewidth=2)
+            ax.loglog(x, y4, 'k:', linewidth=2)
+            ax.loglog(x, y5, 'k:', linewidth=2)
+        else:
+            ax.loglog(x, y1, 'y--', linewidth=2, label="1st order")
+            ax.loglog(x, y2, 'b:', linewidth=2, label="2nd order")
+            ax.loglog(x, y3, 'g-', linewidth=2, label="3rd order")
+            ax.loglog(x, y4, 'm--', linewidth=2, label="4th order")
+            ax.loglog(x, y5, 'r--', linewidth=2, label="5th order")
+            ax.legend(loc="best")
 
         ax.margins(0.1)
 
