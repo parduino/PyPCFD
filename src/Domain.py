@@ -141,6 +141,7 @@ class Domain(object):
             for j in range(nCellsY):
                 id += 1
                 newCell = Cell(id, hx, hy)
+                newCell.setCellGridCoordinates(i, j)
                 theNodes = []
                 theNodes.append(self.nodes[i][j])
                 theNodes.append(self.nodes[i+1][j])
@@ -632,7 +633,8 @@ class Domain(object):
         return dt*CFL
 
     def plotData(self):
-        self.calculateCellFlux()
+        self.computeCellFlux()
+        self.plot.setCellFluxData(self.cells)
         self.plot.setData(self.nodes)
         self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
@@ -684,10 +686,10 @@ class Domain(object):
             node10 = self.nodes[nodeIndices[1][0]][nodeIndices[1][1]]
             node11 = self.nodes[nodeIndices[2][0]][nodeIndices[2][1]]
             node01 = self.nodes[nodeIndices[3][0]][nodeIndices[3][1]]
-            leftFlux   =  0.5 * (node00.getVelocity() + node01.getVelocity()) @ array([-1., 0.])
-            rightFlux  =  0.5 * (node10.getVelocity() + node11.getVelocity()) @ array([1., 0.])
-            topFlux    =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([0., 1.])
-            bottomFlux =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([0., -1.])
+            leftFlux   =  0.5 * (node00.getVelocity() + node01.getVelocity()) @ array([-1.,  0.])
+            rightFlux  =  0.5 * (node10.getVelocity() + node11.getVelocity()) @ array([ 1.,  0.])
+            topFlux    =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0.,  1.])
+            bottomFlux =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0., -1.])
 
             theCell.setFlux(leftFlux + rightFlux + topFlux + bottomFlux)
 

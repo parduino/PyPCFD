@@ -65,6 +65,7 @@ class Cell(object):
         def getID(self)
         def setFlux(self, flux)
         def getFlux(self)
+        def setCellGridCoordinates(self, i, j)
     '''
 
     def __init__(self, id, hx, hy):
@@ -72,6 +73,7 @@ class Cell(object):
         Constructor
         '''
         self.id     = id
+        self.gridCoordinates = ()
         self.nodes  = []
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
@@ -115,6 +117,7 @@ class Cell(object):
                                             self.nodes[2].id,
                                             self.nodes[3].id )
         return s
+
 
     def setParameters(self, density, viscosity):
         self.rho = density
@@ -467,6 +470,12 @@ class Cell(object):
 
     def getFlux(self):
         return self.flux
+
+    def setCellGridCoordinates(self, i, j):
+        self.gridCoordinates = (i, j)
+
+    def getCellGridCoordinates(self):
+        return self.gridCoordinates
 
 
 
