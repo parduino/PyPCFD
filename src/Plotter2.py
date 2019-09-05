@@ -258,8 +258,15 @@ class Plotter(object):
 
     def plotCellFlux(self):
         fig, ax = plt.subplots()
-        i = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.5, vmax=0.5)
-        fig.colorbar(i)
+        img = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.5, vmax=0.5)
+        # fig.colorbar(img)
+        # Loop over data dimensions and create text annotations.
+        for i in range(self.nNodesX-1):
+            for j in range(self.nNodesY-1):
+                strToDisplay = "{:10.4f}".format(self.cellFlux[i, j])
+                text = ax.text(j, i, strToDisplay,
+                               ha="center", va="center", color="k")
+
 
         imageName = "CellFlux{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/" + imageName)
