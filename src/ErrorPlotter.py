@@ -1,5 +1,18 @@
+from sys import platform
+
+import matplotlib
+if "win" in platform.lower():
+    matplotlib.use('TkAgg')
+else:
+    matplotlib.use('Agg')
+matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+matplotlib.rcParams['font.size'] = 15
+
 import matplotlib.pyplot as plt
+
+
 from math import log
+
 from LocalConvergenceTest import *
 from GlobalConvergenceTest import *
 

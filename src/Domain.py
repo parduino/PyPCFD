@@ -22,6 +22,9 @@ from scipy.sparse.linalg import spsolve
 
 from time import process_time
 
+from ParticleTracePlot import *
+
+
 class Domain(object):
     '''
     variable:
@@ -53,6 +56,8 @@ class Domain(object):
 
         self.lastWrite    ... time of the last output
         self.lastPlot     ... time of the last plot
+
+        self.recordParticleTrace = False
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
@@ -83,6 +88,7 @@ class Domain(object):
         def plotData(self)
         def writeData(self)
         def setMotion(self, dt=0.0)
+        def particleTrace(self, OnOff)      # turn particle trace on and off
     '''
 
     def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
@@ -98,6 +104,8 @@ class Domain(object):
         self.hy = height/nCellsY       # cell size in y-direction
         
         self.time = 0.0
+
+        self.recordParticleTrace = False
         
         #self.X = outer(ones(nCellsY+1), linspace(0.0, width, nCellsX+1))
         #self.Y = outer(linspace(0.0, height, nCellsY+1), ones(nCellsX+1))
@@ -144,12 +152,6 @@ class Domain(object):
         
         self.particles = []
 
-        # create some particles ...
-        
-        # self.createParticles(2,2)
-        #self.createParticlesMID(3,3)
-        # self.createParticleAtX(1.0, array([width/2.,height/10.]))
-
         # set default analysis parameters
         self.setAnalysis(False, True, True, True, False, True, True, True)
 
@@ -177,6 +179,11 @@ class Domain(object):
         for cell in self.cells:
             s += str(cell) + "\n"
         return s
+
+    def particleTrace(self, OnOff):
+        self.recordParticleTrace = OnOff
+        for particle in self.particles:
+            particle.trace(OnOff)
 
     def setTimeIntegrator(self, integrator):
         self.particleUpdateScheme = integrator
@@ -650,3 +657,20 @@ class Domain(object):
 
     def setTime(self, time):
         self.time = time
+
+    def plotParticleTrace(self, filename):
+        plotter = ParticleTracePlot()
+        plotter.setDomain(0.0, 0.0, self.width, self.height)
+
+        particleTraceList = []
+        if self.recordParticleTrace:
+            for particle in self.particles:
+                pDict = {}
+                pDict['node'] = particle.id
+                pDict['path'] = array(particle.getTrace())
+                particleTraceList.append(pDict)
+
+        plotter.addTraces(particleTraceList)
+        plotter.setGridNodes(self.nodes)
+        plotter.exportImage(filename)
+
