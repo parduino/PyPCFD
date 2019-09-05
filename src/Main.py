@@ -101,7 +101,10 @@ def Main():
         time += dt
         domain.runAnalysis(time)
 
-    domain.plotParticleTrace('tracePlot{:04d}.png'.format(floor(time*100)))
+        if (time % 1.0 < 0.5*dt):   # write 1.0 sec duration trace plots
+            domain.plotParticleTrace('tracePlot{:04d}.png'.format(floor(time*100)))
+            domain.particleTrace(False)   # this wipes old trace
+            domain.particleTrace(True)    # this restarts trace
 
     
     # generate the animation
