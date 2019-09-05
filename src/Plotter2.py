@@ -6,7 +6,7 @@ Modified on June 24, 2018 for separate images
 '''
 import numpy as np
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('TkAgg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import os
