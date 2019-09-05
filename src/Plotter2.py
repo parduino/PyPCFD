@@ -183,7 +183,7 @@ class Plotter(object):
 
         
         plt.close()
-        self.plotCellFlux()
+        self.plotCellFlux(time)
         
     def setGrid(self, width, height, nCellsX, nCellsY):
         self.height = height
@@ -256,7 +256,7 @@ class Plotter(object):
             self.cellFlux[cellGridCoords[0]][cellGridCoords[1]] = theCell.getFlux()
 
 
-    def plotCellFlux(self):
+    def plotCellFlux(self, time):
         fig, ax = plt.subplots()
         img = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.5, vmax=0.5)
         # fig.colorbar(img)
@@ -267,10 +267,12 @@ class Plotter(object):
                 text = ax.text(j, i, strToDisplay,
                                ha="center", va="center", color="k")
 
+        if (time >= 0.0):
+            ax.set_title('cell flux at t={:08.5f}s'.format(time))
+        else:
+            ax.set_title('cell flux')
 
+        ax.set_xticks([])
+        ax.set_yticks([])
         imageName = "CellFlux{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/" + imageName)
-
-            
-        
-        
