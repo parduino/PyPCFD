@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('TkAgg')
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 import matplotlib.gridspec as gridspec
 import os
 
@@ -36,6 +37,8 @@ class Plotter(object):
         def setGrid(self, nodes)
         def setData(self, nodes)
         def setParticleData(self, particles)
+        def setCellFluxData(self, cells)
+        def plotCellFlux(self, time)
         
     '''
 
@@ -54,10 +57,7 @@ class Plotter(object):
         if not os.path.isdir("images"):
             os.mkdir("images")
 
-        
-    def safePlot(self, filename):
-        self.fig.saveFig(filename)
-        
+
     def refresh(self, time=-1):
         
         self.IMAGE_COUNTER += 1
@@ -174,10 +174,13 @@ class Plotter(object):
             
             imageName = "ParticleVelocity{:04d}.png".format(self.IMAGE_COUNTER)
             plt.savefig("images/"+imageName)
-            
+
             plt.clf()
+
+
         
         plt.close()
+        self.plotCellFlux(time)
         
     def setGrid(self, width, height, nCellsX, nCellsY):
         self.height = height
@@ -240,6 +243,33 @@ class Plotter(object):
             self.ParticleY.append(pos[1])
             self.ParticleVx.append(vel[0])
             self.ParticleVy.append(vel[1])
-            
-        
-        
+
+    def setCellFluxData(self, cells):
+        ncellsX = self.nNodesX-1
+        ncellsY = self.nNodesY-1
+        self.cellFlux = np.zeros((ncellsX, ncellsY))
+        for theCell in cells:
+            cellGridCoords = theCell.getCellGridCoordinates()
+            self.cellFlux[cellGridCoords[0]][cellGridCoords[1]] = theCell.getFlux()
+
+
+    def plotCellFlux(self, time):
+        fig, ax = plt.subplots()
+        img = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.5, vmax=0.5)
+        # fig.colorbar(img)
+        # Loop over data dimensions and create text annotations.
+        for i in range(self.nNodesX-1):
+            for j in range(self.nNodesY-1):
+                strToDisplay = "{:10.4f}".format(self.cellFlux[i, j])
+                text = ax.text(j, i, strToDisplay,
+                               ha="center", va="center", color="k")
+
+        if (time >= 0.0):
+            ax.set_title('cell flux at t={:08.5f}s'.format(time))
+        else:
+            ax.set_title('cell flux')
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+        imageName = "CellFlux{:04d}.png".format(self.IMAGE_COUNTER)
+        plt.savefig("images/" + imageName)
