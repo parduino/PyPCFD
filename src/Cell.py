@@ -66,6 +66,7 @@ class Cell(object):
         def setFlux(self, flux)
         def getFlux(self)
         def setCellGridCoordinates(self, i, j)
+        def getVolumeRate(self)
     '''
 
     def __init__(self, id, hx, hy):
@@ -477,7 +478,13 @@ class Cell(object):
     def getCellGridCoordinates(self):
         return self.gridCoordinates
 
-
+    def getVolumeRate(self):
+        self.SetVelocity()
+        if self.useEnhanced:
+            DvolDtime = 0.0    # should be computed to verify correct implementation
+        else:
+            DvolDtime = self.divVa * self.size[0] * self.size[1]
+        return DvolDtime
 
 
         

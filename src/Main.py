@@ -12,7 +12,7 @@ from math import floor
 def Main():
     # defne the Reynolds number
     Re = 1000
-    Re = 10
+    Re = 1
     
     # set sliding velocity
     velocity = 1.0
@@ -23,7 +23,7 @@ def Main():
     # set side-length of the analysis domain
     edgeDomain      = 1.
     # set the number of cells per edge
-    numCellsPerEdge = 4
+    numCellsPerEdge = 16
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
@@ -37,7 +37,7 @@ def Main():
     solveVstar     = True
     solveP         = True
     solveVtilde    = True
-    solveVenhanced = True
+    solveVenhanced = False
     updatePosition = True
     updateStress   = False
     addTransient   = True
@@ -64,10 +64,10 @@ def Main():
     # define load history and print interval
 
     dt1 = 0.01000
-    target1 = 0.05
+    target1 = 0.1
 
-    dt2 = 0.5
-    target2 = 10.0
+    dt2 = 0.1
+    target2 = 1.0
 
 # ************* don't mess with stuff below *************
 

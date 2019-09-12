@@ -181,8 +181,6 @@ class Plotter(object):
             plt.savefig("images/"+imageName)
 
             plt.clf()
-
-
         
         plt.close()
         self.plotCellFlux(time)
@@ -260,23 +258,24 @@ class Plotter(object):
 
     def plotCellFlux(self, time):
         fig, ax = plt.subplots()
-        img = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.5, vmax=0.5)
-        # fig.colorbar(img)
+        img = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.1, vmax=0.1)
+        fig.colorbar(img)
         # Loop over data dimensions and create text annotations.
-        for i in range(self.nNodesX-1):
-            for j in range(self.nNodesY-1):
-                strToDisplay = "{:10.4f}".format(self.cellFlux[i, j])
-                text = ax.text(j, i, strToDisplay,
-                               ha="center", va="center", color="k")
+
+        if False:
+            for i in range(self.nNodesX-1):
+                for j in range(self.nNodesY-1):
+                    strToDisplay = "{:10.4f}".format(self.cellFlux[i, j])
+                    text = ax.text(j, i, strToDisplay, ha="center", va="center", color="k")
 
         if (time >= 0.0):
-            ax.set_title('cell flux at t={:08.5f}s'.format(time))
+            ax.set_title('volume source at t={:08.5f}s'.format(time))
         else:
-            ax.set_title('cell flux')
+            ax.set_title('volume source')
 
         ax.set_xticks([])
         ax.set_yticks([])
-        imageName = "CellFlux{:04d}.png".format(self.IMAGE_COUNTER)
+        imageName = "VolumeSource{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/" + imageName)
 
         plt.close()

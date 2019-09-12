@@ -311,7 +311,7 @@ class Domain(object):
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
-        dt = self.getTimeStep(0.5)
+        dt = self.getTimeStep(0.1)
         if (dt > (maxtime - self.time)):
             dt = (maxtime - self.time)
         if (dt < (maxtime - self.time)):
@@ -371,18 +371,19 @@ class Domain(object):
 
     def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY+1):
-                self.nodes[i][j].setForce(zeros(2))
+        for rowOfNodes in self.nodes:
+            for node in rowOfNodes:
+                node.setForce(zeros(2))
                 
         for cell in self.cells:
             cell.computeForces(addTransient)
         
         # solve for nodal acceleration a*
         # and update nodal velocity to v*
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY+1):
-                self.nodes[i][j].updateVstar(dt)
+        for rowOfNodes in self.nodes:
+            for node in rowOfNodes:
+                node.updateVstar(dt)
+                node.updateVstar(dt)
 
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
