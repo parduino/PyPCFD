@@ -24,6 +24,8 @@ def Main():
     edgeDomain      = 1.
     # set the number of cells per edge
     numCellsPerEdge = 16
+    numCellsPerEdge = 4
+    #numCellsPerEdge = 2
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re

@@ -67,6 +67,7 @@ class Cell(object):
         def getFlux(self)
         def setCellGridCoordinates(self, i, j)
         def getVolumeRate(self)
+        def getAsPolygon(self)
     '''
 
     def __init__(self, id, hx, hy):
@@ -485,6 +486,16 @@ class Cell(object):
         else:
             DvolDtime = self.divVa * self.size[0] * self.size[1]
         return DvolDtime
+
+    def getAsPolygon(self):
+        x = [ self.getGlobal(array([-1,-1]))]
+        x.append( self.getGlobal(array([1,-1])) )
+        x.append( self.getGlobal(array([1,1])) )
+        x.append( self.getGlobal(array([-1,1])) )
+        #x.append( self.getGlobal(array([-1,-1])) )
+        return array(x)
+
+
 
 
         

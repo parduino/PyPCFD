@@ -311,7 +311,7 @@ class Domain(object):
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
-        dt = self.getTimeStep(0.1)
+        dt = self.getTimeStep(0.025)
         if (dt > (maxtime - self.time)):
             dt = (maxtime - self.time)
         if (dt < (maxtime - self.time)):
@@ -639,6 +639,7 @@ class Domain(object):
         self.plot.setData(self.nodes)
         self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
+        self.plot.cellPlot(self.cells, self.time)
 
     def writeData(self):
         self.writer.setData(self.nodes)

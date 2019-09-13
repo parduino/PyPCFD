@@ -15,6 +15,7 @@ else:
 
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib.colors as colors
 import os
 
 
@@ -44,6 +45,7 @@ class Plotter(object):
         def setParticleData(self, particles)
         def setCellFluxData(self, cells)
         def plotCellFlux(self, time)
+        def cellPlot(self, cellList, time)
         
     '''
 
@@ -262,7 +264,7 @@ class Plotter(object):
         fig.colorbar(img)
         # Loop over data dimensions and create text annotations.
 
-        if False:
+        if True:
             for i in range(self.nNodesX-1):
                 for j in range(self.nNodesY-1):
                     strToDisplay = "{:10.4f}".format(self.cellFlux[i, j])
@@ -275,7 +277,44 @@ class Plotter(object):
 
         ax.set_xticks([])
         ax.set_yticks([])
+        imageName = "KrishSource{:04d}.png".format(self.IMAGE_COUNTER)
+        plt.savefig("images/" + imageName)
+
+        plt.close()
+
+    def cellPlot(self, cellList, time):
+
+        fig, ax = plt.subplots()
+
+        mycmap = cm.ScalarMappable(norm=None, cmap=cm.jet)
+        mycmap.set_clim(-0.1, 0.1)
+
+        for cell in cellList:
+            polygon = cell.getAsPolygon()
+            val = cell.getVolumeRate()
+            color = mycmap.to_rgba(val)
+
+            if colors.is_color_like(color):
+                ax.fill(polygon[:,0], polygon[:,1], colors.to_hex(color))
+            else:
+                ax.fill(polygon[:,0], polygon[:,1])
+
+            x = cell.getGlobal(np.array([0.,0.]))
+            text = ax.text(x[0], x[1], cell.getID(), ha="center", va="center", color="k")
+
+        #img = ax.imshow(np.flipud(self.cellFlux), cmap=cm.jet, interpolation='nearest', vmin=-0.1, vmax=0.1)
+        fig.colorbar(mycmap, ax=ax)
+        # Loop over data dimensions and create text annotations.
+
+        if (time >= 0.0):
+            ax.set_title('volume source at t={:08.5f}s'.format(time))
+        else:
+            ax.set_title('volume source')
+
+        ax.axis('equal')
+
         imageName = "VolumeSource{:04d}.png".format(self.IMAGE_COUNTER)
         plt.savefig("images/" + imageName)
 
         plt.close()
+
