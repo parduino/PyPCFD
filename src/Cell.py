@@ -63,6 +63,11 @@ class Cell(object):
         def mapMomentumToNodes(self)
         def GetAcceleration(self, x)
         def getID(self)
+        def setFlux(self, flux)
+        def getFlux(self)
+        def setCellGridCoordinates(self, i, j)
+        def getVolumeRate(self)
+        def getAsPolygon(self)
     '''
 
     def __init__(self, id, hx, hy):
@@ -70,6 +75,7 @@ class Cell(object):
         Constructor
         '''
         self.id     = id
+        self.gridCoordinates = ()
         self.nodes  = []
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
@@ -89,6 +95,8 @@ class Cell(object):
         self.uHat = array([0.0,0.0])  # enhanced field parameters
         self.fHat = array([0.0,0.0])  # enhanced field forces
         self.mHat = array([0.0,0.0])  # enhanced field mass
+
+        self.flux = 0.
 
         
         self.setShape(array([0.0,0.0]))
@@ -111,6 +119,7 @@ class Cell(object):
                                             self.nodes[2].id,
                                             self.nodes[3].id )
         return s
+
 
     def setParameters(self, density, viscosity):
         self.rho = density
@@ -457,6 +466,35 @@ class Cell(object):
 
     def getID(self):
         return self.id
+
+    def setFlux(self, flux):
+        self.flux = flux
+
+    def getFlux(self):
+        return self.flux
+
+    def setCellGridCoordinates(self, i, j):
+        self.gridCoordinates = (i, j)
+
+    def getCellGridCoordinates(self):
+        return self.gridCoordinates
+
+    def getVolumeRate(self):
+        self.SetVelocity()
+        if self.useEnhanced:
+            DvolDtime = 0.0    # should be computed to verify correct implementation
+        else:
+            DvolDtime = self.divVa * self.size[0] * self.size[1]
+        return DvolDtime
+
+    def getAsPolygon(self):
+        x = [ self.getGlobal(array([-1,-1]))]
+        x.append( self.getGlobal(array([1,-1])) )
+        x.append( self.getGlobal(array([1,1])) )
+        x.append( self.getGlobal(array([-1,1])) )
+        #x.append( self.getGlobal(array([-1,-1])) )
+        return array(x)
+
 
 
 
