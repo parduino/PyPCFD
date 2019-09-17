@@ -24,6 +24,7 @@ def Main():
     edgeDomain      = 1.
     # set the number of cells per edge
     numCellsPerEdge = 16
+    numCellsPerEdge = 8
     numCellsPerEdge = 4
     #numCellsPerEdge = 2
     

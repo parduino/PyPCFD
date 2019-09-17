@@ -286,7 +286,8 @@ class Plotter(object):
 
         fig, ax = plt.subplots()
 
-        mycmap = cm.ScalarMappable(norm=None, cmap=cm.jet)
+        mycmap = cm.ScalarMappable(cmap=cm.jet, norm=None)
+        mycmap.set_array(np.linspace(-0.1, 0.1, 10))
         mycmap.set_clim(-0.1, 0.1)
 
         for cell in cellList:
