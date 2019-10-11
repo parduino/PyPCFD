@@ -100,11 +100,11 @@ class Cell(object):
 
     def __str__(self):
         s = "   cell({}): nodes ({}, {}, {}, {})".format(self.id,
-                                                                    *self.nodes[0].id,
-                                                                    *self.nodes[1].id,
-                                                                    *self.nodes[2].id,
-                                                                    *self.nodes[3].id
-                                                                    )
+                                                         self.nodes[0].id,
+                                                         self.nodes[1].id,
+                                                         self.nodes[2].id,
+                                                         self.nodes[3].id
+                                                        )
         return s
 
     def __repr__(self):

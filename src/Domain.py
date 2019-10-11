@@ -636,8 +636,6 @@ class Domain(object):
         return dt*CFL
 
     def plotData(self):
-        self.computeCellFlux()
-        self.plot.setCellFluxData(self.cells)
         self.plot.setData(self.nodes)
         self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
