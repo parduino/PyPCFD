@@ -19,6 +19,9 @@ import matplotlib.cm as cm
 import matplotlib.colors as colors
 import os
 
+# global settings
+RESULTS = "../"
+
 
 class Plotter(object):
     '''
@@ -35,6 +38,7 @@ class Plotter(object):
         self.speed
         self.fig = plt.figure(figsize=(9, 9))
         self.tracerPoints = [[],[]]
+        self.imageDir
     
     methods:
         def __init__(self)
@@ -59,8 +63,9 @@ class Plotter(object):
         
         self.setGrid(self.width, self.height, 10, 10)
 
-        if not os.path.isdir("images"):
-            os.mkdir("images")
+        self.imageDir = os.path.join(RESULTS, 'images')
+        if not os.path.isdir(self.imageDir):
+            os.mkdir(self.imageDir)
 
 
     def refresh(self, time=-1):
@@ -86,7 +91,8 @@ class Plotter(object):
             ax0.set_title('Pressure Failed at t={:08.5f}s'.format(time))
         
         imageName = "Pressure{:04d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/"+imageName)
+        fname = os.path.join(self.imageDir, imageName)
+        plt.savefig(fname)
         
         plt.clf()
         
@@ -105,7 +111,8 @@ class Plotter(object):
             ax1.set_title('Nodal Forces Failed at t={:08.5f}s'.format(time))
         
         imageName = "Forces{:04d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/"+imageName)
+        fname = os.path.join(self.imageDir, imageName)
+        plt.savefig(fname)
         
         plt.clf()
         
@@ -125,7 +132,8 @@ class Plotter(object):
             ax2.set_title('velocity Failed at t={:08.5f}s'.format(time))
         
         imageName = "Velocity{:04d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/"+imageName)
+        fname = os.path.join(self.imageDir, imageName)
+        plt.savefig(fname)
         
         plt.clf()
         
@@ -153,8 +161,9 @@ class Plotter(object):
         ax3.axis((0.0, self.width, 0.0, self.height))
         
         imageName = "Stream{:04d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/"+imageName)
-        
+        fname = os.path.join(self.imageDir, imageName)
+        plt.savefig(fname)
+
         plt.clf()
 
 
@@ -178,7 +187,8 @@ class Plotter(object):
             #ax4.axis((0, 1, 0, 1))
             
             imageName = "ParticleVelocity{:04d}.png".format(self.IMAGE_COUNTER)
-            plt.savefig("images/"+imageName)
+            fname = os.path.join(self.imageDir, imageName)
+            plt.savefig(fname)
 
             plt.clf()
         
@@ -279,7 +289,8 @@ class Plotter(object):
         ax.axis('equal')
 
         imageName = "VolumeSource{:04d}.png".format(self.IMAGE_COUNTER)
-        plt.savefig("images/" + imageName)
+        fname = os.path.join(self.imageDir, imageName)
+        plt.savefig(fname)
 
         plt.close()
 

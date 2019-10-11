@@ -15,6 +15,9 @@ import os
 from math import ceil
 import numpy as np
 
+# global settings
+RESULTS = "../"
+
 
 class ParticleTracePlot(object):
     """
@@ -25,6 +28,7 @@ class ParticleTracePlot(object):
         self.size = array([1.0, 1.0])
         self.xNDs = array([])
         self.yNDs = array([])
+        self.imageDir
 
     methods:
         def __init__(self)
@@ -44,6 +48,10 @@ class ParticleTracePlot(object):
         self.xNDs = np.array([])
         self.yNDs = np.array([])
 
+        self.imageDir = os.path.join(RESULTS, 'images')
+        if not os.path.isdir(self.imageDir):
+            os.mkdir(self.imageDir)
+
     def __str__(self):
         return "Particle trace plotter object"
 
@@ -62,11 +70,7 @@ class ParticleTracePlot(object):
         ax.axis("equal")
         ax.grid(False)
 
-        # create folder to store images
-        if not os.path.isdir("images"):
-            os.mkdir("images")
-        fileNameWithPath = os.path.join("images", filename)
-
+        fileNameWithPath = os.path.join(self.imageDir, filename)
         plt.savefig(fileNameWithPath, pad_inches=0, bbox_inches='tight')
 
     def setDomain(self, x0, y0, width, height):

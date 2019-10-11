@@ -7,6 +7,9 @@ Modified on June 24, 2018 for separate images
 import numpy as np
 import os
 
+# global settings
+RESULTS = "../"
+
 
 class Writer(object):
     '''
@@ -21,8 +24,8 @@ class Writer(object):
         self.Vx
         self.Vy
         self.speed
-        self.gs
         self.tracerPoints = [[],[]]
+        self.dataDir
     
     methods:
         def __init__(self)
@@ -39,8 +42,9 @@ class Writer(object):
         self.width  = 1.0
         self.height = 1.0
 
-        if not os.path.isdir("data"):
-            os.mkdir("data")
+        self.dataDir = os.path.join(RESULTS,'data')
+        if not os.path.isdir(self.dataDir):
+            os.mkdir(self.dataDir)
         
     def setGrid(self, width, height, nCellsX, nCellsY):
         self.height = height
@@ -108,22 +112,22 @@ class Writer(object):
 
         # store nodal co-ordinates only once at t=0
         if self.DATA_COUNTER == -1:
-            fname = os.path.join('data','nodeXcoordinates.txt')
+            fname = os.path.join(self.dataDir,'nodeXcoordinates.txt')
             np.savetxt(fname, self.X)
 
-            fname = os.path.join('data', 'nodeYcoordinates.txt')
+            fname = os.path.join(self.dataDir, 'nodeYcoordinates.txt')
             np.savetxt(fname, self.Y)
 
         # store velocities and pressures at each time-step
         self.DATA_COUNTER += 1
         hdr = 't={:08.8f}s'.format(time)
-        fname = os.path.join('data',"vx{:03d}.txt".format(self.DATA_COUNTER))
+        fname = os.path.join(self.dataDir,"vx{:03d}.txt".format(self.DATA_COUNTER))
         np.savetxt(fname, self.Vx, header=hdr)
 
-        fname = os.path.join('data', "vy{:03d}.txt".format(self.DATA_COUNTER))
+        fname = os.path.join(self.dataDir, "vy{:03d}.txt".format(self.DATA_COUNTER))
         np.savetxt(fname, self.Vy, header=hdr)
 
-        fname = os.path.join('data', "pressure{:03d}.txt".format(self.DATA_COUNTER))
+        fname = os.path.join(self.dataDir, "pressure{:03d}.txt".format(self.DATA_COUNTER))
         np.savetxt(fname, self.P, header=hdr)
 
 
