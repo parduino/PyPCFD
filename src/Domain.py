@@ -94,12 +94,17 @@ class Domain(object):
     def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, mappingFunction=None):
         '''
         Constructor
+
+        if a mappingfunction is given, that function must provide:
+            mappingFunction(0, s) --> x
+            mappingFunction(1, s) --> y
         '''
         self.width   = width
         self.height  = height
         self.nCellsX = nCellsX
         self.nCellsY = nCellsY
-        
+
+        # cell size need no longer be uniform.  This needs to be moved to the cells!
         self.hx = width/nCellsX        # cell size in x-direction
         self.hy = height/nCellsY       # cell size in y-direction
         
@@ -109,7 +114,8 @@ class Domain(object):
         
         #self.X = outer(ones(nCellsY+1), linspace(0.0, width, nCellsX+1))
         #self.Y = outer(linspace(0.0, height, nCellsY+1), ones(nCellsX+1))
-        
+
+        # if a mapping function is given, these will be the nodal coordinates in parameter space
         x = linspace(0,width ,(nCellsX+1))
         y = linspace(0,height,(nCellsY+1))
         
@@ -128,7 +134,7 @@ class Domain(object):
             for j in range(nCellsY+1):
                 id += 1
                 if mappingFunction:
-                    pass
+                    theNode = Node(id,mappingFunction(0,x[i]),mappingFunction(1,y[j]))
                 else:
                     theNode = Node(id,x[i],y[j])
                 theNode.setGridCoordinates(i,j)
@@ -620,7 +626,8 @@ class Domain(object):
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
-        
+
+        # convection time step
         for nodeList in self.nodes:
             for node in nodeList:
                 vel = node.getVelocity()
@@ -632,6 +639,11 @@ class Domain(object):
                     dty = self.hy / abs(vel[1])
                     if (dty<dt):
                         dt = dty
+
+        # diffusion time step limit
+
+        # combined time step limit
+
 
         return dt*CFL
 
