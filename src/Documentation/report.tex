@@ -1,10 +1,10 @@
 \documentclass[11pt, oneside]{article}   	% use "amsart" instead of "article" for AMSLaTeX format
 \usepackage{geometry}                		% See geometry.pdf to learn the layout options. There are lots.
-\geometry{letterpaper}                   		% ... or a4paper or a5paper or ... 
+\geometry{letterpaper}                      % ... or a4paper or a5paper or ...
 %\geometry{landscape}                		% Activate for rotated page geometry
-%\usepackage[parfill]{parskip}    		% Activate to begin paragraphs with an empty line rather than an indent
-\usepackage{graphicx}				% Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
-								% TeX will automatically convert eps --> pdf in pdflatex		
+%\usepackage[parfill]{parskip}    	        % Activate to begin paragraphs with an empty line rather than an indent
+\usepackage{graphicx}	                    % Use pdf, png, jpg, or eps§ with pdflatex; use eps in DVI mode
+						                    % TeX will automatically convert eps --> pdf in pdflatex
 \usepackage{amssymb}
 
 %   General parameters, for ALL pages:
@@ -13,8 +13,8 @@
 %   Parameters for TEXT pages (not float pages):
 \setcounter{topnumber}{3}
 \setcounter{bottomnumber}{3}
-\setcounter{totalnumber}{4}     % 2 may work better
-\setcounter{dbltopnumber}{3}    % for 2-column pages
+\setcounter{totalnumber}{4}         % 2 may work better
+\setcounter{dbltopnumber}{3}        % for 2-column pages
 \renewcommand{\dbltopfraction}{0.9}	% fit big float above 2-col. text
 \renewcommand{\textfraction}{0.07}	% allow minimal text w. figs
 %   Parameters for FLOAT pages (not text pages):
@@ -40,6 +40,7 @@
 	\caption{State of the simulation at $t = #3$~seconds.}
 	\label{fig:#4}
 \end{figure}}
+
 
 \title{On the sliding lid problem}
 \author{Peter Mackenzie-Helnwein}

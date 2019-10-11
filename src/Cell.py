@@ -63,8 +63,6 @@ class Cell(object):
         def mapMomentumToNodes(self)
         def GetAcceleration(self, x)
         def getID(self)
-        def setFlux(self, flux)
-        def getFlux(self)
         def setCellGridCoordinates(self, i, j)
         def getVolumeRate(self)
         def getAsPolygon(self)
@@ -95,20 +93,17 @@ class Cell(object):
         self.uHat = array([0.0,0.0])  # enhanced field parameters
         self.fHat = array([0.0,0.0])  # enhanced field forces
         self.mHat = array([0.0,0.0])  # enhanced field mass
-
-        self.flux = 0.
-
         
         self.setShape(array([0.0,0.0]))
         
         self.myParticles = []
 
     def __str__(self):
-        s = "   cell({}): ({}/{}),({}/{}),({}/{}),({}/{})".format(self.id,
-                                                                    *self.nodes[0].getGridCoordinates(),
-                                                                    *self.nodes[1].getGridCoordinates(),
-                                                                    *self.nodes[2].getGridCoordinates(),
-                                                                    *self.nodes[3].getGridCoordinates()
+        s = "   cell({}): nodes ({}, {}, {}, {})".format(self.id,
+                                                                    *self.nodes[0].id,
+                                                                    *self.nodes[1].id,
+                                                                    *self.nodes[2].id,
+                                                                    *self.nodes[3].id
                                                                     )
         return s
 
@@ -466,12 +461,6 @@ class Cell(object):
 
     def getID(self):
         return self.id
-
-    def setFlux(self, flux):
-        self.flux = flux
-
-    def getFlux(self):
-        return self.flux
 
     def setCellGridCoordinates(self, i, j):
         self.gridCoordinates = (i, j)
