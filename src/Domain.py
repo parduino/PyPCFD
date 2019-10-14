@@ -23,6 +23,8 @@ from scipy.sparse.linalg import spsolve
 
 from time import process_time
 
+from Mappings import *
+
 
 
 class Domain(object):
@@ -129,6 +131,10 @@ class Domain(object):
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
+
+        if mappingFunction == None:
+            map = Mappings()
+            mappingFunction = map.identity
         
         for i in range(nCellsX+1):
             for j in range(nCellsY+1):
@@ -142,13 +148,14 @@ class Domain(object):
                 
         self.cells = []
         id = -1
-        hx = width / nCellsX
-        hy = height / nCellsY
+        #hx = width / nCellsX
+        #hy = height / nCellsY
         
         for i in range(nCellsX):
             for j in range(nCellsY):
                 id += 1
-                newCell = Cell(id, hx, hy)
+                # newCell = Cell(id, hx, hy)
+                newCell = Cell(id)
                 newCell.setCellGridCoordinates(i, j)
                 theNodes = []
                 theNodes.append(self.nodes[i][j])

@@ -101,10 +101,13 @@ class ParticleTracePlot(object):
 
         for trace in particleTraceList:
 
-            name = trace['node']
-            x = trace['path'][:,0]
-            y = trace['path'][:,1]
+            if 'node' in trace.keys():
+                name = trace['node']
 
-            ax.plot(x, y, '--', c="b")
-            ax.scatter(x[0], y[0], s=30, c="r")
+                if 'path' in trace.keys() and len(trace['path']) >= 2:
+                    x = trace['path'][:,0]
+                    y = trace['path'][:,1]
+
+                    ax.plot(x, y, '--', c="b")
+                    ax.scatter(x[0], y[0], s=30, c="r")
 
