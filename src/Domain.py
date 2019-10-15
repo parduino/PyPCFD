@@ -589,8 +589,8 @@ class Domain(object):
     
     def createParticles(self, n, m):
         for cell in self.cells:
-            h = cell.getSize()
-            mp = self.rho,h[0]*h[1]/n/m
+            area = cell.getSize()
+            mp = self.rho,area/n/m
             
             for i in range(n):
                 s = -1. + (2*i+1)/n

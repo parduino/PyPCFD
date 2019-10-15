@@ -148,22 +148,16 @@ class Cell(object):
         return listOfReleasedParticles
     
     def getLocal(self, x):
-        xl = 2*(x - self.xm) / self.size
+        xl = self.dXidX @ (x - self.xm)    # NEEDS VERIFICATION !!!
         return xl
     
     def getGlobal(self, xl):
-
-        # #local coordinates
-        #xl[0] = min( max(xl[0],-1.0), 1.0 )
-        #xl[1] = min( max(xl[1],-1.0), 1.0 )
 
         sp = 0.5*(1. + xl[0])
         sm = 0.5*(1. - xl[0])
         tp = 0.5*(1. + xl[1])
         tm = 0.5*(1. - xl[1])
         shape   = array([ sm*tm, sp*tm, sp*tp, sm*tp ])
-
-        #x = 0.5*xl*self.size + self.xm
 
         x = array([shape @ self.X, shape @ self.Y])
         return x
@@ -225,14 +219,14 @@ class Cell(object):
 
         self.updateCellVelocity()
         
-        self.divVa =  0.5*(-self.ux[0] + self.ux[1] + self.ux[2] - self.ux[3]) / self.size[0]
-        self.divVa += 0.5*(-self.uy[0] - self.uy[1] + self.uy[2] + self.uy[3]) / self.size[1]
-        self.divVb =  0.5*(self.uy[0]-self.uy[1]+self.uy[2]-self.uy[3]) / self.size[1]
-        self.divVc =  0.5*(self.ux[0]-self.ux[1]+self.ux[2]-self.ux[3]) / self.size[0]
+        self.setShape(array([0.,0.]))
+        self.divVa =  self.DshapeX @ self.ux + self.DshapeY @ self.uy
 
-    # def SetVelocity(self, ux, uy):
-    #      for i in range(4):
-    #         self.nodes[i].SetVelocity(array([ux]))
+        DDuxDsDt = 0.25 * (self.ux[0] - self.ux[1] + self.ux[2] - self.ux[3])
+        DDuyDsDt = 0.25 * (self.uy[0] - self.uy[1] + self.uy[2] - self.uy[3])
+
+        self.divVb = DDuxDsDt * self.dXidX[1][0] + DDuyDsDt * self.dXidX[1][1]    # NEEDS VERIFICATION !!!
+        self.divVc = DDuxDsDt * self.dXidX[0][0] + DDuyDsDt * self.dXidX[0][1]    # NEEDS VERIFICATION !!!
 
     def updateCellVelocity(self):
 
@@ -464,7 +458,7 @@ class Cell(object):
         return state
     
     def getSize(self):
-        return self.size
+        return 4.0*self.j0
     
     def getGridCoordinates(self):
         coords = []
@@ -517,11 +511,13 @@ class Cell(object):
         return self.gridCoordinates
 
     def getVolumeRate(self):
+        # return the average divergence of a cell
+
         self.SetVelocity()
         if self.useEnhanced:
             DvolDtime = 0.0    # should be computed to verify correct implementation
         else:
-            DvolDtime = self.divVa * 4.*self.j0
+            DvolDtime = self.divVa
         return DvolDtime
 
     def getAsPolygon(self):
