@@ -142,7 +142,6 @@ class Plotter(object):
         plt.clf()
         
         
-        #ax3 = fig.add_subplot(gs[0, 1])
         ax3 = fig.gca()
         try:
             seed_points = np.array([ self.tracerPoints[0].flatten(), self.tracerPoints[1].flatten() ])
@@ -161,7 +160,6 @@ class Plotter(object):
             ax3.set_title('Streamlines Failed at t={:08.5f}s'.format(time))
         
         # Displaying the starting points with blue symbols.
-        ###ax3.plot(self.tracerPoints[0], self.tracerPoints[1], 'bo', markersize=2)
         ax3.axis((0.0, self.width, 0.0, self.height))
         
         imageName = "Stream{:04d}.png".format(self.IMAGE_COUNTER)
@@ -173,7 +171,6 @@ class Plotter(object):
 
         if (self.particlesPresent):
             #  Varying line width along a streamline
-            #ax2 = fig.add_subplot(gs[0, 0])
             ax4 = fig.gca()
             try:
                 vecs = ax4.quiver(self.ParticleX, self.ParticleY, self.ParticleVx, self.ParticleVy, cmap='autumn')
@@ -188,8 +185,6 @@ class Plotter(object):
             except:
                 ax4.set_title('particle velocity Failed at t={:08.5f}s'.format(time))
                 
-            #ax4.axis((0, 1, 0, 1))
-            
             imageName = "ParticleVelocity{:04d}.png".format(self.IMAGE_COUNTER)
             fname = os.path.join(self.imageDir, imageName)
             plt.savefig(fname)

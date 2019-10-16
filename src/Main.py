@@ -26,15 +26,15 @@ def Main():
     # set the number of cells per edge
     numCellsPerEdge = 16
     numCellsPerEdge = 8
-    #numCellsPerEdge = 4
+    numCellsPerEdge = 4
     #numCellsPerEdge = 2
     
     # viscosity of the fluid
     viscosity = density * velocity * edgeDomain / Re
     
     # create an analysis domain
-    #domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=IdentityMap())
-    domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=FineEdgeMap())
+    domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=IdentityMap())
+    #domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=FineEdgeMap())
 
     domain.createParticles(2,2)
     
