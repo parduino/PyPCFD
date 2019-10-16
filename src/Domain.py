@@ -135,7 +135,7 @@ class Domain(object):
         for i in range(nCellsX+1):
             for j in range(nCellsY+1):
                 id += 1
-                theNode = Node(id,self.map.toX(x[i],y[i]),self.map.toY(x[i],y[i]))
+                theNode = Node(id,self.map.toX(x[i],y[j]),self.map.toY(x[i],y[j]))
                 theNode.setGridCoordinates(i,j)
                 self.nodes[i][j] = theNode
                 
