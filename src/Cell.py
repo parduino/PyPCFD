@@ -3,14 +3,17 @@ Created on Nov 21, 2015
 
 @author: pmackenz
 '''
-from numpy import array, dot, cross, outer, tensordot, zeros, ones, sqrt, stack, mat
+from numpy import array, dot, cross, outer, tensordot, zeros, ones, sqrt, stack, mat, seterr
 from _operator import index
+
+seterr(all='warn')
 
 class Cell(object):
     '''
     variables:
         self.id     = id
         self.nodes  = []
+        self.size = array([hx,hy])
         self.useEnhanced = False
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
@@ -61,14 +64,22 @@ class Cell(object):
         def mapMomentumToNodes(self)
         def GetAcceleration(self, x)
         def getID(self)
+        def setCellGridCoordinates(self, i, j)
+        def getVolumeRate(self)
+        def getAsPolygon(self)
     '''
 
-    def __init__(self, id, hx, hy):
+    def __init__(self, id, hx=1, hy=1):
         '''
         Constructor
         '''
         self.id     = id
-        self.nodes  = []
+        self.gridCoordinates = ()
+        self.nodes  = [None, None, None, None]
+
+        self.X = zeros(4)
+        self.Y = zeros(4)
+
         self.ux = zeros(4)    # velocity field
         self.uy = zeros(4)    # velocity field
         
@@ -82,24 +93,25 @@ class Cell(object):
         self.divVc = 0.0
         
         self.xm   = zeros(2)
-        self.size = array([hx,hy])
+        #self.size = array([hx,hy])
         
         self.uHat = array([0.0,0.0])  # enhanced field parameters
         self.fHat = array([0.0,0.0])  # enhanced field forces
         self.mHat = array([0.0,0.0])  # enhanced field mass
 
-        
+        self.dXidX = array([[2./hx, 0.0],[0, 2./hy]])
+        self.j0 = hx * hy /4.
         self.setShape(array([0.0,0.0]))
-        
+
         self.myParticles = []
 
     def __str__(self):
-        s = "   cell({}): ({}/{}),({}/{}),({}/{}),({}/{})".format(self.id,
-                                                                    *self.nodes[0].getGridCoordinates(),
-                                                                    *self.nodes[1].getGridCoordinates(),
-                                                                    *self.nodes[2].getGridCoordinates(),
-                                                                    *self.nodes[3].getGridCoordinates()
-                                                                    )
+        s = "   cell({}): nodes ({}, {}, {}, {})".format(self.id,
+                                                         self.nodes[0].id,
+                                                         self.nodes[1].id,
+                                                         self.nodes[2].id,
+                                                         self.nodes[3].id
+                                                        )
         return s
 
     def __repr__(self):
@@ -109,6 +121,7 @@ class Cell(object):
                                             self.nodes[2].id,
                                             self.nodes[3].id )
         return s
+
 
     def setParameters(self, density, viscosity):
         self.rho = density
@@ -135,28 +148,67 @@ class Cell(object):
         return listOfReleasedParticles
     
     def getLocal(self, x):
-        xl = 2*(x - self.xm) / self.size
+        xl = self.dXidX @ (x - self.xm)    # NEEDS VERIFICATION !!!
         return xl
     
     def getGlobal(self, xl):
-        x = 0.5*xl*self.size + self.xm
+
+        sp = 0.5*(1. + xl[0])
+        sm = 0.5*(1. - xl[0])
+        tp = 0.5*(1. + xl[1])
+        tm = 0.5*(1. - xl[1])
+        shape   = array([ sm*tm, sp*tm, sp*tp, sm*tp ])
+
+        x = array([shape @ self.X, shape @ self.Y])
         return x
     
     def setShape(self,xl):
+
+        #local coordinates
+        xl[0] = min( max(xl[0],-1.0), 1.0 )
+        xl[1] = min( max(xl[1],-1.0), 1.0 )
+
         sp = 0.5*(1. + xl[0])
         sm = 0.5*(1. - xl[0])
         tp = 0.5*(1. + xl[1])
         tm = 0.5*(1. - xl[1])
         self.shape   = array([ sm*tm, sp*tm, sp*tp, sm*tp ])
-        self.DshapeX = array([ -tm,  tm,  tp, -tp ]) / self.size[0]
-        self.DshapeY = array([ -sm, -sp,  sp,  sm ]) / self.size[1]
+        DshapeXi  = array([ -tm,  tm,  tp, -tp ]) * 0.5
+        DshapeEta = array([ -sm, -sp,  sp,  sm ]) * 0.5
+
+        # mapping onto global coordinates
+        self.DshapeX = DshapeXi * self.dXidX[0][0] + DshapeEta * self.dXidX[1][0]
+        self.DshapeY = DshapeXi * self.dXidX[0][1] + DshapeEta * self.dXidX[1][1]
+
     
     def SetNodes(self, nds):
         self.nodes = nds
+
         self.xm = zeros(2)
-        for node in nds:
-            self.xm += 0.25*node.getPosition()
-        
+        X = []
+        Y = []
+
+        for node in self.nodes:
+            pos = node.getPosition()
+            X.append(pos[0])
+            Y.append(pos[1])
+            self.xm += 0.25*pos
+
+        self.X = array(X)
+        self.Y = array(Y)
+
+        #local coordinates
+        DshapeXi  = array([ -0.25,  0.25,  0.25, -0.25 ])
+        DshapeEta = array([ -0.25, -0.25,  0.25,  0.25 ])
+
+        # mapping onto global coordinates
+        dxds = DshapeXi  @ self.X
+        dxdt = DshapeEta @ self.X
+        dyds = DshapeXi  @ self.Y
+        dydt = DshapeEta @ self.Y
+        self.j0 = dxds*dydt - dxdt*dyds
+        self.dXidX = array([[dydt, -dyds],[-dxdt, dxds]]) / self.j0   # !!! NEEDS TO BE VERIFIED !!!
+
     def GetNodeIndexes(self):
         indexes = []
         for node in self.nodes:
@@ -167,14 +219,14 @@ class Cell(object):
 
         self.updateCellVelocity()
         
-        self.divVa =  0.5*(-self.ux[0] + self.ux[1] + self.ux[2] - self.ux[3]) / self.size[0]
-        self.divVa += 0.5*(-self.uy[0] - self.uy[1] + self.uy[2] + self.uy[3]) / self.size[1]
-        self.divVb =  0.5*(self.uy[0]-self.uy[1]+self.uy[2]-self.uy[3]) / self.size[1]
-        self.divVc =  0.5*(self.ux[0]-self.ux[1]+self.ux[2]-self.ux[3]) / self.size[0]
+        self.setShape(array([0.,0.]))
+        self.divVa =  self.DshapeX @ self.ux + self.DshapeY @ self.uy
 
-    # def SetVelocity(self, ux, uy):
-    #      for i in range(4):
-    #         self.nodes[i].SetVelocity(array([ux]))
+        DDuxDsDt = 0.25 * (self.ux[0] - self.ux[1] + self.ux[2] - self.ux[3])
+        DDuyDsDt = 0.25 * (self.uy[0] - self.uy[1] + self.uy[2] - self.uy[3])
+
+        self.divVb = DDuxDsDt * self.dXidX[1][0] + DDuyDsDt * self.dXidX[1][1]    # NEEDS VERIFICATION !!!
+        self.divVc = DDuxDsDt * self.dXidX[0][0] + DDuyDsDt * self.dXidX[0][1]    # NEEDS VERIFICATION !!!
 
     def updateCellVelocity(self):
 
@@ -303,7 +355,7 @@ class Cell(object):
     
     def computeForces(self, addTransient=False):
         gpts = [ -1./sqrt(3.), 1./sqrt(3.) ]
-        w = self.size[0]*self.size[1]/4.
+        w = self.j0
         
         self.SetVelocity()   # this initializes nodal velocities
         
@@ -342,9 +394,16 @@ class Cell(object):
                     vx = dot(self.shape, self.ux)
                     vy = dot(self.shape, self.uy)
                     # standard tensor (single) dot product
-                    aTransient[0] = dxu * vx + dyu * vy 
-                    aTransient[1] = dxv * vx + dyv * vy 
-                    
+                    try:
+                        aTransient[0] = dxu * vx + dyu * vy
+                        aTransient[1] = dxv * vx + dyv * vy
+                    except RuntimeWarning:
+                        print(dxu)
+                        print(dyu)
+                        print(vx)
+                        print(vy)
+                        raise
+
                     fTransient = w * self.rho * tensordot(self.shape, aTransient, axes=0)  # tensor product
                     
                     forces -= fTransient
@@ -356,7 +415,7 @@ class Cell(object):
         
     def GetStiffness(self):
         gpts = [ -1./sqrt(3.), 1./sqrt(3.) ]
-        w = self.size[0]*self.size[1]/4.
+        w = self.j0
         
         Ke = zeros((4,4))
         
@@ -373,7 +432,7 @@ class Cell(object):
     
     def GetPforce(self,dt):
         gpts = [ -1./sqrt(3.), 1./sqrt(3.) ]
-        w = self.rho*self.size[0]*self.size[1]/4./dt
+        w = self.rho*self.j0/dt
         
         self.SetVelocity()
         
@@ -399,7 +458,7 @@ class Cell(object):
         return state
     
     def getSize(self):
-        return self.size
+        return 4.0*self.j0
     
     def getGridCoordinates(self):
         coords = []
@@ -409,7 +468,7 @@ class Cell(object):
     
     def mapMassToNodes(self):
         gpts = [ -1./sqrt(3.), 1./sqrt(3.) ]
-        w = self.rho * self.size[0]*self.size[1]/4.
+        w = self.rho * self.j0
         
         mass     = zeros(4)
         
@@ -428,7 +487,7 @@ class Cell(object):
             nodalV[:,i] = self.nodes[i].getVelocity()
             
         gpts = [ -1./sqrt(3.), 1./sqrt(3.) ]
-        w = self.rho * self.size[0]*self.size[1]/4.
+        w = self.rho * self.j0
         
         momentum = zeros((2,4))
         
@@ -444,6 +503,31 @@ class Cell(object):
 
     def getID(self):
         return self.id
+
+    def setCellGridCoordinates(self, i, j):
+        self.gridCoordinates = (i, j)
+
+    def getCellGridCoordinates(self):
+        return self.gridCoordinates
+
+    def getVolumeRate(self):
+        # return the average divergence of a cell
+
+        self.SetVelocity()
+        if self.useEnhanced:
+            DvolDtime = 0.0    # should be computed to verify correct implementation
+        else:
+            DvolDtime = self.divVa
+        return DvolDtime
+
+    def getAsPolygon(self):
+        x = [ self.getGlobal(array([-1,-1]))]
+        x.append( self.getGlobal(array([1,-1])) )
+        x.append( self.getGlobal(array([1,1])) )
+        x.append( self.getGlobal(array([-1,1])) )
+        #x.append( self.getGlobal(array([-1,-1])) )
+        return array(x)
+
 
 
 

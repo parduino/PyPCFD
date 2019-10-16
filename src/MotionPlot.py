@@ -1,8 +1,13 @@
-import matplotlib
-matplotlib.use('TkAgg')
+from sys import platform
 
-matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
-matplotlib.rcParams['font.size'] = 15
+import matplotlib
+if "win" in platform.lower():
+    matplotlib.use('TkAgg')
+else:
+    matplotlib.use('Agg')
+
+#matplotlib.rcParams['font.sans-serif'] = "Times New Roman"
+#matplotlib.rcParams['font.size'] = 15
 
 import matplotlib.pyplot as plt
 
@@ -11,7 +16,7 @@ import os
 from math import ceil
 import numpy as np
 
-from Motion import Motion
+from Node import *
 
 
 class MotionPlot(object):
@@ -25,6 +30,8 @@ class MotionPlot(object):
         self.size = array([1.0, 1.0])
         self.npts    ... points per trace
         self.maxTime ... max time for trace
+        self.xNDs = np.array(x)
+        self.yNDs = np.array(y)
 
     methods:
         def __init__(self, motion)
@@ -32,6 +39,7 @@ class MotionPlot(object):
         def __repr__(self)
         def setMaxTime(self, T)
         def setPointsPerSecond(self, n)
+        def setGridNodes(self, nodes):
         def exportImage(self, filename)            ... this is the user interface
         def setDomain(self, x0, y0, width, height) ... overwrite default domain size
         def setTracers(self, particleList)         ... overwrite default tracer particles
@@ -46,6 +54,9 @@ class MotionPlot(object):
 
         self.npts    = 30
         self.maxtime = 1.0
+
+        self.xNDs = np.array([])
+        self.yNDs = np.array([])
 
     def __str__(self):
         if isinstance(self.motion, Motion):
@@ -71,7 +82,10 @@ class MotionPlot(object):
         ax = fig.gca()
 
         ax.axis("equal")
-        ax.grid(True)
+        ax.grid(False)
+
+        if (len(self.xNDs)>0):
+            ax.scatter(self.xNDs, self.yNDs, marker='+', s=30, c="b")
 
         self.createTraces(ax, self.particles)
 
@@ -110,3 +124,27 @@ class MotionPlot(object):
             ax.plot(xlocs, ylocs, '--', c="b")
             ax.scatter(x0[0], x0[1], s=30, c="r")
 
+    def setGrid(self, nCellsX, nCellsY):
+        theNodes = []
+        id = 0
+
+        x = np.linspace(0, self.size[0], (nCellsX + 1))
+        y = np.linspace(0, self.size[1], (nCellsY + 1))
+
+        for i in range(nCellsX+1):
+            for j in range(nCellsY+1):
+                id += 1
+                theNode = Node(id,x[i],y[j])
+                theNode.setGridCoordinates(i,j)
+                theNodes.append(theNode)
+
+        self.setGridNodes(theNodes)
+
+    def setGridNodes(self, nodes):
+        x = []
+        y = []
+        for node in nodes:
+            x.append(node.pos[0])
+            y.append(node.pos[1])
+        self.xNDs = np.array(x)
+        self.yNDs = np.array(y)

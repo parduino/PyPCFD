@@ -21,6 +21,8 @@ class Particle(object):
         self.p      = 0.0
         self.strainRate = zeros(3)
         self.deformationGradient = identity(2)
+        self.recordParticleTrace = False
+        self.posTrace = []
     
     methods:
         def __init__(self, mp=1.0, xp=zeros(2), vp=zeros(2))
@@ -34,6 +36,8 @@ class Particle(object):
         def strain(self)        # return particle strain
         def strainRate(self)    # return rate of deformation tensor
         def stress(self)        # return particle stress
+        def trace(self, OnOff)  # turn particle trace on and off
+        def getTrace(self)      # return a reference to the particle trace
     '''
 
     def __init__(self, mp=1.0, xp=zeros(2), vp=zeros(2)):
@@ -56,6 +60,9 @@ class Particle(object):
         self.p      = 0.0
         self.strainRate = zeros(3)
         self.deformationGradient = identity(2)
+
+        self.recordParticleTrace = False
+        self.posTrace = []
         
     def setViscosity(self, mu):
         self.mu = mu;
@@ -71,6 +78,8 @@ class Particle(object):
     
     def addToPosition(self, dx):
         self.pos += dx
+        if self.recordParticleTrace:
+            self.posTrace.append(self.pos.copy())
         
     def position(self):
         return self.pos.copy()
@@ -97,4 +106,11 @@ class Particle(object):
 
     def getDeformationGradient(self):
         return self.deformationGradient
-        
+
+    def trace(self, OnOff):
+        self.recordParticleTrace = OnOff
+        if not OnOff:
+            self.posTrace = []
+
+    def getTrace(self):
+        return self.posTrace
