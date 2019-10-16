@@ -26,7 +26,7 @@ def Main():
     # set the number of cells per edge
     numCellsPerEdge = 16
     numCellsPerEdge = 8
-    numCellsPerEdge = 4
+    #numCellsPerEdge = 4
     #numCellsPerEdge = 2
     
     # viscosity of the fluid

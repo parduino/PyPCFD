@@ -13,27 +13,82 @@ class Mappings(object):
         def toY(self, s, t)
         def toS(self, x, y)
         def toT(self, x, y)
+        def oneToX(self, s, t)
+        def oneToY(self, s, t)
+        def oneToS(self, x, y)
+        def oneToT(self, x, y)
     """
 
     def __init__(self, parameters={}):
         self.params = parameters
 
+    # universal functions
+    '''
+    The following functions are to recognize different types of
+    input such that the mapping can be applied to single points,
+    list of points, or even multi-dimensional arrays.
+    '''
     def toX(self, s, t):
-        return s
+        if isinstance(s, np.float64) and isinstance(t, np.float64):
+            return self.oneToX(s,t)
+
+        res = []
+        for (S,T) in zip(s,t):
+            res.append(self.toX(S,T))
+
+        return np.array(res)
 
     def toY(self, s, t):
-        return t
+        if isinstance(s, np.float64) and isinstance(t, np.float64):
+            return self.oneToY(s,t)
+
+        res = []
+        for (S,T) in zip(s,t):
+            res.append(self.toY(S,T))
+
+        return np.array(res)
 
     def toS(self, x, y):
-        return x
+        if isinstance(x, np.float64) and isinstance(y, np.float64):
+            return self.oneToS(x,y)
+
+        res = []
+        for (X,Y) in zip(x,y):
+            res.append(self.toS(X,Y))
+
+        return np.array(res)
 
     def toT(self, x, y):
+        if isinstance(x, np.float64) and isinstance(y, np.float64):
+            return self.oneToT(x,y)
+
+        res = []
+        for (X,Y) in zip(x,y):
+            res.append(self.toT(X,Y))
+
+        return np.array(res)
+
+    # place holder functions: identities
+    '''
+    These functions privide the mapping of a single point
+    onto a resulting mapped single point
+    '''
+    def oneToX(self, s, t):
+        return s
+
+    def oneToY(self, s, t):
+        return t
+
+    def oneToS(self, x, y):
+        return x
+
+    def oneToT(self, x, y):
         return y
 
 
 class IdentityMap(Mappings):
 
-    def toX(self, s, t):
+    def oneToX(self, s, t):
 
         if 'width' in self.params.keys():
             d = self.params['width']
@@ -42,7 +97,7 @@ class IdentityMap(Mappings):
 
         return d * s
 
-    def toY(self, s, t):
+    def oneToY(self, s, t):
 
         if 'height' in self.params.keys():
             d = self.params['height']
@@ -51,7 +106,7 @@ class IdentityMap(Mappings):
 
         return d * t
 
-    def toS(self, x, y):
+    def oneToS(self, x, y):
 
         if 'width' in self.params.keys():
             d = self.params['width']
@@ -60,7 +115,7 @@ class IdentityMap(Mappings):
 
         return x / d
 
-    def toT(self, x, y):
+    def oneToT(self, x, y):
 
         if 'height' in self.params.keys():
             d = self.params['height']
@@ -72,7 +127,7 @@ class IdentityMap(Mappings):
 
 class FineEdgeMap(Mappings):
 
-    def toX(self, s, t):
+    def oneToX(self, s, t):
 
         if 'width' in self.params.keys():
             d = self.params['width']
@@ -81,7 +136,7 @@ class FineEdgeMap(Mappings):
 
         return d * (1.0 - np.cos(np.pi * s)) / 2.
 
-    def toY(self, s, t):
+    def oneToY(self, s, t):
 
         if 'height' in self.params.keys():
             d = self.params['height']
@@ -90,7 +145,7 @@ class FineEdgeMap(Mappings):
 
         return d * (1.0 - np.cos(np.pi * t)) / 2.
 
-    def toS(self, x, y):
+    def oneToS(self, x, y):
 
         if 'width' in self.params.keys():
             d = self.params['width']
@@ -99,7 +154,7 @@ class FineEdgeMap(Mappings):
 
         return np.acos( 1.0 - 2.*x/d ) / np.pi
 
-    def toT(self, x, y):
+    def oneToT(self, x, y):
 
         if 'height' in self.params.keys():
             d = self.params['height']

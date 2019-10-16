@@ -19,6 +19,8 @@ import matplotlib.cm as cm
 import matplotlib.colors as colors
 import os
 
+from Mappings import Mappings
+
 # global settings
 RESULTS = "../"
 
@@ -31,6 +33,7 @@ class Plotter(object):
         self.width
         self.nNodesX = nCellsX+1
         self.nNodesY = nCellsY+1
+        self.map = mappingFunction
         self.Y
         self.X
         self.Vx
@@ -41,7 +44,7 @@ class Plotter(object):
         self.imageDir
     
     methods:
-        def __init__(self)
+        def __init__(self, mappingFunction=Mappings())
         def safePlot(self, filename)
         def refresh(self, time=-1)
         def setGrid(self, nodes)
@@ -51,7 +54,7 @@ class Plotter(object):
         
     '''
 
-    def __init__(self):
+    def __init__(self, mappingFunction=Mappings()):
         '''
         Constructor
         '''
@@ -60,7 +63,8 @@ class Plotter(object):
         
         self.width  = 1.0
         self.height = 1.0
-        
+
+        self.map = mappingFunction
         self.setGrid(self.width, self.height, 10, 10)
 
         self.imageDir = os.path.join(RESULTS, 'images')
@@ -199,11 +203,17 @@ class Plotter(object):
         self.width  = width
         self.nNodesX = nCellsX+1
         self.nNodesY = nCellsY+1
+
+        # regular grid on master element in parameter space
+        slist = np.linspace(0,width ,(nCellsX+1))
+        tlist = np.linspace(0,height,(nCellsY+1))
         
-        x = np.linspace(0,width ,(nCellsX+1))
-        y = np.linspace(0,height,(nCellsY+1))
-        
-        self.X, self.Y = np.meshgrid(x, y)
+        self.S, self.T = np.meshgrid(slist, tlist)
+
+        # create self.X and self.Y as mappings of S and T
+        self.X = self.map.toX(self.S, self.T)
+        self.Y = self.map.toY(self.S, self.T)
+
         self.Vx = np.zeros_like(self.X)
         self.Vy = np.zeros_like(self.X)
         

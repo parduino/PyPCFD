@@ -168,7 +168,7 @@ class Domain(object):
         # set default plot parameters
         self.plotControl   = {'Active':False, 'DelTime':-1 }
     
-        self.plot = Plotter()
+        self.plot = Plotter(self.map)
         self.plot.setGrid(width, height, nCellsX, nCellsY)
         self.lastPlot = self.time
 
