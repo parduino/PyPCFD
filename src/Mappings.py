@@ -5,31 +5,105 @@ class Mappings(object):
     @class: Mapping
 
     variables:
+        self.params
 
     methods:
-        def __init__(self)
-        def identity(self, idx, xi, params=dict())
-        def fineEdge(self, idx, xi, params=dict())
+        def __init__(self, parameters={})
+        def toX(self, s, t)
+        def toY(self, s, t)
+        def toS(self, x, y)
+        def toT(self, x, y)
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, parameters={}):
+        self.params = parameters
 
-    def identity(self, idx, xi, params=dict()):
-        return xi
+    def toX(self, s, t):
+        return s
 
-    def fineEdge(self, idx, xi, params=dict()):
+    def toY(self, s, t):
+        return t
 
-        d = 1.
+    def toS(self, x, y):
+        return x
 
-        if idx == 0:
-            if 'width' in params.keys():
-                d = params['width']
+    def toT(self, x, y):
+        return y
 
-        if idx == 1:
-            if 'height' in params.keys():
-                d = params['height']
 
-        X = d * (1.0 - np.cos(np.pi * xi)) / 2.
+class IdentityMap(Mappings):
 
-        return X
+    def toX(self, s, t):
+
+        if 'width' in self.params.keys():
+            d = self.params['width']
+        else:
+            d = 1.0
+
+        return d * s
+
+    def toY(self, s, t):
+
+        if 'height' in self.params.keys():
+            d = self.params['height']
+        else:
+            d = 1.0
+
+        return d * t
+
+    def toS(self, x, y):
+
+        if 'width' in self.params.keys():
+            d = self.params['width']
+        else:
+            d = 1.0
+
+        return x / d
+
+    def toT(self, x, y):
+
+        if 'height' in self.params.keys():
+            d = self.params['height']
+        else:
+            d = 1.0
+
+        return y / d
+
+
+class FineEdgeMap(Mappings):
+
+    def toX(self, s, t):
+
+        if 'width' in self.params.keys():
+            d = self.params['width']
+        else:
+            d = 1.0
+
+        return d * (1.0 - np.cos(np.pi * s)) / 2.
+
+    def toY(self, s, t):
+
+        if 'height' in self.params.keys():
+            d = self.params['height']
+        else:
+            d = 1.0
+
+        return d * (1.0 - np.cos(np.pi * t)) / 2.
+
+    def toS(self, x, y):
+
+        if 'width' in self.params.keys():
+            d = self.params['width']
+        else:
+            d = 1.0
+
+        return np.acos( 1.0 - 2.*x/d ) / np.pi
+
+    def toT(self, x, y):
+
+        if 'height' in self.params.keys():
+            d = self.params['height']
+        else:
+            d = 1.0
+
+        return np.acos( 1.0 - 2.*y/d ) / np.pi

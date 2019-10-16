@@ -60,6 +60,7 @@ class Domain(object):
         self.lastPlot     ... time of the last plot
 
         self.recordParticleTrace = False
+        self.map = mappingFunction
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
@@ -93,18 +94,17 @@ class Domain(object):
         def particleTrace(self, OnOff)      # turn particle trace on and off
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, mappingFunction=None):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, mappingFunction=Mappings()):
         '''
         Constructor
 
-        if a mappingfunction is given, that function must provide:
-            mappingFunction(0, s) --> x
-            mappingFunction(1, s) --> y
         '''
         self.width   = width
         self.height  = height
         self.nCellsX = nCellsX
         self.nCellsY = nCellsY
+
+        self.map = mappingFunction
 
         # cell size need no longer be uniform.  This needs to be moved to the cells!
         self.hx = width/nCellsX        # cell size in x-direction
@@ -132,17 +132,10 @@ class Domain(object):
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
 
-        if mappingFunction == None:
-            map = Mappings()
-            mappingFunction = map.identity
-        
         for i in range(nCellsX+1):
             for j in range(nCellsY+1):
                 id += 1
-                if mappingFunction:
-                    theNode = Node(id,mappingFunction(0,x[i]),mappingFunction(1,y[j]))
-                else:
-                    theNode = Node(id,x[i],y[j])
+                theNode = Node(id,self.map.toX(x[i],y[i]),self.map.toY(x[i],y[i]))
                 theNode.setGridCoordinates(i,j)
                 self.nodes[i][j] = theNode
                 

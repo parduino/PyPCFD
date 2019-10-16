@@ -33,9 +33,8 @@ def Main():
     viscosity = density * velocity * edgeDomain / Re
     
     # create an analysis domain
-    map = Mappings()
-    #domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=map.identity)
-    domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=map.fineEdge)
+    #domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=IdentityMap())
+    domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=FineEdgeMap())
 
     domain.createParticles(2,2)
     
