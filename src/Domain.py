@@ -12,6 +12,7 @@ from Particle import *
 
 from Writer import *
 from Plotter2 import *
+from ParticleTracePlot import *
 
 from Errors import *
 from ButcherTableau import *
@@ -21,6 +22,10 @@ from numpy.linalg import solve
 from scipy.sparse.linalg import spsolve
 
 from time import process_time
+
+from Mappings import *
+
+
 
 class Domain(object):
     '''
@@ -53,6 +58,9 @@ class Domain(object):
 
         self.lastWrite    ... time of the last output
         self.lastPlot     ... time of the last plot
+
+        self.recordParticleTrace = False
+        self.map = mappingFunction
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
@@ -83,25 +91,33 @@ class Domain(object):
         def plotData(self)
         def writeData(self)
         def setMotion(self, dt=0.0)
+        def particleTrace(self, OnOff)      # turn particle trace on and off
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, mappingFunction=Mappings()):
         '''
         Constructor
+
         '''
         self.width   = width
         self.height  = height
         self.nCellsX = nCellsX
         self.nCellsY = nCellsY
-        
+
+        self.map = mappingFunction
+
+        # cell size need no longer be uniform.  This needs to be moved to the cells!
         self.hx = width/nCellsX        # cell size in x-direction
         self.hy = height/nCellsY       # cell size in y-direction
         
         self.time = 0.0
+
+        self.recordParticleTrace = False
         
         #self.X = outer(ones(nCellsY+1), linspace(0.0, width, nCellsX+1))
         #self.Y = outer(linspace(0.0, height, nCellsY+1), ones(nCellsX+1))
-        
+
+        # if a mapping function is given, these will be the nodal coordinates in parameter space
         x = linspace(0,width ,(nCellsX+1))
         y = linspace(0,height,(nCellsY+1))
         
@@ -115,23 +131,25 @@ class Domain(object):
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
-        
+
         for i in range(nCellsX+1):
             for j in range(nCellsY+1):
                 id += 1
-                theNode = Node(id,x[i],y[j])
+                theNode = Node(id,self.map.toX(x[i],y[j]),self.map.toY(x[i],y[j]))
                 theNode.setGridCoordinates(i,j)
                 self.nodes[i][j] = theNode
                 
         self.cells = []
         id = -1
-        hx = width / nCellsX
-        hy = height / nCellsY
+        #hx = width / nCellsX
+        #hy = height / nCellsY
         
         for i in range(nCellsX):
             for j in range(nCellsY):
                 id += 1
-                newCell = Cell(id, hx, hy)
+                # newCell = Cell(id, hx, hy)
+                newCell = Cell(id)
+                newCell.setCellGridCoordinates(i, j)
                 theNodes = []
                 theNodes.append(self.nodes[i][j])
                 theNodes.append(self.nodes[i+1][j])
@@ -144,19 +162,13 @@ class Domain(object):
         
         self.particles = []
 
-        # create some particles ...
-        
-        # self.createParticles(2,2)
-        #self.createParticlesMID(3,3)
-        self.createParticleAtX(1.0, array([width/2.,height/10.]))
-
         # set default analysis parameters
         self.setAnalysis(False, True, True, True, False, True, True, True)
 
         # set default plot parameters
         self.plotControl   = {'Active':False, 'DelTime':-1 }
     
-        self.plot = Plotter()
+        self.plot = Plotter(self.map)
         self.plot.setGrid(width, height, nCellsX, nCellsY)
         self.lastPlot = self.time
 
@@ -177,6 +189,11 @@ class Domain(object):
         for cell in self.cells:
             s += str(cell) + "\n"
         return s
+
+    def particleTrace(self, OnOff):
+        self.recordParticleTrace = OnOff
+        for particle in self.particles:
+            particle.trace(OnOff)
 
     def setTimeIntegrator(self, integrator):
         self.particleUpdateScheme = integrator
@@ -302,7 +319,7 @@ class Domain(object):
     def runAnalysis(self, maxtime=1.0):
         
         # find ideal timestep using CFL
-        dt = self.getTimeStep(0.5)
+        dt = self.getTimeStep(0.025)
         if (dt > (maxtime - self.time)):
             dt = (maxtime - self.time)
         if (dt < (maxtime - self.time)):
@@ -362,18 +379,19 @@ class Domain(object):
 
     def solveVstar(self, dt, addTransient=False):
         # compute nodal forces from shear
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY+1):
-                self.nodes[i][j].setForce(zeros(2))
+        for rowOfNodes in self.nodes:
+            for node in rowOfNodes:
+                node.setForce(zeros(2))
                 
         for cell in self.cells:
             cell.computeForces(addTransient)
         
         # solve for nodal acceleration a*
         # and update nodal velocity to v*
-        for i in range(self.nCellsX+1):
-            for j in range(self.nCellsY+1):
-                self.nodes[i][j].updateVstar(dt)
+        for rowOfNodes in self.nodes:
+            for node in rowOfNodes:
+                node.updateVstar(dt)
+                node.updateVstar(dt)
 
     def solveP(self, dt):
         ndof = (self.nCellsX+1)*(self.nCellsY+1)
@@ -564,8 +582,8 @@ class Domain(object):
     
     def createParticles(self, n, m):
         for cell in self.cells:
-            h = cell.getSize()
-            mp = self.rho,h[0]*h[1]/n/m
+            area = cell.getSize()
+            mp = self.rho,area/n/m
             
             for i in range(n):
                 s = -1. + (2*i+1)/n
@@ -608,7 +626,8 @@ class Domain(object):
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
-        
+
+        # convection time step
         for nodeList in self.nodes:
             for node in nodeList:
                 vel = node.getVelocity()
@@ -621,12 +640,18 @@ class Domain(object):
                     if (dty<dt):
                         dt = dty
 
+        # diffusion time step limit
+
+        # combined time step limit
+
+
         return dt*CFL
 
     def plotData(self):
         self.plot.setData(self.nodes)
         self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
+        self.plot.cellPlot(self.cells, self.time)
 
     def writeData(self):
         self.writer.setData(self.nodes)
@@ -650,3 +675,21 @@ class Domain(object):
 
     def setTime(self, time):
         self.time = time
+
+    def plotParticleTrace(self, filename):
+        plotter = ParticleTracePlot()
+        plotter.setDomain(0.0, 0.0, self.width, self.height)
+
+        particleTraceList = []
+        if self.recordParticleTrace:
+            for particle in self.particles:
+                pDict = {}
+                pDict['node'] = particle.id
+                pDict['path'] = array(particle.getTrace())
+                particleTraceList.append(pDict)
+
+        plotter.addTraces(particleTraceList)
+        plotter.setGridNodes(self.nodes)
+        plotter.exportImage(filename)
+
+
