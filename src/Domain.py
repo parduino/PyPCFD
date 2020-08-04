@@ -12,6 +12,7 @@ from Particle import *
 
 from Writer import *
 from Plotter2 import *
+from ParticleTracePlot import *
 
 from Errors import *
 from ButcherTableau import *
@@ -22,7 +23,8 @@ from scipy.sparse.linalg import spsolve
 
 from time import process_time
 
-from ParticleTracePlot import *
+from Mappings import *
+
 
 
 class Domain(object):
@@ -58,6 +60,7 @@ class Domain(object):
         self.lastPlot     ... time of the last plot
 
         self.recordParticleTrace = False
+        self.map = mappingFunction
     
     methods:
         def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2)
@@ -89,18 +92,21 @@ class Domain(object):
         def writeData(self)
         def setMotion(self, dt=0.0)
         def particleTrace(self, OnOff)      # turn particle trace on and off
-        def computeCellFlux(self)
     '''
 
-    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2):
+    def __init__(self, width=1., height=1., nCellsX=2, nCellsY=2, mappingFunction=Mappings()):
         '''
         Constructor
+
         '''
         self.width   = width
         self.height  = height
         self.nCellsX = nCellsX
         self.nCellsY = nCellsY
-        
+
+        self.map = mappingFunction
+
+        # cell size need no longer be uniform.  This needs to be moved to the cells!
         self.hx = width/nCellsX        # cell size in x-direction
         self.hy = height/nCellsY       # cell size in y-direction
         
@@ -110,7 +116,8 @@ class Domain(object):
         
         #self.X = outer(ones(nCellsY+1), linspace(0.0, width, nCellsX+1))
         #self.Y = outer(linspace(0.0, height, nCellsY+1), ones(nCellsX+1))
-        
+
+        # if a mapping function is given, these will be the nodal coordinates in parameter space
         x = linspace(0,width ,(nCellsX+1))
         y = linspace(0,height,(nCellsY+1))
         
@@ -124,23 +131,24 @@ class Domain(object):
         
         self.nodes = [ [ None for j in range(self.nCellsY+1) ] for i in range(self.nCellsX+1) ]
         id = -1
-        
+
         for i in range(nCellsX+1):
             for j in range(nCellsY+1):
                 id += 1
-                theNode = Node(id,x[i],y[j])
+                theNode = Node(id,self.map.toX(x[i],y[j]),self.map.toY(x[i],y[j]))
                 theNode.setGridCoordinates(i,j)
                 self.nodes[i][j] = theNode
                 
         self.cells = []
         id = -1
-        hx = width / nCellsX
-        hy = height / nCellsY
+        #hx = width / nCellsX
+        #hy = height / nCellsY
         
         for i in range(nCellsX):
             for j in range(nCellsY):
                 id += 1
-                newCell = Cell(id, hx, hy)
+                # newCell = Cell(id, hx, hy)
+                newCell = Cell(id)
                 newCell.setCellGridCoordinates(i, j)
                 theNodes = []
                 theNodes.append(self.nodes[i][j])
@@ -160,7 +168,7 @@ class Domain(object):
         # set default plot parameters
         self.plotControl   = {'Active':False, 'DelTime':-1 }
     
-        self.plot = Plotter()
+        self.plot = Plotter(self.map)
         self.plot.setGrid(width, height, nCellsX, nCellsY)
         self.lastPlot = self.time
 
@@ -574,8 +582,8 @@ class Domain(object):
     
     def createParticles(self, n, m):
         for cell in self.cells:
-            h = cell.getSize()
-            mp = self.rho,h[0]*h[1]/n/m
+            area = cell.getSize()
+            mp = self.rho,area/n/m
             
             for i in range(n):
                 s = -1. + (2*i+1)/n
@@ -618,7 +626,8 @@ class Domain(object):
     
     def getTimeStep(self, CFL):
         dt = 1.0e10
-        
+
+        # convection time step
         for nodeList in self.nodes:
             for node in nodeList:
                 vel = node.getVelocity()
@@ -631,11 +640,14 @@ class Domain(object):
                     if (dty<dt):
                         dt = dty
 
+        # diffusion time step limit
+
+        # combined time step limit
+
+
         return dt*CFL
 
     def plotData(self):
-        self.computeCellFlux()
-        self.plot.setCellFluxData(self.cells)
         self.plot.setData(self.nodes)
         self.plot.setParticleData(self.particles)
         self.plot.refresh(self.time)
@@ -680,19 +692,4 @@ class Domain(object):
         plotter.setGridNodes(self.nodes)
         plotter.exportImage(filename)
 
-
-    def computeCellFlux(self):
-        for theCell in self.cells:
-            cellSize = theCell.getSize()
-            nodeIndices = theCell.GetNodeIndexes()
-            node00 = self.nodes[nodeIndices[0][0]][nodeIndices[0][1]]
-            node10 = self.nodes[nodeIndices[1][0]][nodeIndices[1][1]]
-            node11 = self.nodes[nodeIndices[2][0]][nodeIndices[2][1]]
-            node01 = self.nodes[nodeIndices[3][0]][nodeIndices[3][1]]
-            leftFlux   =  0.5 * (node00.getVelocity() + node01.getVelocity()) @ array([-1.,  0.]) * cellSize[0]
-            rightFlux  =  0.5 * (node10.getVelocity() + node11.getVelocity()) @ array([ 1.,  0.]) * cellSize[0]
-            topFlux    =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0.,  1.]) * cellSize[1]
-            bottomFlux =  0.5 * (node11.getVelocity() + node01.getVelocity()) @ array([ 0., -1.]) * cellSize[1]
-
-            theCell.setFlux(leftFlux + rightFlux + topFlux + bottomFlux)
 

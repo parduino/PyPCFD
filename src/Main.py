@@ -8,6 +8,7 @@ from Domain import *
 import subprocess
 import ButcherTableau as integrator
 from math import floor
+from Mappings import *
 
 def Main():
     # defne the Reynolds number
@@ -32,7 +33,9 @@ def Main():
     viscosity = density * velocity * edgeDomain / Re
     
     # create an analysis domain
-    domain = Domain(edgeDomain,edgeDomain,numCellsPerEdge,numCellsPerEdge)
+    domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=IdentityMap())
+    #domain = Domain(edgeDomain, edgeDomain, numCellsPerEdge, numCellsPerEdge, mappingFunction=FineEdgeMap())
+
     domain.createParticles(2,2)
     
     # configure the analysis type
@@ -88,6 +91,8 @@ def Main():
     # run first segment
     #domain.setTimeIntegrator(integrator.ExplicitEuler())
     domain.setTimeIntegrator(integrator.RungeKutta4())
+
+    domain.plotParticleTrace('tracePlot{:04d}.png'.format(floor(time*100)))
 
     dt = dt1
     while (time+dt <= target1 + 0.1 * dt):
